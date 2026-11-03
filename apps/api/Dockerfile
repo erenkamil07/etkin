@@ -7,11 +7,14 @@ RUN corepack enable
 WORKDIR /repo
 
 FROM base AS build
-# Manifests first so the dependency layer is cached until they change.
+# Manifests first so the dependency layer is cached until they change. Only the
+# manifests are here yet, so lifecycle scripts are skipped: @etkin/shared's
+# `prepare` (a build for the mobile app) would find no sources, and the build
+# step below compiles it anyway.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/
 COPY packages/shared/package.json packages/shared/
-RUN pnpm install --frozen-lockfile --filter "@etkin/api..."
+RUN pnpm install --frozen-lockfile --ignore-scripts --filter "@etkin/api..."
 COPY tsconfig.base.json ./
 COPY packages/shared packages/shared
 COPY apps/api apps/api
