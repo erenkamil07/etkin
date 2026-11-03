@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { publicApi } from '@/api/base';
-import { api } from '@/api/client';
+import { useMe } from '@/api/queries';
 import { currentRefreshToken, endSession } from '@/auth/session';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, ErrorBanner, Loading, Screen } from '@/components/ui';
@@ -9,14 +9,7 @@ const ROLE = { owner: 'Kurucu', organizer: 'Organizatör', scanner: 'Kapı göre
 
 export default function Profile() {
   const queryClient = useQueryClient();
-  const me = useQuery({
-    queryKey: ['me'],
-    queryFn: async () => {
-      const { data, error } = await api.GET('/me');
-      if (error) throw error;
-      return data;
-    },
-  });
+  const me = useMe();
 
   const signOut = useMutation({
     mutationFn: async () => {

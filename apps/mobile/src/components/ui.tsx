@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,12 +17,27 @@ import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ThemedText } from './themed-text';
 
-/** A scrollable, keyboard-aware page with the app's padding and max width. */
-export function Screen({ children, scroll = true }: { children: ReactNode; scroll?: boolean }) {
+/**
+ * A scrollable, keyboard-aware page with the app's padding and max width.
+ * Pages pushed over the tabs pass `belowHeader`: the navigation header covers
+ * the top inset there, and nothing covers the bottom one.
+ */
+export function Screen({
+  children,
+  scroll = true,
+  belowHeader = false,
+}: {
+  children: ReactNode;
+  scroll?: boolean;
+  belowHeader?: boolean;
+}) {
   const theme = useTheme();
   const body = <View style={styles.content}>{children}</View>;
   return (
-    <SafeAreaView style={[styles.fill, { backgroundColor: theme.background }]} edges={['top', 'left', 'right']}>
+    <SafeAreaView
+      style={[styles.fill, { backgroundColor: theme.background }]}
+      edges={belowHeader ? ['left', 'right', 'bottom'] : ['top', 'left', 'right']}
+    >
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         {scroll ? (
           <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -130,6 +146,35 @@ export function Card({ children, onPress }: { children: ReactNode; onPress?: () 
   ) : (
     <View style={style}>{children}</View>
   );
+}
+
+/** A coloured note inside the page, e.g. "this event was cancelled". */
+export function Notice({ children, tone }: { children: ReactNode; tone: 'success' | 'warning' | 'danger' }) {
+  const theme = useTheme();
+  return (
+    <View style={[styles.banner, { borderColor: theme[tone] }]}>
+      <ThemedText type="small" style={{ color: theme[tone] }}>
+        {children}
+      </ThemedText>
+    </View>
+  );
+}
+
+/** Asks before something that cannot be undone. Resolves true when the person goes ahead. */
+export function confirmAction(title: string, message: string, action: string): Promise<boolean> {
+  // react-native-web's Alert does nothing, so the development web build uses the browser's dialog.
+  if (Platform.OS === 'web') return Promise.resolve(window.confirm(`${title}\n\n${message}`));
+  return new Promise((resolve) => {
+    Alert.alert(
+      title,
+      message,
+      [
+        { text: 'Vazgeç', style: 'cancel', onPress: () => resolve(false) },
+        { text: action, style: 'destructive', onPress: () => resolve(true) },
+      ],
+      { cancelable: true, onDismiss: () => resolve(false) },
+    );
+  });
 }
 
 export function Loading() {

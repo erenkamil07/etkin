@@ -11,6 +11,9 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
 });
 
+/** Pages opened over the tabs get a header with a back button. */
+const pushed = { headerShown: true, headerBackButtonDisplayMode: 'minimal' } as const;
+
 export default function RootLayout() {
   const status = useSessionStatus();
   const scheme = useColorScheme();
@@ -31,6 +34,8 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Protected guard={status === 'signedIn'}>
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="events/[id]" options={{ ...pushed, title: 'Etkinlik' }} />
+            <Stack.Screen name="tickets/[id]" options={{ ...pushed, title: 'Bilet' }} />
           </Stack.Protected>
           <Stack.Protected guard={status === 'signedOut'}>
             <Stack.Screen name="sign-in" />

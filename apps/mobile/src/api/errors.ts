@@ -12,6 +12,11 @@ const MESSAGES: Record<string, string> = {
   LOTTERY_ONLY: 'Bu bilet çekilişle dağıtılıyor.',
   EVENT_NOT_OPEN: 'Bu etkinlik artık bilet almaya açık değil.',
   TOO_LATE_TO_CANCEL: 'Etkinlik başladığı için bilet iptal edilemez.',
+  ALREADY_CHECKED_IN: 'Bu bilet kapıda kullanıldı.',
+  TICKET_CANCELLED: 'Bu bilet iptal edildi.',
+  TICKET_NOT_FOUND: 'Bilet bulunamadı.',
+  EVENT_NOT_FOUND: 'Etkinlik bulunamadı.',
+  TICKET_TYPE_NOT_FOUND: 'Bilet türü bulunamadı.',
 };
 
 const FALLBACK = 'Bir şeyler ters gitti. Bağlantını kontrol edip tekrar dene.';

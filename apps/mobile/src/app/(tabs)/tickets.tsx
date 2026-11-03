@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
-import { api } from '@/api/client';
+import { useMyTickets } from '@/api/queries';
 import { ThemedText } from '@/components/themed-text';
 import { Card, ErrorBanner, Loading, Screen } from '@/components/ui';
 import { BottomTabInset, Spacing } from '@/constants/theme';
@@ -9,14 +9,7 @@ import { formatDateTime } from '@/format';
 const STATUS = { active: 'Aktif', checked_in: 'Kullanıldı', cancelled: 'İptal' } as const;
 
 export default function Tickets() {
-  const tickets = useQuery({
-    queryKey: ['me', 'tickets'],
-    queryFn: async () => {
-      const { data, error } = await api.GET('/me/tickets');
-      if (error) throw error;
-      return data;
-    },
-  });
+  const tickets = useMyTickets();
 
   return (
     <Screen scroll={false}>
@@ -38,7 +31,7 @@ export default function Tickets() {
             </ThemedText>
           }
           renderItem={({ item }) => (
-            <Card>
+            <Card onPress={() => router.push({ pathname: '/tickets/[id]', params: { id: item.id } })}>
               <ThemedText type="smallBold" themeColor="textSecondary">
                 {item.event.organization.name} · {STATUS[item.status]}
               </ThemedText>

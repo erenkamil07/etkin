@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { FlatList, StyleSheet } from 'react-native';
 import { api } from '@/api/client';
 import { ThemedText } from '@/components/themed-text';
@@ -32,7 +33,7 @@ export default function Events() {
           contentContainerStyle={styles.list}
           ListEmptyComponent={<ThemedText themeColor="textSecondary">Yaklaşan etkinlik yok.</ThemedText>}
           renderItem={({ item }) => (
-            <Card>
+            <Card onPress={() => router.push({ pathname: '/events/[id]', params: { id: item.id } })}>
               <ThemedText type="smallBold" themeColor="textSecondary">
                 {item.organization.name}
               </ThemedText>

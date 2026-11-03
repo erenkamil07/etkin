@@ -9,8 +9,8 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
 > Status: the backend is feature-complete for weeks 1 and 2 and load-tested. The Expo app has
-> sign-in, the event feed, tickets and profile. Event pages, the live QR ticket and the scanner
-> come next.
+> sign-in, the event feed, event pages with ticket claims, the live QR ticket and the profile.
+> Points and badges in the app and the organizer's scanner come next.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -102,6 +102,12 @@ tokens live in localStorage instead of the keystore.
 - **Sessions.** Tokens live in the Android Keystore through `expo-secure-store`. The access token is
   refreshed a minute before it expires, one refresh at a time, because the API revokes a session
   whose refresh token is used twice.
+- **Live QR ticket.** The phone fetches its ticket key once, keeps it in the keystore and draws a new
+  code every 15 s with the same `@etkin/shared` code the API verifies with. The code still renders
+  with no signal at the door, and the server's clock offset corrects a phone set to the wrong
+  time. While the code is on screen, screenshots and recordings are blocked and the screen goes to
+  full brightness. A running clock under the code shows the door team it is live, and the screen
+  turns to "Giriş yapıldı" by itself after the scan.
 
 ### API conventions
 
