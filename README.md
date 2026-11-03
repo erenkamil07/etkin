@@ -119,6 +119,26 @@ tokens live in localStorage instead of the keystore.
   club points. Dates are typed as digits and formatted as you go, so the number pad works on every
   phone. If a step fails, trying again resumes where it stopped instead of leaving a second draft.
 
+### Android builds (EAS)
+
+The app id is `com.erengoksel.etkin`. [eas.json](apps/mobile/eas.json) has two profiles:
+`preview` makes an APK to install directly on a phone, and `production` makes the Play Store
+bundle (AAB). EAS keeps the version code and raises it on every production build. Neither profile
+can run against a laptop: [app.config.ts](apps/mobile/app.config.ts) stops the build unless
+`EXPO_PUBLIC_API_URL` is an https address, because Android release builds refuse plain http.
+
+The release manifest asks only for camera, vibration and internet. The storage, photo,
+draw-over-apps and system-settings permissions that the template and some libraries add are
+blocked in `app.json`, so the Play listing doesn't have to justify them.
+
+```bash
+cd apps/mobile
+npx eas-cli@latest login                 # your Expo account
+npx eas-cli@latest init                  # links the project; adds its id to app.json
+npx eas-cli@latest env:create --environment production --name EXPO_PUBLIC_API_URL --value https://<api> --visibility plaintext
+npx eas-cli@latest build -p android --profile production
+```
+
 ### Demo data
 
 `pnpm demo:seed` sets up a club, its team, a student and three events. One of them, **Canlı Demo:
