@@ -36,6 +36,10 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="events/[id]" options={{ ...pushed, title: 'Etkinlik' }} />
             <Stack.Screen name="tickets/[id]" options={{ ...pushed, title: 'Bilet' }} />
+            {/* Club team pages; the club's id travels as `orgId` in the URL. */}
+            <Stack.Screen name="club/[orgId]" options={{ ...pushed, title: 'Kulüp' }} />
+            <Stack.Screen name="manage/[eventId]" options={{ ...pushed, title: 'Etkinlik yönetimi' }} />
+            <Stack.Screen name="scan/[eventId]" options={{ ...pushed, title: 'Kapı' }} />
           </Stack.Protected>
           <Stack.Protected guard={status === 'signedOut'}>
             <Stack.Screen name="sign-in" />

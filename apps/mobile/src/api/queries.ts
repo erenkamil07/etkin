@@ -26,3 +26,14 @@ export function useMyTickets() {
 }
 
 export type MyTicket = NonNullable<ReturnType<typeof useMyTickets>['data']>[number];
+
+/** Your role in a club's team, or undefined while loading or when you are not on it. */
+export function useOrgRole(orgId: string) {
+  const me = useMe();
+  const membership = me.data?.memberships.find((item) => item.organizationId === orgId);
+  return {
+    membership,
+    // Door scanners only scan; stats, attendee lists and manual admission are for organizers and owners.
+    canManage: membership?.role === 'owner' || membership?.role === 'organizer',
+  };
+}

@@ -32,6 +32,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Etkinlik girişinde bilet QR kodlarını okutmak için kamera kullanılır.",
+          "recordAudioAndroid": false
+        }
       ]
     ],
     "experiments": {

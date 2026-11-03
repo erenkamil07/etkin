@@ -9,8 +9,8 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
 > Status: the backend is feature-complete for weeks 1 and 2 and load-tested. The Expo app has
-> sign-in, the event feed, event pages with ticket claims, the live QR ticket, and a profile
-> with club points and badge progress. The organizer's scanner comes next.
+> sign-in, the event feed, event pages with ticket claims, the live QR ticket, a profile with
+> club points and badge progress, and the club team's door scanner and live attendee list.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -108,6 +108,28 @@ tokens live in localStorage instead of the keystore.
   time. While the code is on screen, screenshots and recordings are blocked and the screen goes to
   full brightness. A running clock under the code shows the door team it is live, and the screen
   turns to "Giriş yapıldı" by itself after the scan.
+- **Door scanner.** Club team members reach their club's events from the profile. The scanner reads
+  codes with `expo-camera` and answers with a full-width green, amber or red verdict and a haptic.
+  Each physical scan sends a fresh `Idempotency-Key`, reused on a network retry, so a dropped
+  response never turns into "already used". A ticket counts as one scan until it leaves the frame,
+  even though its code rotates. Organizers also get live numbers, a searchable attendee list and
+  manual admission for a holder whose phone died; door scanners see only the camera.
+
+### Demo data
+
+`pnpm demo:seed` sets up a club, its team, a student and three events. One of them, **Canlı Demo:
+Kapı Testi**, has its door open right now; run the command again at any time to move it back to
+the present. The accounts are for local development only:
+
+| Role | Email | Password |
+|---|---|---|
+| Club owner | `demo.organizer@etkin.dev` | `demo-organizer-2026` |
+| Door scanner | `kapi.demo@etkin.dev` | `demo-kapi-2026` |
+| Student | `ayse.demo@uni.edu.tr` | `correct horse battery` |
+
+To try the door, open the live event's ticket as the student on one screen. On a phone signed in
+as the owner or the scanner, go to Profil → the club → the event → Kapıda QR okut. Run
+`pnpm dev:worker` as well, so the student's badge arrives after the scan.
 
 ### API conventions
 

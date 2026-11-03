@@ -7,9 +7,13 @@ const dateTime = new Intl.DateTimeFormat('tr-TR', {
 });
 
 const clock = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+const time = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
 /** "Paz 16 Kasım 19:00" in the device's time zone. */
 export const formatDateTime = (iso: string) => dateTime.format(new Date(iso));
+
+/** "19:00". */
+export const formatTime = (iso: string) => time.format(new Date(iso));
 
 /** "19:00:42", for the ticket screen's running clock. */
 export const formatClock = (ms: number) => clock.format(new Date(ms));

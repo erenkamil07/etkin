@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { publicApi } from '@/api/base';
 import { api } from '@/api/client';
@@ -216,10 +217,13 @@ export default function Profile() {
         <>
           <ThemedText type="smallBold">Kulüplerin</ThemedText>
           {me.data.memberships.map((membership) => (
-            <Card key={membership.organizationId}>
+            <Card
+              key={membership.organizationId}
+              onPress={() => router.push({ pathname: '/club/[orgId]', params: { orgId: membership.organizationId } })}
+            >
               <ThemedText type="default">{membership.name}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                {ROLE[membership.role]}
+                {ROLE[membership.role]} · etkinlikler ve kapı
               </ThemedText>
             </Card>
           ))}
