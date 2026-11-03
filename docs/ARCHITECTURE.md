@@ -133,49 +133,55 @@ sequenceDiagram
   autonumber
   participant S as Scanner app (gate)
   participant A as API
-  participant R as Redis
   participant P as PostgreSQL
-  S->>A: POST /events/:id/check-ins {payload} + Idempotency-Key
-  A->>R: GET idem:{key}
-  alt retry of a scan already answered
-    R-->>A: cached response
-    A-->>S: same result as the first time
+  S->>A: POST /orgs/:org/events/:event/check-ins {qr, gate} + Idempotency-Key
+  A->>P: check_ins with this idempotency key?
+  alt retry of a scan already admitted
+    A-->>S: accepted, replayed: true
   end
-  A->>A: verify step window + HMAC (ticket from R tk:{id}, fallback P)
-  A->>R: GET ci:{ticket_id}
-  alt already checked in (fast path)
-    A-->>S: 409 ALREADY_CHECKED_IN (when, which gate)
-  end
+  A->>A: parse QR (ticket id, step, MAC)
+  A->>P: ticket: event, status, key version, holder
+  A->>A: derive key, verify MAC, then the step window
   A->>P: BEGIN
-  A->>P: UPDATE tickets SET status='checked_in' WHERE id=$1 AND event_id=$2 AND status='active' RETURNING user_id
-  alt 0 rows: lost the race, cancelled or wrong event
-    A->>P: ROLLBACK, then SELECT the reason
-    A-->>S: 409 / 410 / 422
-  else 1 row: winner
-    A->>P: INSERT check_ins, INSERT point_ledger (trigger updates balance), INSERT outbox
+  A->>P: UPDATE tickets SET status='checked_in' WHERE id=$1 AND status='active' RETURNING id
+  alt 0 rows: another gate won
+    A->>P: COMMIT, read the original check-in
+    A-->>S: duplicate (when, which gate, who scanned)
+  else 1 row: this gate wins
+    A->>P: INSERT check_ins, point_ledger (trigger updates balance), outbox
     A->>P: COMMIT
-    A->>R: SET ci:{ticket_id}, SET idem:{key}, INCR live counter
-    A-->>S: 200 {name, photo, points}
+    A-->>S: accepted (name, photo, ticket type, points)
   end
   A--)P: INSERT scan_attempts (every outcome)
 ```
 
-**Why two simultaneous gates cannot both win.** Both requests can pass the Redis fast path,
+**A verdict, not an error.** Every scan returns `200` with a `result`: `accepted`,
+`duplicate`, `invalid_token`, `expired_token`, `wrong_event`, `ticket_cancelled` or
+`outside_window`. A rejected ticket is a normal outcome at a door, and one response shape keeps
+the scanner screen simple (green, amber or red). For `duplicate`, the response carries the
+original check-in, so staff can see that a ticket was already used at gate 2 at 19:02.
+`401/403/404` remain real errors.
+
+**Why two simultaneous gates cannot both win.** Both requests can pass every pre-check,
 because neither has committed yet. Both then run the same conditional `UPDATE`. PostgreSQL
 takes a row lock, so the second transaction waits. When the first commits, the second
 re-evaluates `status = 'active'` against the new row version (READ COMMITTED re-check),
 finds `checked_in`, and updates 0 rows. Exactly one transaction wins, with no
 `SERIALIZABLE` retries and no distributed lock. `UNIQUE (ticket_id)` on `check_ins` is the
-backstop if a future code path skips the conditional update.
+backstop. In a mutation test without the status condition, the losing gates got 500s, but the
+database still held exactly one check-in.
 
-**Redis is an accelerator, not a guard.** If Redis is down or loses data, check-ins still
-work correctly, only slower. Redis writes happen after commit, so a failed transaction can
-never leave a ticket wrongly marked as used.
+**Where Redis fits.** The plan had Redis caching tickets on this path. It is deliberately not
+there yet. A cached ticket goes stale when the ticket moves to another phone (new key version)
+or is cancelled, and then a valid code is turned away at the door. The uncached path is a few
+indexed queries per scan. The k6 gate load test (T2.5) decides whether a cache earns its
+invalidation cost. Redis currently backs the readiness probe and is reserved for rate limits
+and live counters.
 
 **Idempotent retries.** A gate on bad Wi-Fi retries on timeout. Without care, the retry would
 show "already checked in" for the attendee's own first scan. The scanner sends an
-`Idempotency-Key` per physical scan. The response is cached in Redis, and `check_ins.idempotency_key`
-covers the case where Redis lost it. A retry therefore returns the original success.
+`Idempotency-Key` per physical scan, and `check_ins.idempotency_key` lets a retry return the
+original success (`replayed: true`) instead of `duplicate`.
 
 **Side effects stay out of the hot path.** Badge evaluation, push notifications and the live
 dashboard read from the transactional `outbox`. A worker claims rows with
@@ -221,7 +227,7 @@ locked-down security groups instead of behind a NAT gateway. The stack is design
 | Week | Dates | Backend | Mobile / infra | Done when |
 |---|---|---|---|---|
 | 1 | Nov 2–8 | **T1.1 repo, schema, local infra** ✅ · **T1.2 Fastify skeleton (config, pino logs, problem+json errors, OpenAPI, health, Docker image)** ✅ · **T1.3 auth (argon2id, JWT + rotating refresh) and org RBAC** ✅ · **T1.4 organizations, events, ticket types CRUD** ✅ | **T1.5 GitHub Actions CI** ✅ · open a Play Console account (identity verification takes days) | Swagger: register, create a club, publish an event; CI green |
-| 2 | Nov 9–15 | **Ticket claim (capacity guard, idempotency)** ✅ · **shared QR library + device-bound keys** ✅ · check-in endpoint, ledger, outbox worker · attendance analytics queries | Concurrency test (50 parallel scans of one ticket, exactly 1 success) · k6 gate load test · first internal Android build to start Play closed testing | Race-condition test and k6 report in the README |
+| 2 | Nov 9–15 | **Ticket claim (capacity guard, idempotency)** ✅ · **shared QR library + device-bound keys** ✅ · **check-in endpoint + ledger** ✅ · outbox worker · attendance analytics queries | Concurrency test (50 parallel scans of one ticket, exactly 1 success) · k6 gate load test · first internal Android build to start Play closed testing | Race-condition test and k6 report in the README |
 | 3 | Nov 16–22 | Badge rules worker · push notifications | Expo app: auth, event feed, my tickets with live QR, profile (points, badges, history) · organizer mode: create event, scanner screen, live attendee list | End-to-end demo on a real Android phone |
 | 4 | Nov 23–29 | Priority and lottery allocation · account deletion (KVKK and Play policy) | Terraform AWS stack · CD pipeline · Play Store listing, privacy policy, Data safety form | Public demo URL, app in closed testing, polished README with architecture and demo video |
 

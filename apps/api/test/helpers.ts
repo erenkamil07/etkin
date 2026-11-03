@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 import { citext } from '@electric-sql/pglite/contrib/citext';
+import { createQrPayload, decodeTicketKey } from '@etkin/shared';
 import { Kysely, PGliteDialect } from 'kysely';
 import type { App } from '../src/app.js';
 import { createAccessTokens } from '../src/auth/tokens.js';
@@ -61,6 +62,8 @@ export async function createPublishedEvent(
   app: App,
   owner: { token: string },
   ticketTypes: Record<string, unknown>[] = [{ name: 'Standart', capacity: 50 }],
+  /** startsInMs: 30 minutes puts the event inside its check-in window (doors open an hour early). */
+  { startsInMs = 7 * 24 * 3_600_000, event = {} }: { startsInMs?: number; event?: Record<string, unknown> } = {},
 ) {
   const headers = bearer(owner.token);
   const ok = async (res: { statusCode: number; body: string; json: () => { id: string } }, status: number) => {
@@ -77,7 +80,7 @@ export async function createPublishedEvent(
     }),
     201,
   );
-  const startsAt = Date.now() + 7 * 24 * 3_600_000;
+  const startsAt = Date.now() + startsInMs;
   const eventId = await ok(
     await app.inject({
       method: 'POST',
@@ -87,6 +90,7 @@ export async function createPublishedEvent(
         title: 'Test Event',
         startsAt: new Date(startsAt).toISOString(),
         endsAt: new Date(startsAt + 2 * 3_600_000).toISOString(),
+        ...event,
       },
     }),
     201,
@@ -102,6 +106,36 @@ export async function createPublishedEvent(
   }
   await ok(await app.inject({ method: 'POST', url: `/orgs/${orgId}/events/${eventId}/publish`, headers }), 200);
   return { orgId, eventId, ticketTypeIds };
+}
+
+/**
+ * A student holding a ticket, with their phone's QR key: `qrAt()` renders the
+ * code the phone would show at that moment, exactly as the app will.
+ */
+export async function createTicketHolder(
+  app: App,
+  db: Database,
+  eventId: string,
+  ticketTypeId: string,
+  deviceId = 'phone-1',
+) {
+  const user = await createUser(db);
+  const claim = await app.inject({
+    method: 'POST',
+    url: `/events/${eventId}/tickets`,
+    headers: bearer(user.token),
+    payload: { ticketTypeId },
+  });
+  if (claim.statusCode !== 201) throw new Error(`setup failed: ${claim.statusCode} ${claim.body}`);
+  const ticketId: string = claim.json().id;
+  const keyResponse = await app.inject({
+    method: 'POST',
+    url: `/tickets/${ticketId}/qr-key`,
+    headers: bearer(user.token),
+    payload: { deviceId },
+  });
+  const key = decodeTicketKey(keyResponse.json().key);
+  return { user, ticketId, qrAt: (nowMs: number = Date.now()) => createQrPayload(key, ticketId, nowMs) };
 }
 
 /** Credits club points through the ledger (the balance trigger does the rest). */

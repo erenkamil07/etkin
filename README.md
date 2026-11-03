@@ -9,7 +9,8 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
 > Status: week 2. Week 1 delivered the schema, local infrastructure, API skeleton, authentication,
-> club and event management, and CI. Ticket claiming and dynamic QR keys work; check-in is next.
+> club and event management, and CI. Ticket claiming, dynamic QR and door check-in work; badges,
+> analytics and the gate load test are next.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -65,8 +66,9 @@ Every push and pull request runs three jobs ([ci.yml](.github/workflows/ci.yml))
    in-process via PGlite.
 2. **Migrations and concurrency on PostgreSQL 18:** up → rollback → up, a check that the
    generated Kysely types (`schema.ts`) still match the migrated schema, and the integration tests.
-   Those race real concurrent requests: 50 students for 10 seats, a double-tapped "claim", and
-   claims arriving while the event is being cancelled.
+   Those race real concurrent requests: 50 students for 10 seats, a double-tapped "claim", claims
+   arriving while the event is being cancelled, and one ticket scanned 50 times at once across
+   5 gates (exactly one admission, one point).
 3. **Docker smoke test:** builds the production image, checks that it runs as a non-root user,
    starts it against PostgreSQL and Redis, waits for `/health/ready` and registers a user through it.
 
@@ -93,5 +95,11 @@ Actions are pinned to commit SHAs, and Dependabot proposes updates weekly.
   the key the app uses to render a new code every 15 s, offline. Asking from another phone moves
   the ticket and kills the old phone's codes. The format is documented and tested in
   [packages/shared](packages/shared/src/qr.ts).
+- **Check-in.** Club staff scan with `POST /orgs/:orgId/events/:eventId/check-ins {qr, gate}`, and
+  organizers can admit by ticket id when a phone is dead (`.../check-ins/manual`). Every scan
+  returns `200` with a verdict (`accepted`, `duplicate`, `expired_token`, ...), the attendee's name
+  and photo, and the head count. Admission awards the event's club points through the ledger, and
+  every scan is logged. Send an `Idempotency-Key` per physical scan, so retries don't read as
+  duplicates.
 - **Business rules live in the database** (CHECK and UNIQUE constraints). Violations come back as
   specific codes such as `CAPACITY_BELOW_ISSUED`, `INVALID_SALES_WINDOW` and `SLUG_TAKEN`.

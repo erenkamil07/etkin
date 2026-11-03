@@ -14,6 +14,7 @@ import {
 import { authPlugin } from './auth/plugin.js';
 import { authRoutes } from './auth/routes.js';
 import { createAccessTokens } from './auth/tokens.js';
+import { checkInRoutes } from './checkins/routes.js';
 import type { Config } from './config.js';
 import type { Database } from './db.js';
 import { AppError, registerErrorHandling } from './errors.js';
@@ -76,6 +77,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
         { name: 'orgs', description: 'Clubs and their teams' },
         { name: 'events', description: 'Events and ticket types' },
         { name: 'tickets', description: 'Claiming and managing your tickets' },
+        { name: 'check-in', description: 'Admitting people at the door' },
         { name: 'health', description: 'Liveness and readiness probes' },
       ],
       components: {
@@ -102,6 +104,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   await app.register(orgRoutes, { db });
   await app.register(eventRoutes, { db });
   await app.register(ticketRoutes, { db, qrMasterKey: config.QR_MASTER_KEY });
+  await app.register(checkInRoutes, { db, qrMasterKey: config.QR_MASTER_KEY });
 
   return app;
 }
