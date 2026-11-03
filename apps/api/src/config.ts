@@ -11,6 +11,12 @@ const ConfigSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(32, 'must be at least 32 characters'),
   ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
+  // Base64 of at least 32 random bytes. Every ticket's QR key derives from it,
+  // so rotating it invalidates all codes on all devices.
+  QR_MASTER_KEY: z
+    .base64()
+    .transform((value) => new Uint8Array(Buffer.from(value, 'base64')))
+    .refine((key) => key.length >= 32, 'must decode to at least 32 bytes'),
   // Comma-separated browser origins (the Expo Web dashboard). Native apps don't send Origin.
   CORS_ORIGINS: z
     .string()

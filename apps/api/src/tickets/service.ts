@@ -1,3 +1,4 @@
+import { deriveTicketKey, encodeTicketKey, QR_STEP_SECONDS, QR_TOLERANCE_STEPS } from '@etkin/shared';
 import type { AllocationMode, EventStatus, TicketStatus } from '../db/schema.js';
 import { type Database, isUniqueViolation } from '../db.js';
 import { AppError } from '../errors.js';
@@ -223,6 +224,54 @@ export async function claimTicket(db: Database, userId: string, eventId: string,
     }
     throw err;
   }
+}
+
+/**
+ * Hands the holder's device the key it renders rotating QR codes with. A ticket
+ * lives on one device: asking from a different device bumps the key version,
+ * which kills every code the previous device can still produce.
+ */
+export async function issueQrKey(
+  db: Database,
+  masterKey: Uint8Array,
+  userId: string,
+  ticketId: string,
+  deviceId: string,
+) {
+  return db.transaction().execute(async (trx) => {
+    const ticket = await trx
+      .selectFrom('tickets')
+      .select(['status', 'qr_key_version', 'bound_device_id'])
+      .where('id', '=', ticketId)
+      .where('user_id', '=', userId)
+      .forUpdate()
+      .executeTakeFirst();
+    if (!ticket) throw ticketNotFound();
+    if (ticket.status === 'cancelled') throw new AppError(409, 'TICKET_CANCELLED', 'This ticket was cancelled');
+    if (ticket.status === 'checked_in') {
+      throw new AppError(409, 'ALREADY_CHECKED_IN', 'This ticket was already used at the door');
+    }
+
+    const deviceChanged = ticket.bound_device_id !== null && ticket.bound_device_id !== deviceId;
+    const keyVersion = deviceChanged ? ticket.qr_key_version + 1 : ticket.qr_key_version;
+    if (ticket.bound_device_id !== deviceId) {
+      await trx
+        .updateTable('tickets')
+        .set({ bound_device_id: deviceId, qr_key_version: keyVersion })
+        .where('id', '=', ticketId)
+        .execute();
+    }
+
+    return {
+      ticketId,
+      key: encodeTicketKey(deriveTicketKey(masterKey, ticketId, keyVersion)),
+      keyVersion,
+      deviceChanged,
+      stepSeconds: QR_STEP_SECONDS,
+      toleranceSteps: QR_TOLERANCE_STEPS,
+      serverTime: new Date().toISOString(),
+    };
+  });
 }
 
 /** Gives the seat back. Allowed until the event starts; repeating it is harmless. */

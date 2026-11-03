@@ -14,6 +14,7 @@ export const testConfig = loadConfig({
   DATABASE_URL: 'postgres://etkin:etkin@localhost:5432/etkin',
   REDIS_URL: 'redis://localhost:6379/0',
   JWT_ACCESS_SECRET: 'test-only-secret-that-is-at-least-32-characters',
+  QR_MASTER_KEY: Buffer.alloc(32, 7).toString('base64'),
 });
 
 const MIGRATIONS = new URL('../../../db/migrations/', import.meta.url);

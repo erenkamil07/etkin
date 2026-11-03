@@ -137,6 +137,7 @@ jobs:
             -e DATABASE_URL=postgres://etkin:etkin@127.0.0.1:5432/etkin \
             -e REDIS_URL=redis://127.0.0.1:6379/0 \
             -e JWT_ACCESS_SECRET=ci-only-jwt-secret-0123456789abcdef \
+            -e QR_MASTER_KEY=GPmDqGvsayEWKXTQDFk3wRgLtH8dI0VOevrBq8YtC+8= \
             etkin-api:ci
           for _ in $(seq 1 30); do
             curl -fsS http://127.0.0.1:3000/health/ready && exit 0

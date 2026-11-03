@@ -43,6 +43,7 @@ services:
       DATABASE_URL: postgres://etkin:etkin@postgres:5432/etkin
       REDIS_URL: redis://redis:6379/0
       JWT_ACCESS_SECRET: dev-only-insecure-jwt-secret-change-me-0123456789
+      QR_MASTER_KEY: moVtnpTD1KcuHtr3L0d+xIKgi1uAY8QXejCOGpvfe2U=
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:

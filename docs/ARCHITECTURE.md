@@ -93,11 +93,18 @@ ticket_key = HMAC-SHA256(QR_MASTER_KEY, "etkin/qr/v1" || ticket_id || qr_key_ver
 `QR_MASTER_KEY` lives in AWS Secrets Manager. Leaking the database does not leak
 working codes, and bumping `tickets.qr_key_version` invalidates every code issued so far.
 
-**Delivery and device binding.** `GET /tickets/:id/qr-key` returns `ticket_key` and the
-server time. The app stores the key in `expo-secure-store` (Android Keystore). The ticket is
-bound to the requesting `device_id`. A request from a new device bumps `qr_key_version`, so
-the old device's codes die. Device switches are rate limited, which stops the account from
-being handed back and forth.
+**Delivery and device binding.** `POST /tickets/:id/qr-key {deviceId}` returns the ticket key
+(base64url) and the server time, with `Cache-Control: no-store`. The app stores the key in
+`expo-secure-store` (Android Keystore). The ticket is bound to the requesting device. A request
+from a new device bumps `qr_key_version`, so the old device's codes die. Switches are not rate
+limited, on purpose: a student whose phone dies at the door must be able to log in on a friend's
+phone and get in. A ticket admits once whatever device shows it, and every switch leaves a trace
+in the version number.
+
+**One implementation.** The derivation, encoding and verification live in
+[`packages/shared`](../packages/shared/src/qr.ts). That package is pure JavaScript
+(@noble/hashes, no Node APIs), so the API and the React Native app run the same code. A
+reference vector cross-checked against `node:crypto` pins the format.
 
 **Code generation (offline, in the app).** Every 15 s:
 
@@ -214,7 +221,7 @@ locked-down security groups instead of behind a NAT gateway. The stack is design
 | Week | Dates | Backend | Mobile / infra | Done when |
 |---|---|---|---|---|
 | 1 | Nov 2–8 | **T1.1 repo, schema, local infra** ✅ · **T1.2 Fastify skeleton (config, pino logs, problem+json errors, OpenAPI, health, Docker image)** ✅ · **T1.3 auth (argon2id, JWT + rotating refresh) and org RBAC** ✅ · **T1.4 organizations, events, ticket types CRUD** ✅ | **T1.5 GitHub Actions CI** ✅ · open a Play Console account (identity verification takes days) | Swagger: register, create a club, publish an event; CI green |
-| 2 | Nov 9–15 | **Ticket claim (capacity guard, idempotency)** ✅ · shared QR library · check-in endpoint, ledger, outbox worker · attendance analytics queries | Concurrency test (50 parallel scans of one ticket, exactly 1 success) · k6 gate load test · first internal Android build to start Play closed testing | Race-condition test and k6 report in the README |
+| 2 | Nov 9–15 | **Ticket claim (capacity guard, idempotency)** ✅ · **shared QR library + device-bound keys** ✅ · check-in endpoint, ledger, outbox worker · attendance analytics queries | Concurrency test (50 parallel scans of one ticket, exactly 1 success) · k6 gate load test · first internal Android build to start Play closed testing | Race-condition test and k6 report in the README |
 | 3 | Nov 16–22 | Badge rules worker · push notifications | Expo app: auth, event feed, my tickets with live QR, profile (points, badges, history) · organizer mode: create event, scanner screen, live attendee list | End-to-end demo on a real Android phone |
 | 4 | Nov 23–29 | Priority and lottery allocation · account deletion (KVKK and Play policy) | Terraform AWS stack · CD pipeline · Play Store listing, privacy policy, Data safety form | Public demo URL, app in closed testing, polished README with architecture and demo video |
 

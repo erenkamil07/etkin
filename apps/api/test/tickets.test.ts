@@ -1,3 +1,4 @@
+import { createQrPayload, decodeTicketKey, deriveTicketKey, parseQrPayload, verifyQrPayload } from '@etkin/shared';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type App, buildApp } from '../src/app.js';
 import type { Database } from '../src/db.js';
@@ -200,6 +201,82 @@ describe('sales rules', () => {
     const res = await claim(await createUser(db), eventId, ticketTypeIds[0] ?? '');
     expect(res.statusCode).toBe(409);
     expect(res.json().code).toBe('LOTTERY_ONLY');
+  });
+});
+
+describe('QR key', () => {
+  const requestKey = (user: User, ticketId: string, deviceId: string) =>
+    app.inject({
+      method: 'POST',
+      url: `/tickets/${ticketId}/qr-key`,
+      headers: bearer(user.token),
+      payload: { deviceId },
+    });
+
+  async function heldTicket() {
+    const { eventId, ticketTypeIds } = await createPublishedEvent(app, owner);
+    const student = await createUser(db);
+    const ticket = (await claim(student, eventId, ticketTypeIds[0] ?? '')).json();
+    return { student, ticketId: ticket.id as string };
+  }
+
+  /** What the door will do in T2.3: derive the key from the master key and check the code. */
+  const doorAccepts = (payload: string, keyVersion: number) => {
+    const parsed = parseQrPayload(payload);
+    if (!parsed) return 'unparseable';
+    return verifyQrPayload(parsed, deriveTicketKey(testConfig.QR_MASTER_KEY, parsed.ticketId, keyVersion), Date.now());
+  };
+
+  it("gives the holder's phone a key whose codes the door accepts", async () => {
+    const { student, ticketId } = await heldTicket();
+    const res = await requestKey(student, ticketId, 'phone-a');
+
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['cache-control']).toBe('no-store');
+    const body = res.json();
+    expect(body).toMatchObject({ ticketId, keyVersion: 1, deviceChanged: false, stepSeconds: 15, toleranceSteps: 1 });
+    expect(Math.abs(Date.parse(body.serverTime) - Date.now())).toBeLessThan(5_000);
+
+    const code = createQrPayload(decodeTicketKey(body.key), ticketId, Date.now());
+    expect(doorAccepts(code, 1)).toBe('valid');
+  });
+
+  it('returns the same key to the same device', async () => {
+    const { student, ticketId } = await heldTicket();
+    const first = (await requestKey(student, ticketId, 'phone-a')).json();
+    const again = (await requestKey(student, ticketId, 'phone-a')).json();
+    expect(again).toMatchObject({ key: first.key, keyVersion: 1, deviceChanged: false });
+  });
+
+  it('moves the ticket to a new device and kills the old one', async () => {
+    const { student, ticketId } = await heldTicket();
+    const oldKey = decodeTicketKey((await requestKey(student, ticketId, 'phone-a')).json().key);
+
+    const moved = (await requestKey(student, ticketId, 'phone-b')).json();
+    expect(moved).toMatchObject({ keyVersion: 2, deviceChanged: true });
+
+    const oldPhoneCode = createQrPayload(oldKey, ticketId, Date.now());
+    const newPhoneCode = createQrPayload(decodeTicketKey(moved.key), ticketId, Date.now());
+    expect(doorAccepts(oldPhoneCode, 2)).toBe('invalid');
+    expect(doorAccepts(newPhoneCode, 2)).toBe('valid');
+
+    const row = await db
+      .selectFrom('tickets')
+      .select(['bound_device_id', 'qr_key_version'])
+      .where('id', '=', ticketId)
+      .executeTakeFirstOrThrow();
+    expect(row).toEqual({ bound_device_id: 'phone-b', qr_key_version: 2 });
+  });
+
+  it('is only for the holder of a live ticket', async () => {
+    const { student, ticketId } = await heldTicket();
+    expect((await requestKey(await createUser(db), ticketId, 'phone-x')).statusCode).toBe(404);
+    expect((await requestKey(student, ticketId, '')).statusCode).toBe(400);
+
+    await app.inject({ method: 'POST', url: `/tickets/${ticketId}/cancel`, headers: bearer(student.token) });
+    const cancelled = await requestKey(student, ticketId, 'phone-a');
+    expect(cancelled.statusCode).toBe(409);
+    expect(cancelled.json().code).toBe('TICKET_CANCELLED');
   });
 });
 

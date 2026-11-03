@@ -10,11 +10,14 @@ FROM base AS build
 # Manifests first so the dependency layer is cached until they change.
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY apps/api/package.json apps/api/
-RUN pnpm install --frozen-lockfile --filter @etkin/api
+COPY packages/shared/package.json packages/shared/
+RUN pnpm install --frozen-lockfile --filter "@etkin/api..."
 COPY tsconfig.base.json ./
+COPY packages/shared packages/shared
 COPY apps/api apps/api
+# "@etkin/api..." builds the API and the workspace packages it depends on, in order.
 # deploy copies only "files" (dist) plus production dependencies into /out.
-RUN pnpm --filter @etkin/api build \
+RUN pnpm --filter "@etkin/api..." build \
  && pnpm --filter @etkin/api deploy --prod /out
 
 FROM node:24-alpine AS runtime

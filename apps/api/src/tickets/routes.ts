@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { currentUser } from '../auth/plugin.js';
 import type { Database } from '../db.js';
 import { BEARER, DateTimeOutput, EventParams } from '../schemas.js';
-import { cancelTicket, claimTicket, getTicket, listMyTickets } from './service.js';
+import { cancelTicket, claimTicket, getTicket, issueQrKey, listMyTickets } from './service.js';
 
 const Ticket = z.object({
   id: z.uuid(),
@@ -25,7 +25,20 @@ const Ticket = z.object({
 
 const TicketParams = z.object({ ticketId: z.uuid() });
 
-export const ticketRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app, { db }) => {
+const QrKey = z.object({
+  ticketId: z.uuid(),
+  key: z.string().describe('base64url ticket key; keep it in secure storage and never log it'),
+  keyVersion: z.number().int(),
+  deviceChanged: z.boolean().describe('True when this request moved the ticket here from another device'),
+  stepSeconds: z.number().int().describe('Render a new code this often'),
+  toleranceSteps: z.number().int(),
+  serverTime: DateTimeOutput.describe('Correct the device clock with this before rendering codes'),
+});
+
+export const ticketRoutes: FastifyPluginAsyncZod<{ db: Database; qrMasterKey: Uint8Array }> = async (
+  app,
+  { db, qrMasterKey },
+) => {
   app.addHook('onRequest', app.authenticate);
 
   app.post(
@@ -79,6 +92,24 @@ export const ticketRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app,
       },
     },
     async (request) => getTicket(db, currentUser(request).id, request.params.ticketId),
+  );
+
+  app.post(
+    '/tickets/:ticketId/qr-key',
+    {
+      schema: {
+        tags: ['tickets'],
+        summary: "Key for this device to render the ticket's rotating QR code offline",
+        security: BEARER,
+        params: TicketParams,
+        body: z.object({ deviceId: z.string().min(1).max(128) }),
+        response: { 200: QrKey },
+      },
+    },
+    async (request, reply) => {
+      reply.header('cache-control', 'no-store');
+      return issueQrKey(db, qrMasterKey, currentUser(request).id, request.params.ticketId, request.body.deviceId);
+    },
   );
 
   app.post(

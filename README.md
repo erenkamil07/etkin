@@ -9,7 +9,7 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
 > Status: week 2. Week 1 delivered the schema, local infrastructure, API skeleton, authentication,
-> club and event management, and CI. Ticket claiming works; dynamic QR and check-in are next.
+> club and event management, and CI. Ticket claiming and dynamic QR keys work; check-in is next.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -28,7 +28,7 @@ db/tests/        schema invariant tests (PGlite, no Docker needed)
 docs/            architecture and decisions
 apps/api/        Fastify API (TypeScript, Kysely, zod, OpenAPI)
 apps/mobile/     Expo app                 (week 3)
-packages/shared/ zod schemas, QR library  (week 2)
+packages/shared/ dynamic QR tokens, shared by the API and the mobile app
 infra/           Terraform                (week 4)
 ```
 
@@ -89,5 +89,9 @@ Actions are pinned to commit SHAs, and Dependabot proposes updates weekly.
   sales window, minimum club points, and an early window for loyal members. `GET /me/tickets` lists
   your tickets, and `POST /tickets/:id/cancel` gives the seat back until the event starts. Cancelling
   an event cancels its tickets.
+- **Dynamic QR.** `POST /tickets/:id/qr-key {deviceId}` binds the ticket to the phone and returns
+  the key the app uses to render a new code every 15 s, offline. Asking from another phone moves
+  the ticket and kills the old phone's codes. The format is documented and tested in
+  [packages/shared](packages/shared/src/qr.ts).
 - **Business rules live in the database** (CHECK and UNIQUE constraints). Violations come back as
   specific codes such as `CAPACITY_BELOW_ISSUED`, `INVALID_SALES_WINDOW` and `SLUG_TAKEN`.

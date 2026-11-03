@@ -101,7 +101,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   });
   await app.register(orgRoutes, { db });
   await app.register(eventRoutes, { db });
-  await app.register(ticketRoutes, { db });
+  await app.register(ticketRoutes, { db, qrMasterKey: config.QR_MASTER_KEY });
 
   return app;
 }
