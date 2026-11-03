@@ -5,7 +5,7 @@ import { api } from '@/api/client';
 import { useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
 import { ThemedText } from '@/components/themed-text';
-import { Card, ErrorBanner, Loading, Screen } from '@/components/ui';
+import { Button, Card, ErrorBanner, Loading, Screen } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { formatDateTime } from '@/format';
 import { useNow } from '@/hooks/use-now';
@@ -27,7 +27,7 @@ function byRelevance(now: number) {
 
 export default function Club() {
   const { orgId } = useLocalSearchParams<{ orgId: string }>();
-  const { membership } = useOrgRole(orgId);
+  const { membership, canManage } = useOrgRole(orgId);
   const now = useNow(60_000);
 
   const events = useQuery({
@@ -42,6 +42,12 @@ export default function Club() {
   return (
     <Screen belowHeader>
       <Stack.Screen options={{ title: membership?.name ?? 'Kulüp' }} />
+      {canManage ? (
+        <Button
+          title="+ Yeni etkinlik"
+          onPress={() => router.push({ pathname: '/new-event/[orgId]', params: { orgId } })}
+        />
+      ) : null}
       <ThemedText type="smallBold">Etkinlikler</ThemedText>
       {events.isPending ? (
         <Loading />

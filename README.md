@@ -114,6 +114,10 @@ tokens live in localStorage instead of the keystore.
   response never turns into "already used". A ticket counts as one scan until it leaves the frame,
   even though its code rotates. Organizers also get live numbers, a searchable attendee list and
   manual admission for a holder whose phone died; door scanners see only the camera.
+- **Event creation.** Organizers create an event with its ticket types from the club page, as a
+  draft or published straight away, with an optional early-access window for members with enough
+  club points. Dates are typed as digits and formatted as you go, so the number pad works on every
+  phone. If a step fails, trying again resumes where it stopped instead of leaving a second draft.
 
 ### Demo data
 

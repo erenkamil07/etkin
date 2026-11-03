@@ -52,13 +52,19 @@ export function Screen({
   );
 }
 
-export function Field({ label, error, ...input }: TextInputProps & { label: string; error?: string | undefined }) {
+export function Field({
+  label,
+  error,
+  style,
+  ...input
+}: TextInputProps & { label: string; error?: string | undefined }) {
   const theme = useTheme();
   return (
     <View style={styles.field}>
       <ThemedText type="smallBold">{label}</ThemedText>
       <TextInput
         placeholderTextColor={theme.textSecondary}
+        {...input}
         style={[
           styles.input,
           {
@@ -66,8 +72,8 @@ export function Field({ label, error, ...input }: TextInputProps & { label: stri
             borderColor: error ? theme.danger : theme.border,
             backgroundColor: theme.backgroundElement,
           },
+          style,
         ]}
-        {...input}
       />
       {error ? (
         <ThemedText type="small" style={{ color: theme.danger }}>

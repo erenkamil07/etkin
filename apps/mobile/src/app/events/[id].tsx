@@ -19,7 +19,7 @@ function rules(type: TicketType): string[] {
   if (type.minPointsRequired > 0) lines.push(`Bu kulüpten en az ${type.minPointsRequired} puanın olmalı.`);
   if (type.allocationMode === 'priority' && type.priorityPointsThreshold !== null && type.prioritySalesStartsAt) {
     lines.push(
-      `${type.priorityPointsThreshold}+ puanı olan üyeler ${formatDateTime(type.prioritySalesStartsAt)} itibarıyla erken alabilir.`,
+      `${type.priorityPointsThreshold}+ puanı olan üyeler ${formatDateTime(type.prioritySalesStartsAt)} itibarıyla erken alabilir; herkes için satış ${formatDateTime(type.salesStartsAt)}.`,
     );
   }
   return lines;

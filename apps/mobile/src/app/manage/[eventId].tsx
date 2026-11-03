@@ -69,6 +69,31 @@ export default function EventDashboard() {
   });
   const admitted = admit.data ? describeVerdict(admit.data) : null;
 
+  const refreshEvent = () => {
+    queryClient.invalidateQueries({ queryKey: ['events'] });
+    queryClient.invalidateQueries({ queryKey: ['orgs', orgId, 'events'] });
+  };
+  const publish = useMutation({
+    mutationFn: async () => {
+      const { error } = await api.POST('/orgs/{orgId}/events/{eventId}/publish', { params: { path } });
+      if (error) throw error;
+    },
+    onSuccess: refreshEvent,
+  });
+  const cancel = useMutation({
+    mutationFn: async () => {
+      const ok = await confirmAction(
+        'Etkinliği iptal et',
+        'Etkinlik listeden kalkar ve yeni bilet alınamaz. Bu geri alınamaz.',
+        'İptal et',
+      );
+      if (!ok) return;
+      const { error } = await api.POST('/orgs/{orgId}/events/{eventId}/cancel', { params: { path } });
+      if (error) throw error;
+    },
+    onSuccess: refreshEvent,
+  });
+
   if (event.isPending) return <Loading />;
   if (event.error) {
     return (
@@ -98,10 +123,21 @@ export default function EventDashboard() {
         </ThemedText>
       </View>
 
-      <Button
-        title="Kapıda QR okut"
-        onPress={() => router.push({ pathname: '/scan/[eventId]', params: { eventId, orgId } })}
-      />
+      {event.data.status === 'draft' ? (
+        <Notice tone="warning">Taslak: öğrenciler bu etkinliği henüz göremez.</Notice>
+      ) : null}
+      {event.data.status === 'cancelled' ? <Notice tone="danger">Bu etkinlik iptal edildi.</Notice> : null}
+      <ErrorBanner error={publish.error ?? cancel.error} />
+
+      {event.data.status === 'draft' && canManage ? (
+        <Button title="Yayınla" loading={publish.isPending} onPress={() => publish.mutate()} />
+      ) : null}
+      {event.data.status === 'published' ? (
+        <Button
+          title="Kapıda QR okut"
+          onPress={() => router.push({ pathname: '/scan/[eventId]', params: { eventId, orgId } })}
+        />
+      ) : null}
 
       {!canManage ? (
         <Notice tone="warning">Sayılar ve katılımcı listesi kulübün organizatörlerine açık.</Notice>
@@ -189,6 +225,15 @@ export default function EventDashboard() {
               </Card>
             ))
           )}
+
+          {event.data.status === 'draft' || event.data.status === 'published' ? (
+            <Button
+              title="Etkinliği iptal et"
+              variant="secondary"
+              loading={cancel.isPending}
+              onPress={() => cancel.mutate()}
+            />
+          ) : null}
         </>
       )}
     </Screen>

@@ -17,6 +17,16 @@ const MESSAGES: Record<string, string> = {
   TICKET_NOT_FOUND: 'Bilet bulunamadı.',
   EVENT_NOT_FOUND: 'Etkinlik bulunamadı.',
   TICKET_TYPE_NOT_FOUND: 'Bilet türü bulunamadı.',
+  FORBIDDEN: 'Bunu yapmak için kulüpte yetkin yok.',
+  INVALID_EVENT_TIMES: 'Etkinliğin bitişi başlangıcından sonra olmalı.',
+  INVALID_CHECKIN_WINDOW: 'Kapının kapanışı açılışından sonra olmalı.',
+  TICKET_TYPE_NAME_TAKEN: 'Bu etkinlikte aynı adla bir bilet türü zaten var.',
+  INVALID_SALES_WINDOW: 'Satış, etkinlik başlamadan önce bitmeli.',
+  INVALID_PRIORITY_CONFIG: 'Erken erişim, herkese açık satıştan önce başlamalı.',
+  EVENT_NOT_EDITABLE: 'Bu etkinlik artık değiştirilemez.',
+  EVENT_ALREADY_ENDED: 'Etkinlik bitmiş; artık yayınlanamaz.',
+  NO_TICKET_TYPES: 'Yayınlamak için en az bir bilet türü ekle.',
+  INVALID_STATUS_TRANSITION: 'Etkinlik bu durumdayken bu işlem yapılamaz.',
 };
 
 const FALLBACK = 'Bir şeyler ters gitti. Bağlantını kontrol edip tekrar dene.';
