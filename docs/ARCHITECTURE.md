@@ -62,7 +62,23 @@ and a per-club breakdown. Eligibility for a club's VIP events uses that club's p
 | Balance never goes negative, and always equals the ledger | Trigger updates `point_balances` in the same transaction; `CHECK (balance >= 0)` |
 | Spending points does not lower priority rank | `lifetime_earned` ignores redemptions and is what eligibility reads |
 
-## 3. Dynamic QR codes
+## 3. Authentication
+
+- **Passwords** are hashed with argon2id at the OWASP baseline (19 MiB, t=2, p=1). Login runs a
+  dummy verification for unknown emails and returns the same `INVALID_CREDENTIALS` error, so
+  neither the response nor its timing reveals which emails are registered.
+- **Access tokens** are HS256 JWTs that live 15 minutes and carry only the user id and the
+  platform role. Club roles are looked up per request, so removing an organizer takes effect
+  immediately.
+- **Refresh tokens** are opaque 256-bit values. Only their SHA-256 is stored, and each one is good for
+  30 days and one use. Every refresh retires the presented token and issues a new one in the same
+  *family*. If a retired token is presented again, a copy has leaked: the whole family is revoked
+  and both holders have to log in again. The mobile client therefore runs refreshes single-flight.
+- **Rate limits.** Login is limited to 10 attempts per minute per IP + email, and sign-up to
+  30 per minute per IP. A campus Wi-Fi shares one public IP across a lecture hall, so a plain
+  per-IP login limit would lock out legitimate students.
+
+## 4. Dynamic QR codes
 
 Goal: a screenshot or a forwarded image stops working within seconds, and the code works
 at a door with poor mobile signal.
@@ -102,7 +118,7 @@ MAC and compare in constant time.
 **Residual risk, accepted.** A user on a rooted phone can extract `ticket_key`. The
 mitigation is human: a successful scan shows the holder's name and photo on the scanner.
 
-## 4. Check-in and double-scan prevention
+## 5. Check-in and double-scan prevention
 
 ```mermaid
 sequenceDiagram
@@ -158,7 +174,7 @@ dashboard read from the transactional `outbox`. A worker claims rows with
 `FOR UPDATE SKIP LOCKED`, so a check-in commits in a few milliseconds and side effects are
 never lost.
 
-## 5. Priority and lottery allocation
+## 6. Priority and lottery allocation
 
 `ticket_types.allocation_mode`:
 
@@ -170,7 +186,7 @@ never lost.
   recent `lifetime_earned` and shrinks with the no-show rate (tickets issued but never checked in).
   The run's `seed` is stored and published, so anyone can replay the draw and verify it was fair.
 
-## 6. Deployment (AWS)
+## 7. Deployment (AWS)
 
 ```
 Route 53 → ALB (HTTPS) → ECS Fargate: api (2 tasks) + worker (1 task)
@@ -187,11 +203,11 @@ To keep the bill low for a student project, the Fargate tasks run in public subn
 locked-down security groups instead of behind a NAT gateway. The stack is designed to be
 `terraform destroy`-ed between demos.
 
-## 7. Roadmap
+## 8. Roadmap
 
 | Week | Dates | Backend | Mobile / infra | Done when |
 |---|---|---|---|---|
-| 1 | Nov 2–8 | **T1.1 repo, schema, local infra** ✅ · **T1.2 Fastify skeleton (config, pino logs, problem+json errors, OpenAPI, health, Docker image)** ✅ · T1.3 auth (argon2id, JWT + rotating refresh) and org RBAC · T1.4 organizations, events, ticket types CRUD | T1.5 GitHub Actions CI · open a Play Console account (identity verification takes days) | Swagger: register, create a club, publish an event; CI green |
+| 1 | Nov 2–8 | **T1.1 repo, schema, local infra** ✅ · **T1.2 Fastify skeleton (config, pino logs, problem+json errors, OpenAPI, health, Docker image)** ✅ · **T1.3 auth (argon2id, JWT + rotating refresh) and org RBAC** ✅ · T1.4 organizations, events, ticket types CRUD | T1.5 GitHub Actions CI · open a Play Console account (identity verification takes days) | Swagger: register, create a club, publish an event; CI green |
 | 2 | Nov 9–15 | Ticket claim (capacity guard, idempotency) · shared QR library · check-in endpoint, ledger, outbox worker · attendance analytics queries | Concurrency test (50 parallel scans of one ticket, exactly 1 success) · k6 gate load test · first internal Android build to start Play closed testing | Race-condition test and k6 report in the README |
 | 3 | Nov 16–22 | Badge rules worker · push notifications | Expo app: auth, event feed, my tickets with live QR, profile (points, badges, history) · organizer mode: create event, scanner screen, live attendee list | End-to-end demo on a real Android phone |
 | 4 | Nov 23–29 | Priority and lottery allocation · account deletion (KVKK and Play policy) | Terraform AWS stack · CD pipeline · Play Store listing, privacy policy, Data safety form | Public demo URL, app in closed testing, polished README with architecture and demo video |

@@ -1,16 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { type App, buildApp } from '../src/app.js';
-import { loadConfig } from '../src/config.js';
+import type { Database } from '../src/db.js';
 import { AppError } from '../src/errors.js';
 import type { ReadinessCheck } from '../src/routes/health.js';
+import { testConfig as config } from './helpers.js';
 
-const config = loadConfig({
-  NODE_ENV: 'test',
-  LOG_LEVEL: 'silent',
-  DATABASE_URL: 'postgres://etkin:etkin@localhost:5432/etkin',
-  REDIS_URL: 'redis://localhost:6379/0',
-});
+// These tests never reach a database-backed route.
+const db = {} as Database;
 
 const up: ReadinessCheck = async () => undefined;
 const down: ReadinessCheck = async () => {
@@ -21,7 +18,7 @@ let app: App;
 afterEach(() => app?.close());
 
 async function build(readinessChecks: Record<string, ReadinessCheck> = { postgres: up, redis: up }) {
-  app = await buildApp({ config, readinessChecks });
+  app = await buildApp({ config, db, readinessChecks });
   return app;
 }
 

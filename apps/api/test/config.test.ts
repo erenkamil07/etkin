@@ -4,6 +4,7 @@ import { loadConfig } from '../src/config.js';
 const required = {
   DATABASE_URL: 'postgres://etkin:etkin@localhost:5432/etkin',
   REDIS_URL: 'redis://localhost:6379/0',
+  JWT_ACCESS_SECRET: 'x'.repeat(32),
 };
 
 describe('loadConfig', () => {
@@ -16,6 +17,10 @@ describe('loadConfig', () => {
     const config = loadConfig({ ...required, PORT: '8080', CORS_ORIGINS: 'http://a.test, http://b.test,' });
     expect(config.PORT).toBe(8080);
     expect(config.CORS_ORIGINS).toEqual(['http://a.test', 'http://b.test']);
+  });
+
+  it('rejects a short JWT secret', () => {
+    expect(() => loadConfig({ ...required, JWT_ACCESS_SECRET: 'too-short' })).toThrow('JWT_ACCESS_SECRET');
   });
 
   it('names every invalid variable', () => {

@@ -9,6 +9,7 @@ const redis = createRedis(config.REDIS_URL);
 
 const app = await buildApp({
   config,
+  db,
   readinessChecks: {
     postgres: () => pingDatabase(db),
     redis: () => redis.ping(),

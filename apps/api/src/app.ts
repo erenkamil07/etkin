@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import rateLimit from '@fastify/rate-limit';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import Fastify, { type FastifyServerOptions } from 'fastify';
@@ -10,12 +11,17 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
+import { authPlugin } from './auth/plugin.js';
+import { authRoutes } from './auth/routes.js';
+import { createAccessTokens } from './auth/tokens.js';
 import type { Config } from './config.js';
-import { registerErrorHandling } from './errors.js';
+import type { Database } from './db.js';
+import { AppError, registerErrorHandling } from './errors.js';
 import { healthRoutes, type ReadinessCheck } from './routes/health.js';
 
 export interface AppDeps {
   config: Config;
+  db: Database;
   /** Named probes for /health/ready; each rejects when its dependency is unreachable. */
   readinessChecks: Record<string, ReadinessCheck>;
 }
@@ -30,7 +36,7 @@ function loggerOptions(config: Config): FastifyServerOptions['logger'] {
   return { level: config.LOG_LEVEL };
 }
 
-export async function buildApp({ config, readinessChecks }: AppDeps) {
+export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   const app = Fastify({
     logger: loggerOptions(config),
     // Honour an incoming x-request-id (ALB, mobile client) so one id follows a request end to end.
@@ -48,6 +54,13 @@ export async function buildApp({ config, readinessChecks }: AppDeps) {
 
   await app.register(helmet);
   await app.register(cors, { origin: config.CORS_ORIGINS.length > 0 ? config.CORS_ORIGINS : false });
+  // Opt-in per route. In-memory counters are per instance; move to a Redis store
+  // once the API runs as more than a couple of tasks.
+  await app.register(rateLimit, {
+    global: false,
+    errorResponseBuilder: (_request, context) =>
+      new AppError(429, 'RATE_LIMITED', `Too many attempts; try again in ${context.after}`),
+  });
   await app.register(swagger, {
     openapi: {
       info: {
@@ -55,7 +68,13 @@ export async function buildApp({ config, readinessChecks }: AppDeps) {
         description: 'Event ticketing, dynamic-QR check-in and loyalty for university communities.',
         version: '0.1.0',
       },
-      tags: [{ name: 'health', description: 'Liveness and readiness probes' }],
+      tags: [
+        { name: 'auth', description: 'Accounts and sessions' },
+        { name: 'health', description: 'Liveness and readiness probes' },
+      ],
+      components: {
+        securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' } },
+      },
     },
     transform: jsonSchemaTransform,
   });
@@ -67,7 +86,13 @@ export async function buildApp({ config, readinessChecks }: AppDeps) {
     transformStaticCSP: (header) => header.replace(/style-src [^;]*/, "style-src 'self' https: 'unsafe-inline'"),
   });
 
+  const accessTokens = createAccessTokens(config.JWT_ACCESS_SECRET, config.ACCESS_TOKEN_TTL_SECONDS);
+  await app.register(authPlugin, { db, accessTokens });
+
   await app.register(healthRoutes, { checks: readinessChecks });
+  await app.register(authRoutes, {
+    auth: { db, accessTokens, refreshTokenTtlDays: config.REFRESH_TOKEN_TTL_DAYS },
+  });
 
   return app;
 }

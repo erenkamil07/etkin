@@ -8,6 +8,9 @@ const ConfigSchema = z.object({
   DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }),
   DATABASE_POOL_MAX: z.coerce.number().int().positive().default(10),
   REDIS_URL: z.url({ protocol: /^rediss?$/ }),
+  JWT_ACCESS_SECRET: z.string().min(32, 'must be at least 32 characters'),
+  ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
+  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
   // Comma-separated browser origins (the Expo Web dashboard). Native apps don't send Origin.
   CORS_ORIGINS: z
     .string()

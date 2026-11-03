@@ -6,7 +6,8 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **Students** claim tickets, show a rotating QR code at the door, and earn club points and badges for showing up.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
-> Status: week 1. Schema, local infrastructure and the API skeleton are in place; auth comes next.
+> Status: week 1. Schema, local infrastructure, the API skeleton and authentication are in place;
+> club and event management comes next.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -57,3 +58,6 @@ API docs (Swagger UI) are served at <http://localhost:3000/docs>.
 - **Errors** are [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457) `application/problem+json` with a stable `code`
   (e.g. `VALIDATION_FAILED`, `ALREADY_CHECKED_IN`) and a `traceId` that matches the `x-request-id` header and the logs.
 - **Health:** `GET /health/live` (process up) and `GET /health/ready` (PostgreSQL and Redis reachable, 503 otherwise).
+- **Auth:** `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout` and `GET /me`. Send
+  `Authorization: Bearer <accessToken>`. On `401 TOKEN_EXPIRED`, call `/auth/refresh` once and retry.
+  Details are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#3-authentication).
