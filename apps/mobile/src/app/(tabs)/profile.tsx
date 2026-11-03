@@ -132,6 +132,31 @@ export default function Profile() {
         </Card>
       )}
 
+      {/* Club team first: at an event this is the way to the door scanner. */}
+      {me.data && me.data.memberships.length > 0 ? (
+        <>
+          <ThemedText type="smallBold">Kulüp yönetimi</ThemedText>
+          {me.data.memberships.map((membership) => (
+            <Card
+              key={membership.organizationId}
+              onPress={() => router.push({ pathname: '/club/[orgId]', params: { orgId: membership.organizationId } })}
+            >
+              <View style={styles.row}>
+                <View style={styles.grow}>
+                  <ThemedText type="default">{membership.name}</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {ROLE[membership.role]} · etkinlikler, katılımcılar, QR okutma
+                  </ThemedText>
+                </View>
+                <ThemedText type="subtitle" themeColor="textSecondary">
+                  ›
+                </ThemedText>
+              </View>
+            </Card>
+          ))}
+        </>
+      ) : null}
+
       <ThemedText type="smallBold">Puanların</ThemedText>
       {points.isPending ? (
         <Loading />
@@ -212,23 +237,6 @@ export default function Profile() {
           ))}
         </View>
       )}
-
-      {me.data && me.data.memberships.length > 0 ? (
-        <>
-          <ThemedText type="smallBold">Kulüplerin</ThemedText>
-          {me.data.memberships.map((membership) => (
-            <Card
-              key={membership.organizationId}
-              onPress={() => router.push({ pathname: '/club/[orgId]', params: { orgId: membership.organizationId } })}
-            >
-              <ThemedText type="default">{membership.name}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {ROLE[membership.role]} · etkinlikler ve kapı
-              </ThemedText>
-            </Card>
-          ))}
-        </>
-      ) : null}
 
       <Button title="Çıkış yap" variant="secondary" loading={signOut.isPending} onPress={() => signOut.mutate()} />
       <View style={styles.tabBarSpace} />

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
-import { useMyTickets } from '@/api/queries';
+import { useMyTickets, useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, ErrorBanner, Loading, Notice, Screen } from '@/components/ui';
@@ -55,6 +55,8 @@ export default function EventDetail() {
   });
   const tickets = useMyTickets();
   const held = tickets.data?.find((ticket) => ticket.event.id === id && ticket.status !== 'cancelled');
+  const orgId = event.data?.organization.id ?? '';
+  const { membership, canManage } = useOrgRole(orgId);
 
   const claim = useMutation({
     mutationFn: async (ticketTypeId: string) => {
@@ -92,6 +94,25 @@ export default function EventDetail() {
           </View>
 
           {event.data.status === 'cancelled' ? <Notice tone="danger">Bu etkinlik iptal edildi.</Notice> : null}
+
+          {membership ? (
+            // The club's own team lands here from the feed too: give them the door straight away.
+            <Card>
+              <ThemedText type="smallBold">Kulübünün etkinliği</ThemedText>
+              <Button
+                title="Kapıda QR okut"
+                onPress={() => router.push({ pathname: '/scan/[eventId]', params: { eventId: id, orgId } })}
+              />
+              {canManage ? (
+                <Button
+                  title="Katılımcılar ve sayılar"
+                  variant="secondary"
+                  onPress={() => router.push({ pathname: '/manage/[eventId]', params: { eventId: id, orgId } })}
+                />
+              ) : null}
+            </Card>
+          ) : null}
+
           {event.data.description ? <ThemedText>{event.data.description}</ThemedText> : null}
           {event.data.checkinPoints > 0 ? (
             <Notice tone="success">Kapıda biletin okutulunca {event.data.checkinPoints} kulüp puanı kazanırsın.</Notice>
