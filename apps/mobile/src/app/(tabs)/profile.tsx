@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { publicApi } from '@/api/base';
 import { api } from '@/api/client';
-import { problemMessage } from '@/api/errors';
 import { currentRefreshToken, endSession } from '@/auth/session';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, ErrorBanner, Loading, Screen } from '@/components/ui';
@@ -35,7 +34,7 @@ export default function Profile() {
     <Screen>
       <ThemedText type="subtitle">Profil</ThemedText>
       {me.error ? (
-        <ErrorBanner message={problemMessage(me.error)} />
+        <ErrorBanner error={me.error} />
       ) : (
         <>
           <Card>

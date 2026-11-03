@@ -2,7 +2,6 @@ import { useMutation } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { publicApi } from '@/api/base';
-import { problemMessage } from '@/api/errors';
 import { getDeviceId } from '@/auth/device';
 import { startSession } from '@/auth/session';
 import { ThemedText } from '@/components/themed-text';
@@ -89,7 +88,7 @@ export default function SignUp() {
         keyboardType="number-pad"
       />
 
-      <ErrorBanner message={signUp.error ? problemMessage(signUp.error) : null} />
+      <ErrorBanner error={signUp.error} />
       <Button title="Hesabı oluştur" loading={signUp.isPending} onPress={submit} />
 
       <Link href="/sign-in">

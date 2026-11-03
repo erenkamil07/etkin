@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { problemMessage } from '@/api/errors';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ThemedText } from './themed-text';
@@ -92,14 +93,29 @@ export function Button({
   );
 }
 
-export function ErrorBanner({ message }: { message: string | null }) {
+function technicalDetail(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  try {
+    return JSON.stringify(error).slice(0, 300);
+  } catch {
+    return String(error);
+  }
+}
+
+/** The friendly Turkish message; development builds add the raw error underneath. */
+export function ErrorBanner({ error }: { error: unknown }) {
   const theme = useTheme();
-  if (!message) return null;
+  if (!error) return null;
   return (
     <View accessibilityRole="alert" style={[styles.banner, { borderColor: theme.danger }]}>
       <ThemedText type="small" style={{ color: theme.danger }}>
-        {message}
+        {problemMessage(error)}
       </ThemedText>
+      {__DEV__ ? (
+        <ThemedText type="code" themeColor="textSecondary">
+          {technicalDetail(error)}
+        </ThemedText>
+      ) : null}
     </View>
   );
 }

@@ -2,7 +2,6 @@ import { useMutation } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { publicApi } from '@/api/base';
-import { problemMessage } from '@/api/errors';
 import { getDeviceId } from '@/auth/device';
 import { startSession } from '@/auth/session';
 import { ThemedText } from '@/components/themed-text';
@@ -47,7 +46,7 @@ export default function SignIn() {
         onSubmitEditing={() => signIn.mutate()}
       />
 
-      <ErrorBanner message={signIn.error ? problemMessage(signIn.error) : null} />
+      <ErrorBanner error={signIn.error} />
       <Button title="Giriş yap" loading={signIn.isPending} onPress={() => signIn.mutate()} />
 
       <Link href="/sign-up">

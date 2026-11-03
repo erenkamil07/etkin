@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { FlatList, StyleSheet } from 'react-native';
 import { api } from '@/api/client';
-import { problemMessage } from '@/api/errors';
 import { ThemedText } from '@/components/themed-text';
 import { Card, ErrorBanner, Loading, Screen } from '@/components/ui';
 import { BottomTabInset, Spacing } from '@/constants/theme';
@@ -23,7 +22,7 @@ export default function Events() {
       {events.isPending ? (
         <Loading />
       ) : events.error ? (
-        <ErrorBanner message={problemMessage(events.error)} />
+        <ErrorBanner error={events.error} />
       ) : (
         <FlatList
           data={events.data}
