@@ -16,6 +16,10 @@ coverage/
 *.tfvars
 !*.tfvars.example
 
+# Load test fixtures hold access tokens and ticket keys; raw k6 output is regenerated
+loadtest/.fixtures/
+loadtest/results/
+
 .DS_Store
 Thumbs.db
 .idea/

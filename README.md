@@ -8,9 +8,8 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **Students** claim tickets, show a rotating QR code at the door, and earn club points and badges for showing up.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
-> Status: week 2. Week 1 delivered the schema, local infrastructure, API skeleton, authentication,
-> club and event management, and CI. Ticket claiming, dynamic QR, door check-in, badges and
-> attendance analytics work; the gate load test is next.
+> Status: the backend is feature-complete for weeks 1 and 2 and load-tested. The mobile app
+> (Expo) comes in week 3.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -20,13 +19,21 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **No double check-ins.** Two gates scanning the same ticket at the same moment cannot both
   succeed. A conditional row update decides the winner, and a unique constraint backs it up.
 - **Tamper-proof points.** Points live in an append-only ledger. Balances are maintained by a trigger in the same transaction.
+- **Load-tested** ([report](docs/load-test.md)). A door rush of 5,000+ people at 60 scans/s, about 30
+  times a real event's peak, ran at p95 22 to 35 ms with zero errors. A ticket drop of 1,000
+  students for 300 seats sold exactly 300, and every student had an answer at p95 under 1.4 s.
+- **Proven under real concurrency.** Integration tests race real PostgreSQL connections, and
+  mutation tests show that each guard is what stops its race. Without the claim lock, 29 of 30
+  tickets survived an event cancellation. Without the outbox row lock, four workers handled 40
+  events 150 times.
 
 ## Repository layout
 
 ```
 db/migrations/   SQL migrations (dbmate, up + down)
 db/tests/        schema invariant tests (PGlite, no Docker needed)
-docs/            architecture and decisions
+docs/            architecture, decisions, load test report
+loadtest/        k6 scenarios and their runner
 apps/api/        Fastify API (TypeScript, Kysely, zod, OpenAPI)
 apps/mobile/     Expo app                 (week 3)
 packages/shared/ dynamic QR tokens, shared by the API and the mobile app
@@ -53,6 +60,7 @@ API docs (Swagger UI) are served at <http://localhost:3000/docs>.
 |---|---|
 | `pnpm test` | Schema invariant tests + API tests (no Docker needed) |
 | `pnpm test:integration` | Concurrency tests on the compose PostgreSQL (uses a separate `etkin_test` database) |
+| `pnpm loadtest` | k6 door-rush and ticket-drop scenarios against the production image ([report](docs/load-test.md)) |
 | `pnpm typecheck` | TypeScript across the workspace |
 | `pnpm lint` / `pnpm lint:fix` | Biome lint + format check / apply fixes |
 | `pnpm db:codegen` | Regenerate Kysely types from the live schema after a migration |

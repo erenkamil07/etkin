@@ -172,11 +172,13 @@ backstop. In a mutation test without the status condition, the losing gates got 
 database still held exactly one check-in.
 
 **Where Redis fits.** The plan had Redis caching tickets on this path. It is deliberately not
-there yet. A cached ticket goes stale when the ticket moves to another phone (new key version)
-or is cancelled, and then a valid code is turned away at the door. The uncached path is a few
-indexed queries per scan. The k6 gate load test (T2.5) decides whether a cache earns its
-invalidation cost. Redis currently backs the readiness probe and is reserved for rate limits
-and live counters.
+there. A cached ticket goes stale when the ticket moves to another phone (new key version) or is
+cancelled, and then a valid code is turned away at the door. The k6 load test
+([docs/load-test.md](load-test.md)) settled it. At 60 scans/s, about 30 times a real event's
+peak, the uncached path answers at p95 22 to 35 ms, against a 250 ms budget. The measured
+bottleneck is elsewhere: in a ticket drop, every claim serializes on one `ticket_types` row. An
+atomic Redis seat counter in front of PostgreSQL is the documented next step if drops outgrow about
+1,000 simultaneous students. Today Redis backs the readiness probe.
 
 **Idempotent retries.** A gate on bad Wi-Fi retries on timeout. Without care, the retry would
 show "already checked in" for the attendee's own first scan. The scanner sends an
@@ -236,7 +238,7 @@ locked-down security groups instead of behind a NAT gateway. The stack is design
 | Week | Dates | Backend | Mobile / infra | Done when |
 |---|---|---|---|---|
 | 1 | Nov 2–8 | **T1.1 repo, schema, local infra** ✅ · **T1.2 Fastify skeleton (config, pino logs, problem+json errors, OpenAPI, health, Docker image)** ✅ · **T1.3 auth (argon2id, JWT + rotating refresh) and org RBAC** ✅ · **T1.4 organizations, events, ticket types CRUD** ✅ | **T1.5 GitHub Actions CI** ✅ · open a Play Console account (identity verification takes days) | Swagger: register, create a club, publish an event; CI green |
-| 2 | Nov 9–15 | **Ticket claim (capacity guard, idempotency)** ✅ · **shared QR library + device-bound keys** ✅ · **check-in endpoint + ledger** ✅ · **outbox worker + badges** ✅ · **attendance analytics** ✅ | Concurrency test (50 parallel scans of one ticket, exactly 1 success) · k6 gate load test · first internal Android build to start Play closed testing | Race-condition test and k6 report in the README |
+| 2 | Nov 9–15 | **Ticket claim (capacity guard, idempotency)** ✅ · **shared QR library + device-bound keys** ✅ · **check-in endpoint + ledger** ✅ · **outbox worker + badges** ✅ · **attendance analytics** ✅ | **Concurrency tests (50 parallel scans of one ticket, exactly 1 success)** ✅ · **k6 load test: door rush + ticket drop** ✅ · first internal Android build to start Play closed testing | Race-condition test and k6 report in the README |
 | 3 | Nov 16–22 | Push notifications (outbox handler) · club-defined badges API | Expo app: auth, event feed, my tickets with live QR, profile (points, badges, history) · organizer mode: create event, scanner screen, live attendee list | End-to-end demo on a real Android phone |
 | 4 | Nov 23–29 | Priority and lottery allocation · account deletion (KVKK and Play policy) | Terraform AWS stack · CD pipeline · Play Store listing, privacy policy, Data safety form | Public demo URL, app in closed testing, polished README with architecture and demo video |
 

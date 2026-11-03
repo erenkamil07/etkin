@@ -154,19 +154,24 @@ export function assertCanClaim(rules: SalesRules, points: number, now: Date) {
  * ticket type row, so concurrent claims serialise on that row and can never
  * oversell. Repeating a claim (a retried request, a double tap) returns the
  * ticket already held instead of failing.
+ *
+ * In a ticket drop every claim queues for that one row lock, so the lock is
+ * held as briefly as possible: the response is built after commit, and once
+ * the type is visibly sold out, claims answer without queueing at all.
  */
 export async function claimTicket(db: Database, userId: string, eventId: string, ticketTypeId: string) {
-  const existingOrConflict = async (exec: Database) => {
+  const heldTicket = async (exec: Database) => {
     const existing = await findLiveTicket(exec, eventId, userId);
     if (!existing) return undefined;
     if (existing.ticket_type_id !== ticketTypeId) {
       throw new AppError(409, 'ALREADY_HAS_TICKET', 'You already hold another ticket for this event');
     }
-    return { ticket: await getTicket(exec, userId, existing.id), created: false };
+    return { id: existing.id, created: false };
   };
 
+  let outcome: { id: string; created: boolean };
   try {
-    return await db.transaction().execute(async (trx) => {
+    outcome = await db.transaction().execute(async (trx) => {
       // FOR SHARE: claims run side by side, but an organizer cancelling the
       // event waits for them, so no ticket slips in after the cancellation.
       const event = await trx
@@ -184,6 +189,8 @@ export async function claimTicket(db: Database, userId: string, eventId: string,
           'priority_sales_starts_at',
           'sales_starts_at',
           'sales_ends_at',
+          'issued_count',
+          'capacity',
         ])
         .where('id', '=', ticketTypeId)
         .where('event_id', '=', eventId)
@@ -195,11 +202,17 @@ export async function claimTicket(db: Database, userId: string, eventId: string,
         throw new AppError(409, 'EVENT_NOT_OPEN', `This event is ${event.status}`);
       }
 
-      const held = await existingOrConflict(trx);
+      const held = await heldTicket(trx);
       if (held) return held;
 
       assertCanClaim(rules, await lifetimePoints(trx, userId, event.organization_id), new Date());
 
+      const soldOut = () => new AppError(409, 'SOLD_OUT', 'No tickets of this type are left');
+      // Unlocked read: only a shortcut. The conditional UPDATE below stays the guard.
+      if (rules.issued_count >= rules.capacity) throw soldOut();
+
+      // Take the seat before inserting the ticket. (Inserting first was measured
+      // slower in the load test: losers then insert, wait for the lock and roll back.)
       const seat = await trx
         .updateTable('ticket_types')
         .set((eb) => ({ issued_count: eb('issued_count', '+', 1) }))
@@ -207,23 +220,22 @@ export async function claimTicket(db: Database, userId: string, eventId: string,
         .whereRef('issued_count', '<', 'capacity')
         .returning('id')
         .executeTakeFirst();
-      if (!seat) throw new AppError(409, 'SOLD_OUT', 'No tickets of this type are left');
+      if (!seat) throw soldOut();
 
       const { id } = await trx
         .insertInto('tickets')
         .values({ ticket_type_id: ticketTypeId, event_id: eventId, user_id: userId })
         .returning('id')
         .executeTakeFirstOrThrow();
-      return { ticket: await getTicket(trx, userId, id), created: true };
+      return { id, created: true };
     });
   } catch (err) {
     // A parallel claim by the same user committed first; its seat is the one they keep.
-    if (isUniqueViolation(err, 'tickets_one_live_per_user_event')) {
-      const held = await existingOrConflict(db);
-      if (held) return held;
-    }
-    throw err;
+    const held = isUniqueViolation(err, 'tickets_one_live_per_user_event') && (await heldTicket(db));
+    if (!held) throw err;
+    outcome = held;
   }
+  return { ticket: await getTicket(db, userId, outcome.id), created: outcome.created };
 }
 
 /**
