@@ -9,8 +9,8 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
 > Status: the backend is feature-complete for weeks 1 and 2 and load-tested. The Expo app has
-> sign-in, the event feed, event pages with ticket claims, the live QR ticket and the profile.
-> Points and badges in the app and the organizer's scanner come next.
+> sign-in, the event feed, event pages with ticket claims, the live QR ticket, and a profile
+> with club points and badge progress. The organizer's scanner comes next.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -138,7 +138,9 @@ tokens live in localStorage instead of the keystore.
   duplicates.
 - **Points and badges.** `GET /me/points` shows your balance per club and the latest changes,
   with the event behind each one. `GET /me/badges` lists badges such as İlk Adım, Müdavim and
-  Kaşif, which the worker awards within about a second of a check-in.
+  Kaşif, which the worker awards within about a second of a check-in. `GET /me/badges/progress`
+  shows the ones still to earn, nearest first ("2 / 5 etkinlik"), using the same rule code the
+  worker awards with.
 - **Organizer analytics.** `GET /orgs/:orgId/events/:eventId/stats` reports issued, checked in,
   cancelled and no-show counts, the attendance rate, per-ticket-type numbers, the arrival curve in
   10-minute buckets, per-gate counts and scan outcomes. `.../attendees?q=` searches holders by

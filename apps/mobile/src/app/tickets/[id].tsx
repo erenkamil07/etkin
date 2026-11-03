@@ -8,11 +8,10 @@ import QRCode from 'react-native-qrcode-svg';
 import { api } from '@/api/client';
 import { type MyTicket, useMe } from '@/api/queries';
 import { ThemedText } from '@/components/themed-text';
-import { Button, Card, confirmAction, ErrorBanner, Loading, Notice, Screen } from '@/components/ui';
+import { Button, Card, confirmAction, ErrorBanner, Loading, Notice, ProgressBar, Screen } from '@/components/ui';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { formatClock, formatDateTime } from '@/format';
 import { useNow } from '@/hooks/use-now';
-import { useTheme } from '@/hooks/use-theme';
 import { useTicketDisplay } from '@/hooks/use-ticket-display';
 import { forgetQrKey, loadQrKey, type QrKey } from '@/tickets/qr-key';
 
@@ -24,7 +23,6 @@ const STEP_MS = QR_STEP_SECONDS * 1000;
  * running clock under it shows the door team this is a live screen, not a photo.
  */
 function LiveQr({ ticketId, qrKey }: { ticketId: string; qrKey: QrKey }) {
-  const theme = useTheme();
   const { width } = useWindowDimensions();
   const now = useNow(250) + qrKey.clockOffsetMs;
   const step = qrStep(now);
@@ -41,9 +39,7 @@ function LiveQr({ ticketId, qrKey }: { ticketId: string; qrKey: QrKey }) {
       <View style={styles.paper}>
         <QRCode value={payload} size={size} ecl="M" color="#000000" backgroundColor="#FFFFFF" />
       </View>
-      <View style={[styles.track, { backgroundColor: theme.backgroundSelected, width: size }]}>
-        <View style={[styles.bar, { backgroundColor: theme.tint, width: `${(left / STEP_MS) * 100}%` }]} />
-      </View>
+      <ProgressBar value={left / STEP_MS} width={size} />
       <ThemedText type="small" themeColor="textSecondary">
         Kod {Math.ceil(left / 1000)} sn sonra yenilenir
       </ThemedText>
@@ -91,7 +87,8 @@ export default function Ticket() {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
       }
-      queryClient.invalidateQueries({ queryKey: ['me', 'tickets'] });
+      // Tickets, points and badges all moved (badges a moment later, once the worker runs).
+      queryClient.invalidateQueries({ queryKey: ['me'] });
     }
     previousStatus.current = status;
   }, [status, queryClient]);
@@ -188,7 +185,5 @@ const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   qrBlock: { alignItems: 'center', gap: Spacing.two },
   paper: { backgroundColor: '#FFFFFF', padding: Spacing.three, borderRadius: 16 },
-  track: { height: 6, borderRadius: 3, overflow: 'hidden' },
-  bar: { height: '100%' },
   clock: { fontSize: 28, lineHeight: 36, fontWeight: 700, fontVariant: ['tabular-nums'] },
 });

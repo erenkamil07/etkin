@@ -118,6 +118,44 @@ describe('badges', () => {
     expect(await badgeCodes(student.id)).toContain('home_regular');
   });
 
+  it('shows how close each unearned badge is, nearest first', async () => {
+    const student = await createUser(db);
+    const [club, unvisited] = [await seedClub(db), await seedClub(db)];
+    for (const [orgId, code] of [
+      [club, 'club_trio'],
+      [unvisited, 'never_seen'],
+    ] as const) {
+      await db
+        .insertInto('badges')
+        .values({
+          organization_id: orgId,
+          code,
+          name: code,
+          criteria: JSON.stringify({ type: 'checkin_count', gte: 3 }),
+        })
+        .execute();
+    }
+    await checkInsAt(student.id, club, 2);
+    await drain();
+
+    const response = await app.inject({ method: 'GET', url: '/me/badges/progress', headers: bearer(student.token) });
+    expect(response.statusCode).toBe(200);
+    const progress: {
+      code: string;
+      rule: string;
+      current: number;
+      target: number;
+      organization: { id: string } | null;
+    }[] = response.json();
+    expect(progress.map(({ code, rule, current, target }) => [code, rule, current, target])).toEqual([
+      ['club_trio', 'checkin_count', 2, 3], // only this club's events count, and only clubs you have been to show up
+      ['regular_5', 'checkin_count', 2, 5],
+      ['explorer_3', 'distinct_clubs', 1, 3],
+      ['regular_20', 'checkin_count', 2, 20],
+    ]);
+    expect(progress[0]?.organization?.id).toBe(club);
+  });
+
   it('never awards twice when an event is handled again', async () => {
     const student = await createUser(db);
     await checkInsAt(student.id, await seedClub(db), 1);

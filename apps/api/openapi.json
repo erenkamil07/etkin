@@ -4885,6 +4885,105 @@
         }
       }
     },
+    "/me/badges/progress": {
+      "get": {
+        "summary": "Badges you can still earn and how close you are, nearest first",
+        "tags": [
+          "loyalty"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "iconUrl": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "organization": {
+                        "nullable": true,
+                        "description": "Null for platform-wide badges",
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "slug",
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "rule": {
+                        "type": "string",
+                        "enum": [
+                          "checkin_count",
+                          "distinct_clubs"
+                        ],
+                        "description": "What `current` counts: events attended (the club's own, for a club badge) or different clubs"
+                      },
+                      "current": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Where you stand, e.g. events attended"
+                      },
+                      "target": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "The badge is awarded when current reaches this"
+                      }
+                    },
+                    "required": [
+                      "code",
+                      "name",
+                      "description",
+                      "iconUrl",
+                      "organization",
+                      "rule",
+                      "current",
+                      "target"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/orgs/{orgId}/events/{eventId}/stats": {
       "get": {
         "summary": "Attendance, no-shows, arrival curve, gates and scan outcomes (organizer+)",

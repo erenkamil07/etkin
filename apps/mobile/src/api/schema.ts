@@ -2186,6 +2186,63 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/me/badges/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Badges you can still earn and how close you are, nearest first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            code: string;
+                            name: string;
+                            description: string | null;
+                            iconUrl: string | null;
+                            /** @description Null for platform-wide badges */
+                            organization: {
+                                /** Format: uuid */
+                                id: string;
+                                slug: string;
+                                name: string;
+                            } | null;
+                            /**
+                             * @description What `current` counts: events attended (the club's own, for a club badge) or different clubs
+                             * @enum {string}
+                             */
+                            rule: "checkin_count" | "distinct_clubs";
+                            /** @description Where you stand, e.g. events attended */
+                            current: number;
+                            /** @description The badge is awarded when current reaches this */
+                            target: number;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/orgs/{orgId}/events/{eventId}/stats": {
         parameters: {
             query?: never;

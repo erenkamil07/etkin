@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  type DimensionValue,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -177,6 +178,17 @@ export function confirmAction(title: string, message: string, action: string): P
   });
 }
 
+/** A thin bar filled to `value` (0 to 1). */
+export function ProgressBar({ value, width = '100%' }: { value: number; width?: DimensionValue }) {
+  const theme = useTheme();
+  const filled = Math.min(Math.max(value, 0), 1) * 100;
+  return (
+    <View style={[styles.track, { backgroundColor: theme.backgroundSelected, width }]}>
+      <View style={[styles.bar, { backgroundColor: theme.tint, width: `${filled}%` }]} />
+    </View>
+  );
+}
+
 export function Loading() {
   const theme = useTheme();
   return <ActivityIndicator style={styles.loading} color={theme.tint} />;
@@ -210,5 +222,7 @@ const styles = StyleSheet.create({
   },
   banner: { borderWidth: 1, borderRadius: 12, padding: Spacing.three },
   card: { borderRadius: 16, padding: Spacing.three, gap: Spacing.one },
+  track: { height: 6, borderRadius: 3, overflow: 'hidden' },
+  bar: { height: '100%' },
   loading: { marginTop: Spacing.five },
 });

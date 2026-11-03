@@ -1,6 +1,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { currentUser } from '../auth/plugin.js';
+import { getBadgeProgress } from '../badges/service.js';
 import type { Database } from '../db.js';
 import { BEARER, DateTimeOutput } from '../schemas.js';
 import { getMyBadges, getMyPoints } from './service.js';
@@ -32,6 +33,14 @@ const Badge = z.object({
   organization: OrgRef.nullable().describe('Null for platform-wide badges'),
 });
 
+const BadgeProgress = Badge.omit({ awardedAt: true }).extend({
+  rule: z
+    .enum(['checkin_count', 'distinct_clubs'])
+    .describe("What `current` counts: events attended (the club's own, for a club badge) or different clubs"),
+  current: z.number().int().describe('Where you stand, e.g. events attended'),
+  target: z.number().int().describe('The badge is awarded when current reaches this'),
+});
+
 export const loyaltyRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app, { db }) => {
   app.addHook('onRequest', app.authenticate);
 
@@ -59,5 +68,18 @@ export const loyaltyRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app
       },
     },
     async (request) => getMyBadges(db, currentUser(request).id),
+  );
+
+  app.get(
+    '/me/badges/progress',
+    {
+      schema: {
+        tags: ['loyalty'],
+        summary: 'Badges you can still earn and how close you are, nearest first',
+        security: BEARER,
+        response: { 200: z.array(BadgeProgress) },
+      },
+    },
+    async (request) => getBadgeProgress(db, currentUser(request).id),
   );
 };
