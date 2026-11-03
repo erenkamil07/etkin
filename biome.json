@@ -6,7 +6,13 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!apps/api/src/db/schema.ts"]
+    "includes": [
+      "**",
+      "!apps/api/src/db/schema.ts",
+      "!apps/api/openapi.json",
+      "!apps/mobile/src/api/schema.ts",
+      "!apps/mobile/assets"
+    ]
   },
   "formatter": {
     "enabled": true,

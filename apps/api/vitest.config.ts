@@ -9,5 +9,9 @@ export default defineConfig({
   },
   test: {
     exclude: [...configDefaults.exclude, 'test/integration/**'],
+    // Each file boots PostgreSQL in WebAssembly and files run in parallel; on a
+    // busy laptop or a 2-core CI runner the first test of a file can pass 5 s.
+    testTimeout: 20_000,
+    hookTimeout: 30_000,
   },
 });

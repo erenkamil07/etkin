@@ -24,7 +24,8 @@
     "db:rollback": "dbmate rollback",
     "db:new": "dbmate new",
     "db:reset": "docker compose down -v && docker compose up -d --wait && dbmate up",
-    "db:codegen": "pnpm --filter @etkin/api db:codegen"
+    "db:codegen": "pnpm --filter @etkin/api db:codegen",
+    "api:types": "pnpm --filter @etkin/api openapi && pnpm --filter @etkin/mobile api:types"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

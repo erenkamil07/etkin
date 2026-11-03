@@ -8,8 +8,9 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **Students** claim tickets, show a rotating QR code at the door, and earn club points and badges for showing up.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
-> Status: the backend is feature-complete for weeks 1 and 2 and load-tested. The mobile app
-> (Expo) comes in week 3.
+> Status: the backend is feature-complete for weeks 1 and 2 and load-tested. The Expo app has
+> sign-in, the event feed, tickets and profile. Event pages, the live QR ticket and the scanner
+> come next.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -35,7 +36,7 @@ db/tests/        schema invariant tests (PGlite, no Docker needed)
 docs/            architecture, decisions, load test report
 loadtest/        k6 scenarios and their runner
 apps/api/        Fastify API (TypeScript, Kysely, zod, OpenAPI)
-apps/mobile/     Expo app                 (week 3)
+apps/mobile/     Expo app (Expo Router, React Query, typed client generated from the API's OpenAPI)
 packages/shared/ dynamic QR tokens, shared by the API and the mobile app
 infra/           Terraform                (week 4)
 ```
@@ -82,6 +83,25 @@ Every push and pull request runs three jobs ([ci.yml](.github/workflows/ci.yml))
    starts it against PostgreSQL and Redis, waits for `/health/ready` and registers a user through it.
 
 Actions are pinned to commit SHAs, and Dependabot proposes updates weekly.
+
+### Mobile app
+
+```bash
+pnpm dev                              # the API, in one terminal
+pnpm --filter @etkin/mobile start     # Metro, in another; scan its QR code with Expo Go
+```
+
+The phone must be on the same Wi-Fi as the laptop. In development the app calls the API on the
+laptop that serves the bundle (`http://<laptop-ip>:3000`); set `EXPO_PUBLIC_API_URL` to point it
+elsewhere. Pressing `w` in Metro opens the web build, which is handy for quick UI checks; there,
+tokens live in localStorage instead of the keystore.
+
+- **Typed API client.** `pnpm api:types` exports the API's OpenAPI document and generates
+  `apps/mobile/src/api/schema.ts`. CI fails if either file is stale, so an API change that breaks
+  the app breaks the build.
+- **Sessions.** Tokens live in the Android Keystore through `expo-secure-store`. The access token is
+  refreshed a minute before it expires, one refresh at a time, because the API revokes a session
+  whose refresh token is used twice.
 
 ### API conventions
 
