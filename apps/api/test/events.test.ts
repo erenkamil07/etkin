@@ -262,7 +262,9 @@ describe('publishing and cancelling', () => {
 describe('editing', () => {
   it('moves the check-in window with the event unless one is sent', async () => {
     const event = await draft();
-    const moved = (await manage('PATCH', `/${event.id}`, { startsAt: at(10 * DAY), endsAt: at(10 * DAY + 3 * HOUR) })).json();
+    const moved = (
+      await manage('PATCH', `/${event.id}`, { startsAt: at(10 * DAY), endsAt: at(10 * DAY + 3 * HOUR) })
+    ).json();
     expect(Date.parse(moved.startsAt) - Date.parse(moved.checkinOpensAt)).toBe(HOUR);
     expect(moved.checkinClosesAt).toBe(moved.endsAt);
 
@@ -293,18 +295,23 @@ describe('editing', () => {
 
 describe('feed', () => {
   let club: string;
-  let ids: string[];
+  let firstDayEventId = '';
 
   beforeAll(async () => {
     club = await newClub('feed-pages');
-    ids = [];
+    // Created out of order so the test proves the feed sorts by start time.
     for (const day of [3, 1, 2]) {
       const event = await draft({ title: `Day ${day}`, startsAt: at(day * DAY), endsAt: at(day * DAY + HOUR) }, club);
       const base = `/orgs/${club}/events/${event.id}`;
       const headers = bearer(owner.token);
-      await app.inject({ method: 'POST', url: `${base}/ticket-types`, headers, payload: { name: 'Standart', capacity: 10 } });
+      await app.inject({
+        method: 'POST',
+        url: `${base}/ticket-types`,
+        headers,
+        payload: { name: 'Standart', capacity: 10 },
+      });
       await app.inject({ method: 'POST', url: `${base}/publish`, headers });
-      ids.push(event.id);
+      if (day === 1) firstDayEventId = event.id;
     }
   });
 
@@ -324,7 +331,7 @@ describe('feed', () => {
     await db
       .updateTable('events')
       .set({ starts_at: new Date(Date.now() - 2 * HOUR), ends_at: new Date(Date.now() - HOUR) })
-      .where('id', '=', ids[1]!)
+      .where('id', '=', firstDayEventId)
       .execute();
     const feed = (await app.inject({ method: 'GET', url: `/events?orgId=${club}` })).json();
     expect(feed.items.map((e: { title: string }) => e.title)).toEqual(['Day 2', 'Day 3']);

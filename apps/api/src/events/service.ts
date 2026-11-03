@@ -1,8 +1,8 @@
 import { sql } from 'kysely';
 import { findOrgRole } from '../auth/plugin.js';
 import type { AuthUser } from '../auth/tokens.js';
-import type { Database } from '../db.js';
 import type { AllocationMode, EventStatus } from '../db/schema.js';
+import type { Database } from '../db.js';
 import { AppError } from '../errors.js';
 import { iso, isoOrNull } from '../schemas.js';
 
@@ -110,9 +110,7 @@ function toEvent(row: EventRow) {
 // Capacity totals across an event's ticket types, for list cards ("12 places left").
 // Queries using these must alias events as "e".
 const CAPACITY_TOTALS = [
-  sql<number>`(select coalesce(sum(tt.capacity), 0)::int from ticket_types tt where tt.event_id = e.id)`.as(
-    'capacity',
-  ),
+  sql<number>`(select coalesce(sum(tt.capacity), 0)::int from ticket_types tt where tt.event_id = e.id)`.as('capacity'),
   sql<number>`(select coalesce(sum(tt.capacity - tt.issued_count), 0)::int from ticket_types tt where tt.event_id = e.id)`.as(
     'remaining',
   ),
@@ -218,7 +216,11 @@ function decodeCursor(cursor: string): [Date, string] {
 /** Public feed: published events that haven't ended, soonest first, keyset-paginated. */
 export async function listUpcomingEvents(
   db: Database,
-  { orgId, limit = 20, cursor }: { orgId?: string | undefined; limit?: number | undefined; cursor?: string | undefined },
+  {
+    orgId,
+    limit = 20,
+    cursor,
+  }: { orgId?: string | undefined; limit?: number | undefined; cursor?: string | undefined },
 ) {
   const pageSize = Math.min(limit, FEED_MAX_LIMIT);
   let query = db
@@ -341,7 +343,11 @@ export async function publishEvent(db: Database, orgId: string, eventId: string)
   await db.transaction().execute(async (trx) => {
     const event = await lockEvent(trx, orgId, eventId);
     if (event.status !== 'draft') {
-      throw new AppError(409, 'INVALID_STATUS_TRANSITION', `Only drafts can be published; this event is ${event.status}`);
+      throw new AppError(
+        409,
+        'INVALID_STATUS_TRANSITION',
+        `Only drafts can be published; this event is ${event.status}`,
+      );
     }
     if (event.ends_at <= new Date()) {
       throw new AppError(409, 'EVENT_ALREADY_ENDED', 'This event has already ended');
@@ -453,7 +459,11 @@ export async function deleteTicketType(db: Database, orgId: string, eventId: str
       .executeTakeFirst();
     if (!existing) throw ticketTypeNotFound();
     if (existing.issued_count > 0) {
-      throw new AppError(409, 'TICKET_TYPE_IN_USE', 'Tickets of this type were already issued; lower its capacity instead');
+      throw new AppError(
+        409,
+        'TICKET_TYPE_IN_USE',
+        'Tickets of this type were already issued; lower its capacity instead',
+      );
     }
     await trx.deleteFrom('ticket_types').where('id', '=', ticketTypeId).execute();
   });

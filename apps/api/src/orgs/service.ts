@@ -1,6 +1,6 @@
 import { sql } from 'kysely';
-import type { Database } from '../db.js';
 import type { OrgRole } from '../db/schema.js';
+import type { Database } from '../db.js';
 import { AppError } from '../errors.js';
 import { iso } from '../schemas.js';
 

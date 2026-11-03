@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
-import type { Database } from '../db.js';
 import type { OrgRole } from '../db/schema.js';
+import type { Database } from '../db.js';
 import { AppError } from '../errors.js';
 import type { AccessTokens, AuthUser } from './tokens.js';
 
@@ -60,8 +60,7 @@ export const authPlugin = fp<{ db: Database; accessTokens: AccessTokens }>(
         throw err;
       }
     }
-    const bearerToken = (request: FastifyRequest) =>
-      /^Bearer\s+(\S+)$/i.exec(request.headers.authorization ?? '')?.[1];
+    const bearerToken = (request: FastifyRequest) => /^Bearer\s+(\S+)$/i.exec(request.headers.authorization ?? '')?.[1];
 
     app.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
       const token = bearerToken(request);

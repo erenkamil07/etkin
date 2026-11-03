@@ -4,8 +4,8 @@ import { citext } from '@electric-sql/pglite/contrib/citext';
 import { Kysely, PGliteDialect } from 'kysely';
 import { createAccessTokens } from '../src/auth/tokens.js';
 import { loadConfig } from '../src/config.js';
-import type { Database } from '../src/db.js';
 import type { DB, PlatformRole } from '../src/db/schema.js';
+import type { Database } from '../src/db.js';
 
 export const testConfig = loadConfig({
   NODE_ENV: 'test',
@@ -20,7 +20,9 @@ const MIGRATIONS = new URL('../../../db/migrations/', import.meta.url);
 /** A throwaway in-process PostgreSQL 18 (PGlite) with every migration applied. */
 export async function createTestDatabase(): Promise<Database> {
   const pglite = new PGlite({ extensions: { citext } });
-  const files = readdirSync(MIGRATIONS).filter((file) => file.endsWith('.sql')).sort();
+  const files = readdirSync(MIGRATIONS)
+    .filter((file) => file.endsWith('.sql'))
+    .sort();
   for (const file of files) {
     const [up = ''] = readFileSync(new URL(file, MIGRATIONS), 'utf8').split('-- migrate:down');
     await pglite.exec(up.replace('-- migrate:up', ''));

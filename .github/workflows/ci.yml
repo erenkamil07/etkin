@@ -1,0 +1,151 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Third-party actions are pinned to commit SHAs (tags can be moved); Dependabot keeps them current.
+jobs:
+  test:
+    name: Lint, typecheck, test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          cache: true
+      - run: pnpm install --frozen-lockfile
+      - name: Lint and format check
+        if: matrix.node == 24
+        run: pnpm exec biome ci .
+      - run: pnpm typecheck
+      # Schema and API tests run on PGlite (in-process PostgreSQL 18), so no service is needed.
+      - run: pnpm test
+
+  database:
+    name: Migrations on PostgreSQL 18
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: etkin
+          POSTGRES_PASSWORD: etkin
+          POSTGRES_DB: etkin
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U etkin -d etkin"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          cache: true
+      - run: pnpm install --frozen-lockfile
+      - run: cp .env.example .env
+      - name: Apply, roll back and re-apply migrations
+        run: |
+          pnpm exec dbmate --wait up
+          pnpm exec dbmate rollback
+          pnpm exec dbmate up
+      - name: Generated Kysely types match the migrated schema
+        run: |
+          pnpm db:codegen
+          git diff --exit-code -- apps/api/src/db/schema.ts
+
+  docker:
+    name: Docker image smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: etkin
+          POSTGRES_PASSWORD: etkin
+          POSTGRES_DB: etkin
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U etkin -d etkin"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:8-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s --health-timeout 3s --health-retries 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build the API image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          tags: etkin-api:ci
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Image runs as a non-root user
+        run: test "$(docker run --rm --entrypoint whoami etkin-api:ci)" = node
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          cache: true
+      - name: Migrate the database
+        run: |
+          pnpm install --frozen-lockfile
+          cp .env.example .env
+          pnpm exec dbmate --wait up
+      - name: Start the API and wait for readiness
+        run: |
+          docker run -d --name api --network host \
+            -e NODE_ENV=production \
+            -e DATABASE_URL=postgres://etkin:etkin@127.0.0.1:5432/etkin \
+            -e REDIS_URL=redis://127.0.0.1:6379/0 \
+            -e JWT_ACCESS_SECRET=ci-only-jwt-secret-0123456789abcdef \
+            etkin-api:ci
+          for _ in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:3000/health/ready && exit 0
+            sleep 1
+          done
+          docker logs api
+          exit 1
+      # Exercises the native argon2 build, PostgreSQL and JWT signing inside the production image.
+      - name: Register a user against the running image
+        run: |
+          curl -fsS -X POST http://127.0.0.1:3000/auth/register \
+            -H 'content-type: application/json' \
+            -d '{"email":"ci@uni.edu.tr","password":"correct horse battery","fullName":"CI Bot"}' \
+            | grep -q '"accessToken"'
+      - name: API logs
+        if: always()
+        run: docker logs api || true

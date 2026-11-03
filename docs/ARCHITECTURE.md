@@ -15,7 +15,8 @@ communities. This document records the design decisions; the schema itself lives
 | Database | PostgreSQL 18 | Source of truth. Native `uuidv7()` gives time-ordered keys with good index locality. |
 | Cache | Redis (ElastiCache for Valkey on AWS) | Ticket validation cache, fast duplicate rejection, idempotency responses, rate limits, live counters. Never the source of truth. |
 | Mobile | Expo (React Native) + Expo Router | `expo-camera` scanning, `expo-secure-store` for QR keys, `expo-screen-capture` to block screenshots, EAS Build → Play Store AAB. Organizer dashboard runs on Expo Web from the same codebase. |
-| Tests | Vitest, Testcontainers, PGlite, k6 | PGlite for fast schema tests, Testcontainers for real concurrency, k6 for gate load tests. |
+| Tests | Vitest, PGlite, real PostgreSQL, k6 | PGlite (in-process PostgreSQL 18) for schema and API tests with no Docker, real PostgreSQL in CI for migrations and concurrency, k6 for gate load tests. |
+| Quality | Biome, GitHub Actions | One tool for lint and format; CI on every push, with SHA-pinned actions. |
 | Infra | AWS via Terraform | ECS Fargate, RDS, ElastiCache, ALB, ECR, Secrets Manager, CloudWatch. GitHub Actions deploys with OIDC (no long-lived AWS keys). |
 
 ## 2. Data model
@@ -195,9 +196,14 @@ Route 53 → ALB (HTTPS) → ECS Fargate: api (2 tasks) + worker (1 task)
 ECR (images) · Secrets Manager (DB creds, JWT keys, QR master key) · CloudWatch logs and alarms
 ```
 
-Terraform state lives in S3 with native lockfile locking. CI runs on every PR: lint,
-typecheck, unit tests, schema tests and Testcontainers. CD runs on `main`: build the image,
-push it to ECR, run `dbmate up` as a one-off ECS task, then roll out the service.
+Terraform state lives in S3 with native lockfile locking. CI runs on every push and PR:
+
+- lint, typecheck and tests on Node 22 and 24;
+- migrations up/down/up on PostgreSQL 18, plus a drift check on the generated types;
+- a production image build with a smoke test.
+
+CD runs on `main`: build the image, push it to ECR, run `dbmate up` as a one-off ECS task, then
+roll out the service.
 
 To keep the bill low for a student project, the Fargate tasks run in public subnets with
 locked-down security groups instead of behind a NAT gateway. The stack is designed to be
@@ -207,7 +213,7 @@ locked-down security groups instead of behind a NAT gateway. The stack is design
 
 | Week | Dates | Backend | Mobile / infra | Done when |
 |---|---|---|---|---|
-| 1 | Nov 2–8 | **T1.1 repo, schema, local infra** ✅ · **T1.2 Fastify skeleton (config, pino logs, problem+json errors, OpenAPI, health, Docker image)** ✅ · **T1.3 auth (argon2id, JWT + rotating refresh) and org RBAC** ✅ · **T1.4 organizations, events, ticket types CRUD** ✅ | T1.5 GitHub Actions CI · open a Play Console account (identity verification takes days) | Swagger: register, create a club, publish an event; CI green |
+| 1 | Nov 2–8 | **T1.1 repo, schema, local infra** ✅ · **T1.2 Fastify skeleton (config, pino logs, problem+json errors, OpenAPI, health, Docker image)** ✅ · **T1.3 auth (argon2id, JWT + rotating refresh) and org RBAC** ✅ · **T1.4 organizations, events, ticket types CRUD** ✅ | **T1.5 GitHub Actions CI** ✅ · open a Play Console account (identity verification takes days) | Swagger: register, create a club, publish an event; CI green |
 | 2 | Nov 9–15 | Ticket claim (capacity guard, idempotency) · shared QR library · check-in endpoint, ledger, outbox worker · attendance analytics queries | Concurrency test (50 parallel scans of one ticket, exactly 1 success) · k6 gate load test · first internal Android build to start Play closed testing | Race-condition test and k6 report in the README |
 | 3 | Nov 16–22 | Badge rules worker · push notifications | Expo app: auth, event feed, my tickets with live QR, profile (points, badges, history) · organizer mode: create event, scanner screen, live attendee list | End-to-end demo on a real Android phone |
 | 4 | Nov 23–29 | Priority and lottery allocation · account deletion (KVKK and Play policy) | Terraform AWS stack · CD pipeline · Play Store listing, privacy policy, Data safety form | Public demo URL, app in closed testing, polished README with architecture and demo video |

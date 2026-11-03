@@ -26,7 +26,11 @@ const Member = z.object({
 
 const Name = z.string().trim().min(2).max(120);
 const Description = z.string().trim().max(2000).nullable().optional();
-const LogoUrl = z.url({ protocol: /^https$/ }).max(500).nullable().optional();
+const LogoUrl = z
+  .url({ protocol: /^https$/ })
+  .max(500)
+  .nullable()
+  .optional();
 
 const CreateOrgBody = z.object({
   slug: z
@@ -105,7 +109,7 @@ export const orgRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app, { 
       preHandler: app.requireOrgRole('owner'),
       schema: {
         tags: ['orgs'],
-        summary: "Add a registered user to the team or change their role (owner)",
+        summary: 'Add a registered user to the team or change their role (owner)',
         security: BEARER,
         params: OrgParams,
         body: z.object({ email: z.email(), role: OrgRoleSchema }),

@@ -52,7 +52,11 @@ describe('register', () => {
     });
     expect(session.user).not.toHaveProperty('passwordHash');
 
-    const row = await db.selectFrom('users').select('password_hash').where('id', '=', session.user.id).executeTakeFirstOrThrow();
+    const row = await db
+      .selectFrom('users')
+      .select('password_hash')
+      .where('id', '=', session.user.id)
+      .executeTakeFirstOrThrow();
     expect(row.password_hash).toMatch(/^\$argon2id\$v=19\$m=19456,t=2,p=1\$/);
   });
 
@@ -74,7 +78,12 @@ describe('register', () => {
       payload: { email: 'not-an-email', password: 'short', fullName: 'A' },
     });
     expect(res.statusCode).toBe(400);
-    expect(res.json().errors.map((e: { path: string }) => e.path).sort()).toEqual(['email', 'fullName', 'password']);
+    expect(
+      res
+        .json()
+        .errors.map((e: { path: string }) => e.path)
+        .sort(),
+    ).toEqual(['email', 'fullName', 'password']);
   });
 });
 
@@ -130,8 +139,15 @@ describe('login', () => {
 describe('access tokens', () => {
   it('lets the holder read their profile and club roles', async () => {
     const { user, accessToken } = await registerUser();
-    const org = await db.insertInto('organizations').values({ slug: 'ieee-odtu', name: 'IEEE ODTÜ' }).returning('id').executeTakeFirstOrThrow();
-    await db.insertInto('organization_members').values({ organization_id: org.id, user_id: user.id, role: 'organizer' }).execute();
+    const org = await db
+      .insertInto('organizations')
+      .values({ slug: 'ieee-odtu', name: 'IEEE ODTÜ' })
+      .returning('id')
+      .executeTakeFirstOrThrow();
+    await db
+      .insertInto('organization_members')
+      .values({ organization_id: org.id, user_id: user.id, role: 'organizer' })
+      .execute();
 
     const res = await app.inject({ method: 'GET', url: '/me', headers: bearer(accessToken) });
     expect(res.statusCode).toBe(200);
@@ -220,7 +236,11 @@ describe('refresh tokens', () => {
     expect(unknown.json().code).toBe('INVALID_REFRESH_TOKEN');
 
     const { refreshToken, user } = await registerUser();
-    await db.updateTable('refresh_tokens').set({ expires_at: new Date(Date.now() - 1000) }).where('user_id', '=', user.id).execute();
+    await db
+      .updateTable('refresh_tokens')
+      .set({ expires_at: new Date(Date.now() - 1000) })
+      .where('user_id', '=', user.id)
+      .execute();
     const expired = await refreshWith(refreshToken);
     expect(expired.statusCode).toBe(401);
     expect(expired.json().code).toBe('INVALID_REFRESH_TOKEN');
@@ -239,8 +259,9 @@ describe('refresh tokens', () => {
     const { refreshToken, user } = await registerUser();
     const rows = await db.selectFrom('refresh_tokens').select('token_hash').where('user_id', '=', user.id).execute();
     expect(rows).toHaveLength(1);
-    expect(Buffer.from(rows[0]!.token_hash).toString('base64url')).not.toBe(refreshToken);
-    expect(rows[0]!.token_hash).toHaveLength(32);
+    const stored = Buffer.from(rows[0]?.token_hash ?? []);
+    expect(stored.toString('base64url')).not.toBe(refreshToken);
+    expect(stored).toHaveLength(32);
   });
 });
 
@@ -248,14 +269,21 @@ describe('club roles', () => {
   let orgId: string;
   const member = async (role: 'owner' | 'organizer' | 'scanner' | null) => {
     const { user, accessToken } = await registerUser();
-    if (role) await db.insertInto('organization_members').values({ organization_id: orgId, user_id: user.id, role }).execute();
+    if (role)
+      await db.insertInto('organization_members').values({ organization_id: orgId, user_id: user.id, role }).execute();
     return { user, accessToken };
   };
   const manage = (token: string, id = orgId) =>
     app.inject({ method: 'GET', url: `/test/orgs/${id}/manage`, headers: bearer(token) });
 
   beforeAll(async () => {
-    orgId = (await db.insertInto('organizations').values({ slug: 'acm-itu', name: 'ACM İTÜ' }).returning('id').executeTakeFirstOrThrow()).id;
+    orgId = (
+      await db
+        .insertInto('organizations')
+        .values({ slug: 'acm-itu', name: 'ACM İTÜ' })
+        .returning('id')
+        .executeTakeFirstOrThrow()
+    ).id;
   });
 
   it('allows the required role and anything above it', async () => {
@@ -273,7 +301,11 @@ describe('club roles', () => {
       expect(res.json().code).toBe('FORBIDDEN');
     }
 
-    const otherOrg = await db.insertInto('organizations').values({ slug: 'gdg-boun', name: 'GDG Boğaziçi' }).returning('id').executeTakeFirstOrThrow();
+    const otherOrg = await db
+      .insertInto('organizations')
+      .values({ slug: 'gdg-boun', name: 'GDG Boğaziçi' })
+      .returning('id')
+      .executeTakeFirstOrThrow();
     const organizerHere = await member('organizer');
     expect((await manage(organizerHere.accessToken, otherOrg.id)).statusCode).toBe(403);
   });

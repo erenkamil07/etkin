@@ -1,13 +1,15 @@
 # Etkin
 
+[![CI](https://github.com/erenkamil07/etkin/actions/workflows/ci.yml/badge.svg)](https://github.com/erenkamil07/etkin/actions/workflows/ci.yml)
+
 Event ticketing, dynamic-QR check-in and loyalty for university communities.
 
 - **Organizers** create events and ticket types, scan tickets at the door and see attendance analytics.
 - **Students** claim tickets, show a rotating QR code at the door, and earn club points and badges for showing up.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
-> Status: week 1. Schema, local infrastructure, the API skeleton, authentication, and club and
-> event management are in place. CI comes next, then ticketing and check-in in week 2.
+> Status: week 1 is complete. The schema, local infrastructure, API skeleton, authentication,
+> club and event management, and CI are in place. Ticketing and check-in come in week 2.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -49,9 +51,23 @@ API docs (Swagger UI) are served at <http://localhost:3000/docs>.
 |---|---|
 | `pnpm test` | Schema invariant tests + API tests |
 | `pnpm typecheck` | TypeScript across the workspace |
+| `pnpm lint` / `pnpm lint:fix` | Biome lint + format check / apply fixes |
 | `pnpm db:codegen` | Regenerate Kysely types from the live schema after a migration |
 | `pnpm app:up` | Build and run the production API image in Docker (stop `pnpm dev` first, both use port 3000) |
 | `pnpm infra:down` | Stop every container |
+
+### Continuous integration
+
+Every push and pull request runs three jobs ([ci.yml](.github/workflows/ci.yml)):
+
+1. **Lint, typecheck, test** on Node 22 and 24. The tests need no services, because PostgreSQL runs
+   in-process via PGlite.
+2. **Migrations on PostgreSQL 18:** up → rollback → up, then a check that the generated Kysely
+   types (`schema.ts`) still match the migrated schema.
+3. **Docker smoke test:** builds the production image, checks that it runs as a non-root user,
+   starts it against PostgreSQL and Redis, waits for `/health/ready` and registers a user through it.
+
+Actions are pinned to commit SHAs, and Dependabot proposes updates weekly.
 
 ### API conventions
 

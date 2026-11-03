@@ -15,7 +15,12 @@ const ConfigSchema = z.object({
   CORS_ORIGINS: z
     .string()
     .default('')
-    .transform((value) => value.split(',').map((origin) => origin.trim()).filter(Boolean)),
+    .transform((value) =>
+      value
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    ),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

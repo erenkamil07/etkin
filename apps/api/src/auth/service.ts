@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { type Database, isUniqueViolation } from '../db.js';
 import type { PlatformRole } from '../db/schema.js';
+import { type Database, isUniqueViolation } from '../db.js';
 import { AppError } from '../errors.js';
 import { hashPassword, verifyPassword } from './passwords.js';
 import { type AccessTokens, hashRefreshToken, newRefreshToken } from './tokens.js';

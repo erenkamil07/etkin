@@ -10,6 +10,8 @@
     "dev": "pnpm --filter @etkin/api dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
     "test": "pnpm test:db && pnpm -r test",
     "test:db": "node db/tests/schema.test.mjs",
     "infra:up": "docker compose up -d --wait",
@@ -22,6 +24,7 @@
     "db:codegen": "pnpm --filter @etkin/api db:codegen"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@electric-sql/pglite": "0.5.10",
     "dbmate": "2.37.0"
   }

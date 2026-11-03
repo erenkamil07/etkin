@@ -65,7 +65,11 @@ const EventSummary = EventBase.extend({ capacity: z.number().int(), remaining: z
 const EventDetail = EventBase.extend({ ticketTypes: z.array(TicketType) });
 
 const text = (max: number) => z.string().trim().max(max).nullable().optional();
-const ImageUrl = z.url({ protocol: /^https$/ }).max(500).nullable().optional();
+const ImageUrl = z
+  .url({ protocol: /^https$/ })
+  .max(500)
+  .nullable()
+  .optional();
 
 const EventBody = z.object({
   title: z.string().trim().min(3).max(200),
@@ -85,7 +89,7 @@ const TicketTypeBody = z.object({
   capacity: z.number().int().positive().max(100_000),
   priceCents: z.number().int().min(0).max(10_000_000).optional().describe('Informational for now; 0 = free'),
   allocationMode: AllocationModeSchema.optional(),
-  minPointsRequired: z.number().int().min(0).optional().describe("Club points needed to claim at all"),
+  minPointsRequired: z.number().int().min(0).optional().describe('Club points needed to claim at all'),
   priorityPointsThreshold: z.number().int().positive().nullable().optional(),
   prioritySalesStartsAt: DateTimeInput.nullable().optional(),
   salesStartsAt: DateTimeInput.optional().describe('Defaults to now'),
@@ -238,9 +242,7 @@ export const eventRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app, 
       },
     },
     async (request, reply) =>
-      reply
-        .status(201)
-        .send(await createTicketType(db, request.params.orgId, request.params.eventId, request.body)),
+      reply.status(201).send(await createTicketType(db, request.params.orgId, request.params.eventId, request.body)),
   );
 
   app.patch(
