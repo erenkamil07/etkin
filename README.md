@@ -6,8 +6,8 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **Students** claim tickets, show a rotating QR code at the door, and earn club points and badges for showing up.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
-> Status: week 1. Schema, local infrastructure, the API skeleton and authentication are in place;
-> club and event management comes next.
+> Status: week 1. Schema, local infrastructure, the API skeleton, authentication, and club and
+> event management are in place. CI comes next, then ticketing and check-in in week 2.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -61,3 +61,9 @@ API docs (Swagger UI) are served at <http://localhost:3000/docs>.
 - **Auth:** `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout` and `GET /me`. Send
   `Authorization: Bearer <accessToken>`. On `401 TOKEN_EXPIRED`, call `/auth/refresh` once and retry.
   Details are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#3-authentication).
+- **Clubs and events.** Anyone signed in can create a club and becomes its owner. The owner adds
+  organizers and door scanners by email. Organizers create draft events, add ticket types and
+  publish. `GET /events` is the public feed (cursor-paginated). Drafts are visible only to the
+  club's team.
+- **Business rules live in the database** (CHECK and UNIQUE constraints). Violations come back as
+  specific codes such as `CAPACITY_BELOW_ISSUED`, `INVALID_SALES_WINDOW` and `SLUG_TAKEN`.

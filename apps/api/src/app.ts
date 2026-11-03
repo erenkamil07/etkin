@@ -17,6 +17,8 @@ import { createAccessTokens } from './auth/tokens.js';
 import type { Config } from './config.js';
 import type { Database } from './db.js';
 import { AppError, registerErrorHandling } from './errors.js';
+import { eventRoutes } from './events/routes.js';
+import { orgRoutes } from './orgs/routes.js';
 import { healthRoutes, type ReadinessCheck } from './routes/health.js';
 
 export interface AppDeps {
@@ -70,6 +72,8 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
       },
       tags: [
         { name: 'auth', description: 'Accounts and sessions' },
+        { name: 'orgs', description: 'Clubs and their teams' },
+        { name: 'events', description: 'Events and ticket types' },
         { name: 'health', description: 'Liveness and readiness probes' },
       ],
       components: {
@@ -93,6 +97,8 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   await app.register(authRoutes, {
     auth: { db, accessTokens, refreshTokenTtlDays: config.REFRESH_TOKEN_TTL_DAYS },
   });
+  await app.register(orgRoutes, { db });
+  await app.register(eventRoutes, { db });
 
   return app;
 }

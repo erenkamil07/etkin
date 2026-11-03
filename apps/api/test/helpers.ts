@@ -2,9 +2,10 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 import { citext } from '@electric-sql/pglite/contrib/citext';
 import { Kysely, PGliteDialect } from 'kysely';
+import { createAccessTokens } from '../src/auth/tokens.js';
 import { loadConfig } from '../src/config.js';
 import type { Database } from '../src/db.js';
-import type { DB } from '../src/db/schema.js';
+import type { DB, PlatformRole } from '../src/db/schema.js';
 
 export const testConfig = loadConfig({
   NODE_ENV: 'test',
@@ -26,3 +27,22 @@ export async function createTestDatabase(): Promise<Database> {
   }
   return new Kysely<DB>({ dialect: new PGliteDialect({ pglite }) });
 }
+
+const accessTokens = createAccessTokens(testConfig.JWT_ACCESS_SECRET, testConfig.ACCESS_TOKEN_TTL_SECONDS);
+let userCounter = 0;
+
+/**
+ * Inserts a user straight into the database and signs an access token for them,
+ * skipping /auth/register (argon2 cost, sign-up rate limit) where auth isn't under test.
+ */
+export async function createUser(db: Database, platformRole: PlatformRole = 'user') {
+  const n = ++userCounter;
+  const user = await db
+    .insertInto('users')
+    .values({ email: `member${n}@uni.edu.tr`, full_name: `Member ${n}`, platform_role: platformRole })
+    .returning(['id', 'email'])
+    .executeTakeFirstOrThrow();
+  return { ...user, token: await accessTokens.sign({ id: user.id, platformRole }) };
+}
+
+export const bearer = (token: string) => ({ authorization: `Bearer ${token}` });

@@ -9,6 +9,8 @@ declare module 'fastify' {
   interface FastifyInstance {
     /** onRequest hook: requires a valid bearer access token and sets request.user. */
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    /** onRequest hook for public routes that show more to signed-in users; rejects only a bad token. */
+    authenticateOptional: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     /**
      * preHandler for routes with an :orgId param: requires at least `minimum`
      * in that club (owner > organizer > scanner). Platform admins always pass.
@@ -28,40 +30,57 @@ export function currentUser(request: FastifyRequest): AuthUser {
   return request.user;
 }
 
+export async function findOrgRole(db: Database, orgId: string, userId: string): Promise<OrgRole | undefined> {
+  const row = await db
+    .selectFrom('organization_members')
+    .select('role')
+    .where('organization_id', '=', orgId)
+    .where('user_id', '=', userId)
+    .executeTakeFirst();
+  return row?.role;
+}
+
+export async function assertOrgRole(db: Database, user: AuthUser, orgId: string, minimum: OrgRole) {
+  if (user.platformRole === 'admin') return;
+  const role = await findOrgRole(db, orgId, user.id);
+  if (!role || ORG_ROLE_RANK[role] < ORG_ROLE_RANK[minimum]) {
+    throw new AppError(403, 'FORBIDDEN', `Requires the ${minimum} role in this organization`);
+  }
+}
+
 export const authPlugin = fp<{ db: Database; accessTokens: AccessTokens }>(
   async (app, { db, accessTokens }) => {
     app.decorateRequest('user', null);
 
-    app.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
-      const token = /^Bearer\s+(\S+)$/i.exec(request.headers.authorization ?? '')?.[1];
-      if (!token) {
-        reply.header('www-authenticate', 'Bearer');
-        throw new AppError(401, 'UNAUTHENTICATED', 'Missing bearer access token');
-      }
+    async function verifyBearer(request: FastifyRequest, reply: FastifyReply, token: string) {
       try {
         request.user = await accessTokens.verify(token);
       } catch (err) {
         reply.header('www-authenticate', 'Bearer error="invalid_token"');
         throw err;
       }
+    }
+    const bearerToken = (request: FastifyRequest) =>
+      /^Bearer\s+(\S+)$/i.exec(request.headers.authorization ?? '')?.[1];
+
+    app.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
+      const token = bearerToken(request);
+      if (!token) {
+        reply.header('www-authenticate', 'Bearer');
+        throw new AppError(401, 'UNAUTHENTICATED', 'Missing bearer access token');
+      }
+      await verifyBearer(request, reply, token);
+    });
+
+    app.decorate('authenticateOptional', async (request: FastifyRequest, reply: FastifyReply) => {
+      const token = bearerToken(request);
+      if (token) await verifyBearer(request, reply, token);
     });
 
     app.decorate('requireOrgRole', (minimum: OrgRole) => async (request: FastifyRequest) => {
-      const user = currentUser(request);
-      if (user.platformRole === 'admin') return;
-
       const { orgId } = request.params as { orgId?: string };
       if (!orgId) throw new Error('requireOrgRole needs a route with an :orgId param');
-
-      const membership = await db
-        .selectFrom('organization_members')
-        .select('role')
-        .where('organization_id', '=', orgId)
-        .where('user_id', '=', user.id)
-        .executeTakeFirst();
-      if (!membership || ORG_ROLE_RANK[membership.role] < ORG_ROLE_RANK[minimum]) {
-        throw new AppError(403, 'FORBIDDEN', `Requires the ${minimum} role in this organization`);
-      }
+      await assertOrgRole(db, currentUser(request), orgId, minimum);
     });
   },
   { name: 'auth' },

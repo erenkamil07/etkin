@@ -44,6 +44,46 @@ const STATUS_TITLES: Record<number, string> = {
   503: 'Service Unavailable',
 };
 
+type Problem = Pick<ProblemDetails, 'status' | 'code' | 'detail'>;
+
+// Cross-field rules live in the database as CHECK/UNIQUE constraints (one source
+// of truth for create and update); these turn their violations into client errors.
+const CONSTRAINT_PROBLEMS: Record<string, Problem> = {
+  organizations_slug_key: { status: 409, code: 'SLUG_TAKEN', detail: 'Another club already uses this slug' },
+  events_time_order: { status: 400, code: 'INVALID_EVENT_TIMES', detail: 'endsAt must be after startsAt' },
+  events_checkin_order: {
+    status: 400,
+    code: 'INVALID_CHECKIN_WINDOW',
+    detail: 'checkinClosesAt must be after checkinOpensAt',
+  },
+  ticket_types_name_unique: {
+    status: 409,
+    code: 'TICKET_TYPE_NAME_TAKEN',
+    detail: 'This event already has a ticket type with that name',
+  },
+  ticket_types_capacity: {
+    status: 409,
+    code: 'CAPACITY_BELOW_ISSUED',
+    detail: 'capacity cannot be lower than the number of tickets already issued',
+  },
+  ticket_types_sales_window: {
+    status: 400,
+    code: 'INVALID_SALES_WINDOW',
+    detail: 'salesEndsAt must be after salesStartsAt (it defaults to the event start)',
+  },
+  ticket_types_priority_config: {
+    status: 400,
+    code: 'INVALID_PRIORITY_CONFIG',
+    detail:
+      "allocationMode 'priority' needs priorityPointsThreshold and a prioritySalesStartsAt before salesStartsAt; other modes must leave both empty",
+  },
+};
+
+function constraintProblem(error: unknown): Problem | undefined {
+  if (typeof error !== 'object' || error === null || !('constraint' in error)) return undefined;
+  return typeof error.constraint === 'string' ? CONSTRAINT_PROBLEMS[error.constraint] : undefined;
+}
+
 function sendProblem(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -84,6 +124,9 @@ export function registerErrorHandling(app: FastifyInstance) {
     if (error instanceof AppError) {
       return sendProblem(request, reply, { status: error.status, code: error.code, detail: error.message });
     }
+
+    const fromConstraint = constraintProblem(error);
+    if (fromConstraint) return sendProblem(request, reply, fromConstraint);
 
     // Fastify's own client errors (malformed JSON, payload too large, ...) are safe to echo.
     const status = error.statusCode ?? 500;
