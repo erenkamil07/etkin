@@ -1,0 +1,34 @@
+# Local development infrastructure. The API and worker join this file in week 1 (T1.2).
+name: etkin
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: etkin
+      POSTGRES_PASSWORD: etkin
+      POSTGRES_DB: etkin
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      # postgres 18 images keep PGDATA under /var/lib/postgresql/<major>/docker
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U etkin -d etkin"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pgdata:

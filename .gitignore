@@ -1,0 +1,23 @@
+node_modules/
+dist/
+coverage/
+.turbo/
+.expo/
+*.log
+
+.env
+.env.*
+!.env.example
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
