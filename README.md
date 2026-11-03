@@ -8,8 +8,8 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **Students** claim tickets, show a rotating QR code at the door, and earn club points and badges for showing up.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
-> Status: week 1 is complete. The schema, local infrastructure, API skeleton, authentication,
-> club and event management, and CI are in place. Ticketing and check-in come in week 2.
+> Status: week 2. Week 1 delivered the schema, local infrastructure, API skeleton, authentication,
+> club and event management, and CI. Ticket claiming works; dynamic QR and check-in are next.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -49,7 +49,8 @@ API docs (Swagger UI) are served at <http://localhost:3000/docs>.
 
 | Command | What it does |
 |---|---|
-| `pnpm test` | Schema invariant tests + API tests |
+| `pnpm test` | Schema invariant tests + API tests (no Docker needed) |
+| `pnpm test:integration` | Concurrency tests on the compose PostgreSQL (uses a separate `etkin_test` database) |
 | `pnpm typecheck` | TypeScript across the workspace |
 | `pnpm lint` / `pnpm lint:fix` | Biome lint + format check / apply fixes |
 | `pnpm db:codegen` | Regenerate Kysely types from the live schema after a migration |
@@ -62,8 +63,10 @@ Every push and pull request runs three jobs ([ci.yml](.github/workflows/ci.yml))
 
 1. **Lint, typecheck, test** on Node 22 and 24. The tests need no services, because PostgreSQL runs
    in-process via PGlite.
-2. **Migrations on PostgreSQL 18:** up → rollback → up, then a check that the generated Kysely
-   types (`schema.ts`) still match the migrated schema.
+2. **Migrations and concurrency on PostgreSQL 18:** up → rollback → up, a check that the
+   generated Kysely types (`schema.ts`) still match the migrated schema, and the integration tests.
+   Those race real concurrent requests: 50 students for 10 seats, a double-tapped "claim", and
+   claims arriving while the event is being cancelled.
 3. **Docker smoke test:** builds the production image, checks that it runs as a non-root user,
    starts it against PostgreSQL and Redis, waits for `/health/ready` and registers a user through it.
 
@@ -81,5 +84,10 @@ Actions are pinned to commit SHAs, and Dependabot proposes updates weekly.
   organizers and door scanners by email. Organizers create draft events, add ticket types and
   publish. `GET /events` is the public feed (cursor-paginated). Drafts are visible only to the
   club's team.
+- **Tickets.** `POST /events/:eventId/tickets` claims a seat. Repeating the call returns the ticket
+  you already hold, so retries and double taps are safe. Eligibility follows the ticket type:
+  sales window, minimum club points, and an early window for loyal members. `GET /me/tickets` lists
+  your tickets, and `POST /tickets/:id/cancel` gives the seat back until the event starts. Cancelling
+  an event cancels its tickets.
 - **Business rules live in the database** (CHECK and UNIQUE constraints). Violations come back as
   specific codes such as `CAPACITY_BELOW_ISSUED`, `INVALID_SALES_WINDOW` and `SLUG_TAKEN`.

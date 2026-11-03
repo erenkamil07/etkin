@@ -20,6 +20,7 @@ import { AppError, registerErrorHandling } from './errors.js';
 import { eventRoutes } from './events/routes.js';
 import { orgRoutes } from './orgs/routes.js';
 import { healthRoutes, type ReadinessCheck } from './routes/health.js';
+import { ticketRoutes } from './tickets/routes.js';
 
 export interface AppDeps {
   config: Config;
@@ -74,6 +75,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
         { name: 'auth', description: 'Accounts and sessions' },
         { name: 'orgs', description: 'Clubs and their teams' },
         { name: 'events', description: 'Events and ticket types' },
+        { name: 'tickets', description: 'Claiming and managing your tickets' },
         { name: 'health', description: 'Liveness and readiness probes' },
       ],
       components: {
@@ -99,6 +101,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   });
   await app.register(orgRoutes, { db });
   await app.register(eventRoutes, { db });
+  await app.register(ticketRoutes, { db });
 
   return app;
 }

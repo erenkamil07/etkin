@@ -41,7 +41,7 @@ jobs:
       - run: pnpm test
 
   database:
-    name: Migrations on PostgreSQL 18
+    name: Migrations and concurrency tests on PostgreSQL 18
     runs-on: ubuntu-latest
     timeout-minutes: 10
     services:
@@ -76,6 +76,11 @@ jobs:
         run: |
           pnpm db:codegen
           git diff --exit-code -- apps/api/src/db/schema.ts
+      # Real connections running in parallel (PGlite in the unit tests runs one query at a time).
+      - name: Integration tests (concurrent claims, cancellation races)
+        run: pnpm test:integration
+        env:
+          TEST_DATABASE_URL: postgres://etkin:etkin@localhost:5432/etkin_test
 
   docker:
     name: Docker image smoke test

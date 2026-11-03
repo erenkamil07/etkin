@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 import { citext } from '@electric-sql/pglite/contrib/citext';
 import { Kysely, PGliteDialect } from 'kysely';
+import type { App } from '../src/app.js';
 import { createAccessTokens } from '../src/auth/tokens.js';
 import { loadConfig } from '../src/config.js';
 import type { DB, PlatformRole } from '../src/db/schema.js';
@@ -48,3 +49,64 @@ export async function createUser(db: Database, platformRole: PlatformRole = 'use
 }
 
 export const bearer = (token: string) => ({ authorization: `Bearer ${token}` });
+
+let clubCounter = 0;
+
+/**
+ * A new club owned by `owner` with one published event a week from now,
+ * built through the API. Returns the ids tests need.
+ */
+export async function createPublishedEvent(
+  app: App,
+  owner: { token: string },
+  ticketTypes: Record<string, unknown>[] = [{ name: 'Standart', capacity: 50 }],
+) {
+  const headers = bearer(owner.token);
+  const ok = async (res: { statusCode: number; body: string; json: () => { id: string } }, status: number) => {
+    if (res.statusCode !== status) throw new Error(`setup failed: ${res.statusCode} ${res.body}`);
+    return res.json().id;
+  };
+
+  const orgId = await ok(
+    await app.inject({
+      method: 'POST',
+      url: '/orgs',
+      headers,
+      payload: { slug: `club-${++clubCounter}-${Date.now()}`, name: 'Test Club' },
+    }),
+    201,
+  );
+  const startsAt = Date.now() + 7 * 24 * 3_600_000;
+  const eventId = await ok(
+    await app.inject({
+      method: 'POST',
+      url: `/orgs/${orgId}/events`,
+      headers,
+      payload: {
+        title: 'Test Event',
+        startsAt: new Date(startsAt).toISOString(),
+        endsAt: new Date(startsAt + 2 * 3_600_000).toISOString(),
+      },
+    }),
+    201,
+  );
+  const ticketTypeIds: string[] = [];
+  for (const payload of ticketTypes) {
+    ticketTypeIds.push(
+      await ok(
+        await app.inject({ method: 'POST', url: `/orgs/${orgId}/events/${eventId}/ticket-types`, headers, payload }),
+        201,
+      ),
+    );
+  }
+  await ok(await app.inject({ method: 'POST', url: `/orgs/${orgId}/events/${eventId}/publish`, headers }), 200);
+  return { orgId, eventId, ticketTypeIds };
+}
+
+/** Credits club points through the ledger (the balance trigger does the rest). */
+export async function grantPoints(db: Database, userId: string, orgId: string, points: number) {
+  await db
+    .insertInto('point_ledger')
+    .values({ user_id: userId, organization_id: orgId, delta: points, reason: 'bonus' })
+    .execute();
+}

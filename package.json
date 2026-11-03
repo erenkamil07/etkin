@@ -14,6 +14,7 @@
     "lint:fix": "biome check --write .",
     "test": "pnpm test:db && pnpm -r test",
     "test:db": "node db/tests/schema.test.mjs",
+    "test:integration": "pnpm --filter @etkin/api test:integration",
     "infra:up": "docker compose up -d --wait",
     "infra:down": "docker compose --profile app down",
     "app:up": "docker compose --profile app up -d --build --wait",

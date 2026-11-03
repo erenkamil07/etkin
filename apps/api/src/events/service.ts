@@ -376,6 +376,14 @@ export async function cancelEvent(db: Database, orgId: string, eventId: string) 
       throw new AppError(409, 'INVALID_STATUS_TRANSITION', `A ${event.status} event cannot be cancelled`);
     }
     await trx.updateTable('events').set({ status: 'cancelled' }).where('id', '=', eventId).execute();
+    // Holders keep a visible, cancelled ticket; claims in flight finished before
+    // the event lock above was granted (they hold it FOR SHARE).
+    await trx
+      .updateTable('tickets')
+      .set({ status: 'cancelled', cancelled_at: new Date() })
+      .where('event_id', '=', eventId)
+      .where('status', '=', 'active')
+      .execute();
   });
   return loadEventDetail(db, eventId);
 }

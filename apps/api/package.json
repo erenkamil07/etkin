@@ -15,6 +15,7 @@
     "start": "node dist/server.js",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:codegen": "kysely-codegen --env-file ../../.env --dialect postgres --exclude-pattern schema_migrations --out-file src/db/schema.ts"
   },
   "dependencies": {
