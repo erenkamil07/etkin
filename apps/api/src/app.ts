@@ -11,6 +11,7 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
+import { analyticsRoutes } from './analytics/routes.js';
 import { authPlugin } from './auth/plugin.js';
 import { authRoutes } from './auth/routes.js';
 import { createAccessTokens } from './auth/tokens.js';
@@ -19,6 +20,7 @@ import type { Config } from './config.js';
 import type { Database } from './db.js';
 import { AppError, registerErrorHandling } from './errors.js';
 import { eventRoutes } from './events/routes.js';
+import { loyaltyRoutes } from './loyalty/routes.js';
 import { orgRoutes } from './orgs/routes.js';
 import { healthRoutes, type ReadinessCheck } from './routes/health.js';
 import { ticketRoutes } from './tickets/routes.js';
@@ -78,6 +80,8 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
         { name: 'events', description: 'Events and ticket types' },
         { name: 'tickets', description: 'Claiming and managing your tickets' },
         { name: 'check-in', description: 'Admitting people at the door' },
+        { name: 'loyalty', description: 'Your club points and badges' },
+        { name: 'analytics', description: 'Attendance numbers for organizers' },
         { name: 'health', description: 'Liveness and readiness probes' },
       ],
       components: {
@@ -105,6 +109,8 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   await app.register(eventRoutes, { db });
   await app.register(ticketRoutes, { db, qrMasterKey: config.QR_MASTER_KEY });
   await app.register(checkInRoutes, { db, qrMasterKey: config.QR_MASTER_KEY });
+  await app.register(loyaltyRoutes, { db });
+  await app.register(analyticsRoutes, { db });
 
   return app;
 }

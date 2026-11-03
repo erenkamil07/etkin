@@ -9,8 +9,8 @@ Event ticketing, dynamic-QR check-in and loyalty for university communities.
 - **Loyal members** get priority access or better lottery odds for limited events.
 
 > Status: week 2. Week 1 delivered the schema, local infrastructure, API skeleton, authentication,
-> club and event management, and CI. Ticket claiming, dynamic QR and door check-in work; badges,
-> analytics and the gate load test are next.
+> club and event management, and CI. Ticket claiming, dynamic QR, door check-in, badges and
+> attendance analytics work; the gate load test is next.
 > See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design and the 4-week roadmap.
 
 ## Highlights
@@ -44,6 +44,7 @@ cp .env.example .env
 pnpm infra:up       # PostgreSQL 18 + Redis
 pnpm db:migrate     # apply migrations
 pnpm dev            # API with hot reload on http://localhost:3000
+pnpm dev:worker     # outbox worker (badges), in a second terminal
 ```
 
 API docs (Swagger UI) are served at <http://localhost:3000/docs>.
@@ -101,5 +102,12 @@ Actions are pinned to commit SHAs, and Dependabot proposes updates weekly.
   and photo, and the head count. Admission awards the event's club points through the ledger, and
   every scan is logged. Send an `Idempotency-Key` per physical scan, so retries don't read as
   duplicates.
+- **Points and badges.** `GET /me/points` shows your balance per club and the latest changes,
+  with the event behind each one. `GET /me/badges` lists badges such as İlk Adım, Müdavim and
+  Kaşif, which the worker awards within about a second of a check-in.
+- **Organizer analytics.** `GET /orgs/:orgId/events/:eventId/stats` reports issued, checked in,
+  cancelled and no-show counts, the attendance rate, per-ticket-type numbers, the arrival curve in
+  10-minute buckets, per-gate counts and scan outcomes. `.../attendees?q=` searches holders by
+  name or student number.
 - **Business rules live in the database** (CHECK and UNIQUE constraints). Violations come back as
   specific codes such as `CAPACITY_BELOW_ISSUED`, `INVALID_SALES_WINDOW` and `SLUG_TAKEN`.

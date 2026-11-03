@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @etkin/api dev",
+    "dev:worker": "pnpm --filter @etkin/api dev:worker",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "biome check .",

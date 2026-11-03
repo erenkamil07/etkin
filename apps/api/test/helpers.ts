@@ -138,6 +138,96 @@ export async function createTicketHolder(
   return { user, ticketId, qrAt: (nowMs: number = Date.now()) => createQrPayload(key, ticketId, nowMs) };
 }
 
+let seedCounter = 0;
+
+export async function seedClub(db: Database) {
+  const n = ++seedCounter;
+  return (
+    await db
+      .insertInto('organizations')
+      .values({ slug: `seeded-club-${n}`, name: `Seeded Club ${n}` })
+      .returning('id')
+      .executeTakeFirstOrThrow()
+  ).id;
+}
+
+/**
+ * Writes a completed check-in straight to the database, with its ledger entry
+ * and outbox event, as the door would. For tests about what happens after
+ * check-ins (badges, points, stats) that need many of them quickly.
+ */
+export async function seedCheckIn(
+  db: Database,
+  { userId, orgId, staffId, points = 1 }: { userId: string; orgId: string; staffId: string; points?: number },
+) {
+  const now = Date.now();
+  const at = (offsetMs: number) => new Date(now + offsetMs);
+  const event = await db
+    .insertInto('events')
+    .values({
+      organization_id: orgId,
+      title: `Seeded Event ${++seedCounter}`,
+      status: 'published',
+      starts_at: at(-3_600_000),
+      ends_at: at(3_600_000),
+      checkin_opens_at: at(-7_200_000),
+      checkin_closes_at: at(3_600_000),
+      checkin_points: points,
+      created_by: staffId,
+    })
+    .returning(['id', 'title'])
+    .executeTakeFirstOrThrow();
+  const type = await db
+    .insertInto('ticket_types')
+    .values({
+      event_id: event.id,
+      name: 'Standart',
+      capacity: 10,
+      issued_count: 1,
+      sales_starts_at: at(-86_400_000),
+      sales_ends_at: at(-3_600_000),
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  const ticket = await db
+    .insertInto('tickets')
+    .values({
+      ticket_type_id: type.id,
+      event_id: event.id,
+      user_id: userId,
+      status: 'checked_in',
+      checked_in_at: at(0),
+    })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  const checkIn = await db
+    .insertInto('check_ins')
+    .values({ ticket_id: ticket.id, event_id: event.id, user_id: userId, scanned_by: staffId })
+    .returning('id')
+    .executeTakeFirstOrThrow();
+  if (points > 0) {
+    await db
+      .insertInto('point_ledger')
+      .values({ user_id: userId, organization_id: orgId, delta: points, reason: 'checkin', check_in_id: checkIn.id })
+      .execute();
+  }
+  await db
+    .insertInto('outbox')
+    .values({
+      topic: 'checkin.accepted',
+      payload: JSON.stringify({
+        checkInId: checkIn.id,
+        ticketId: ticket.id,
+        eventId: event.id,
+        userId,
+        organizationId: orgId,
+        points,
+      }),
+    })
+    .execute();
+  return { eventId: event.id, eventTitle: event.title, checkInId: checkIn.id };
+}
+
 /** Credits club points through the ledger (the balance trigger does the rest). */
 export async function grantPoints(db: Database, userId: string, orgId: string, points: number) {
   await db

@@ -1,7 +1,20 @@
-# Local infrastructure. `pnpm infra:up` starts postgres + redis only; the api
-# service is behind the "app" profile (`pnpm app:up`) so it doesn't clash with
-# `pnpm dev`, which runs the API on the host with hot reload.
+# Local infrastructure. `pnpm infra:up` starts postgres + redis only. The api
+# and worker services are behind the "app" profile (`pnpm app:up`) so they don't
+# clash with `pnpm dev` / `pnpm dev:worker`, which run on the host with hot reload.
 name: etkin
+
+# Shared by the api and worker containers (dev-only secrets).
+x-app-environment: &app-environment
+  NODE_ENV: production
+  LOG_LEVEL: info
+  DATABASE_URL: postgres://etkin:etkin@postgres:5432/etkin
+  REDIS_URL: redis://redis:6379/0
+  JWT_ACCESS_SECRET: dev-only-insecure-jwt-secret-change-me-0123456789
+  QR_MASTER_KEY: moVtnpTD1KcuHtr3L0d+xIKgi1uAY8QXejCOGpvfe2U=
+
+x-app-build: &app-build
+  context: .
+  dockerfile: apps/api/Dockerfile
 
 services:
   postgres:
@@ -34,16 +47,8 @@ services:
 
   api:
     profiles: ["app"]
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-    environment:
-      NODE_ENV: production
-      LOG_LEVEL: info
-      DATABASE_URL: postgres://etkin:etkin@postgres:5432/etkin
-      REDIS_URL: redis://redis:6379/0
-      JWT_ACCESS_SECRET: dev-only-insecure-jwt-secret-change-me-0123456789
-      QR_MASTER_KEY: moVtnpTD1KcuHtr3L0d+xIKgi1uAY8QXejCOGpvfe2U=
+    build: *app-build
+    environment: *app-environment
     ports:
       - "127.0.0.1:3000:3000"
     depends_on:
@@ -56,6 +61,16 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  # Same image, different entry point: drains the outbox (badges) and does housekeeping.
+  worker:
+    profiles: ["app"]
+    build: *app-build
+    command: ["node", "dist/worker.js"]
+    environment: *app-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   pgdata:

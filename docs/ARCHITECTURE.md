@@ -183,10 +183,19 @@ show "already checked in" for the attendee's own first scan. The scanner sends a
 `Idempotency-Key` per physical scan, and `check_ins.idempotency_key` lets a retry return the
 original success (`replayed: true`) instead of `duplicate`.
 
-**Side effects stay out of the hot path.** Badge evaluation, push notifications and the live
-dashboard read from the transactional `outbox`. A worker claims rows with
-`FOR UPDATE SKIP LOCKED`, so a check-in commits in a few milliseconds and side effects are
-never lost.
+**Side effects stay out of the hot path.** The check-in transaction writes a
+`checkin.accepted` row to the `outbox`, and the worker (`src/worker.ts`, same image,
+`node dist/worker.js`) does the rest. It currently awards badges; push notifications will run
+there too. A check-in therefore commits in a few milliseconds, and its side effects can't be
+lost. Each event is claimed with `FOR UPDATE SKIP LOCKED` and handled in the same transaction
+that marks it processed. Several workers share the queue without blocking each other. A failing
+handler rolls back its writes and is retried with exponential backoff (2 s doubling up to 1 h).
+Handlers are idempotent. In a mutation test without the row lock, four workers handled 40
+events 150 times; with it, exactly 40.
+
+**Badges** are rows in `badges` with a JSON rule. The rules are `checkin_count ≥ n` (a club
+badge counts only that club's events) and `distinct_clubs ≥ n`. The platform seeds İlk Adım,
+Müdavim (5), Efsane (20) and Kaşif (3 clubs). An unknown rule type never awards.
 
 ## 6. Priority and lottery allocation
 
@@ -227,8 +236,8 @@ locked-down security groups instead of behind a NAT gateway. The stack is design
 | Week | Dates | Backend | Mobile / infra | Done when |
 |---|---|---|---|---|
 | 1 | Nov 2–8 | **T1.1 repo, schema, local infra** ✅ · **T1.2 Fastify skeleton (config, pino logs, problem+json errors, OpenAPI, health, Docker image)** ✅ · **T1.3 auth (argon2id, JWT + rotating refresh) and org RBAC** ✅ · **T1.4 organizations, events, ticket types CRUD** ✅ | **T1.5 GitHub Actions CI** ✅ · open a Play Console account (identity verification takes days) | Swagger: register, create a club, publish an event; CI green |
-| 2 | Nov 9–15 | **Ticket claim (capacity guard, idempotency)** ✅ · **shared QR library + device-bound keys** ✅ · **check-in endpoint + ledger** ✅ · outbox worker · attendance analytics queries | Concurrency test (50 parallel scans of one ticket, exactly 1 success) · k6 gate load test · first internal Android build to start Play closed testing | Race-condition test and k6 report in the README |
-| 3 | Nov 16–22 | Badge rules worker · push notifications | Expo app: auth, event feed, my tickets with live QR, profile (points, badges, history) · organizer mode: create event, scanner screen, live attendee list | End-to-end demo on a real Android phone |
+| 2 | Nov 9–15 | **Ticket claim (capacity guard, idempotency)** ✅ · **shared QR library + device-bound keys** ✅ · **check-in endpoint + ledger** ✅ · **outbox worker + badges** ✅ · **attendance analytics** ✅ | Concurrency test (50 parallel scans of one ticket, exactly 1 success) · k6 gate load test · first internal Android build to start Play closed testing | Race-condition test and k6 report in the README |
+| 3 | Nov 16–22 | Push notifications (outbox handler) · club-defined badges API | Expo app: auth, event feed, my tickets with live QR, profile (points, badges, history) · organizer mode: create event, scanner screen, live attendee list | End-to-end demo on a real Android phone |
 | 4 | Nov 23–29 | Priority and lottery allocation · account deletion (KVKK and Play policy) | Terraform AWS stack · CD pipeline · Play Store listing, privacy policy, Data safety form | Public demo URL, app in closed testing, polished README with architecture and demo video |
 
 **Play Store timing.** New personal developer accounts must run a closed test with at least 12

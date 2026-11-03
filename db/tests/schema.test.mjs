@@ -263,11 +263,13 @@ await rejects(
 );
 
 // --- badges ---------------------------------------------------------------
+const seeded = await one(`SELECT count(*)::int AS n FROM badges WHERE organization_id IS NULL`);
+ok(seeded.n === 4, `platform badges are seeded (found ${seeded.n})`);
 await db.query(
-  `INSERT INTO badges (code, name, criteria) VALUES ('first_checkin', 'İlk Adım', '{"type":"checkin_count","gte":1}')`,
+  `INSERT INTO badges (code, name, criteria) VALUES ('schema_test', 'Test', '{"type":"checkin_count","gte":1}')`,
 );
 await rejects(
-  `INSERT INTO badges (code, name, criteria) VALUES ('first_checkin', 'Dup', '{"type":"checkin_count","gte":1}')`,
+  `INSERT INTO badges (code, name, criteria) VALUES ('schema_test', 'Dup', '{"type":"checkin_count","gte":1}')`,
   'platform badge codes unique (NULLS NOT DISTINCT)',
   [],
   'badges_code_unique',

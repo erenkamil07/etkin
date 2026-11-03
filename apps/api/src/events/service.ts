@@ -388,6 +388,18 @@ export async function cancelEvent(db: Database, orgId: string, eventId: string) 
   return loadEventDetail(db, eventId);
 }
 
+/** Housekeeping: published events whose doors have closed become 'completed'. Returns how many. */
+export async function completeEndedEvents(db: Database, now = new Date()) {
+  const result = await db
+    .updateTable('events')
+    .set({ status: 'completed' })
+    .where('status', '=', 'published')
+    .where('ends_at', '<', now)
+    .where('checkin_closes_at', '<', now)
+    .executeTakeFirst();
+  return Number(result.numUpdatedRows);
+}
+
 /** Only drafts can be deleted; a published event is cancelled instead so attendees see what happened. */
 export async function deleteEvent(db: Database, orgId: string, eventId: string) {
   await db.transaction().execute(async (trx) => {
