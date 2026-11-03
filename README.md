@@ -38,7 +38,7 @@ loadtest/        k6 scenarios and their runner
 apps/api/        Fastify API (TypeScript, Kysely, zod, OpenAPI)
 apps/mobile/     Expo app (Expo Router, React Query, typed client generated from the API's OpenAPI)
 packages/shared/ dynamic QR tokens, shared by the API and the mobile app
-infra/           Terraform                (week 4)
+infra/           Terraform for AWS        (later; the API runs on Railway now)
 ```
 
 ## Getting started

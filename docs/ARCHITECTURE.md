@@ -17,7 +17,7 @@ communities. This document records the design decisions; the schema itself lives
 | Mobile | Expo (React Native) + Expo Router | `expo-camera` scanning, `expo-secure-store` for QR keys, `expo-screen-capture` to block screenshots, EAS Build → Play Store AAB. Organizer dashboard runs on Expo Web from the same codebase. |
 | Tests | Vitest, PGlite, real PostgreSQL, k6 | PGlite (in-process PostgreSQL 18) for schema and API tests with no Docker, real PostgreSQL in CI for migrations and concurrency, k6 for gate load tests. |
 | Quality | Biome, GitHub Actions | One tool for lint and format; CI on every push, with SHA-pinned actions. |
-| Infra | AWS via Terraform | ECS Fargate, RDS, ElastiCache, ALB, ECR, Secrets Manager, CloudWatch. GitHub Actions deploys with OIDC (no long-lived AWS keys). |
+| Infra | Railway now; AWS via Terraform later | Railway runs the same Docker image with managed PostgreSQL 18 and Redis behind https, deployed from GitHub (§7). The AWS design (ECS Fargate, RDS, ElastiCache, ALB, Secrets Manager) is the path once one instance is not enough. |
 
 ## 2. Data model
 
@@ -90,7 +90,8 @@ at a door with poor mobile signal.
 ticket_key = HMAC-SHA256(QR_MASTER_KEY, "etkin/qr/v1" || ticket_id || qr_key_version)
 ```
 
-`QR_MASTER_KEY` lives in AWS Secrets Manager. Leaking the database does not leak
+`QR_MASTER_KEY` lives only in the host's secret variables (Railway now, AWS Secrets Manager
+later), never in the database. Leaking the database does not leak
 working codes, and bumping `tickets.qr_key_version` invalidates every code issued so far.
 
 **Delivery and device binding.** `POST /tickets/:id/qr-key {deviceId}` returns the ticket key
@@ -213,7 +214,29 @@ toward unearned badges is computed by the same function that decides awards, so 
   recent `lifetime_earned` and shrinks with the no-show rate (tickets issued but never checked in).
   The run's `seed` is stored and published, so anyone can replay the draw and verify it was fair.
 
-## 7. Deployment (AWS)
+## 7. Deployment
+
+**Now: Railway.** The API runs on [Railway](https://railway.com) as two services built from the
+same Dockerfile, next to Railway's PostgreSQL 18 and Redis:
+
+```
+https://<name>.up.railway.app → api   (apps/api/railway.json: dbmate up before each deploy, /health/ready check)
+                                worker (apps/api/railway.worker.json: node dist/worker.js)
+                                ├── PostgreSQL 18 (private network, volume)
+                                └── Redis (private network)
+```
+
+Railway builds and deploys on every push to `main` that touches the API, the shared package, the
+migrations or the lockfile. Migrations ship inside the image and run as the pre-deploy step, so
+a failed migration stops the deploy before the new code starts. Secrets (`JWT_ACCESS_SECRET`,
+`QR_MASTER_KEY`) live only in Railway's service variables.
+
+**Why not AWS yet.** With a one-month deadline and a Play closed test that needs 14 days of an
+installable build, an hour of setup beat a few days of VPC, IAM, RDS and certificates. The cost
+is about $5 a month. The AWS design below stays as the plan for when the app outgrows one
+instance; the Docker image and the migration step carry over unchanged.
+
+**Later: AWS via Terraform.**
 
 ```
 Route 53 → ALB (HTTPS) → ECS Fargate: api (2 tasks) + worker (1 task)
@@ -242,7 +265,7 @@ locked-down security groups instead of behind a NAT gateway. The stack is design
 | 1 | Nov 2–8 | **T1.1 repo, schema, local infra** ✅ · **T1.2 Fastify skeleton (config, pino logs, problem+json errors, OpenAPI, health, Docker image)** ✅ · **T1.3 auth (argon2id, JWT + rotating refresh) and org RBAC** ✅ · **T1.4 organizations, events, ticket types CRUD** ✅ | **T1.5 GitHub Actions CI** ✅ · open a Play Console account (identity verification takes days) | Swagger: register, create a club, publish an event; CI green |
 | 2 | Nov 9–15 | **Ticket claim (capacity guard, idempotency)** ✅ · **shared QR library + device-bound keys** ✅ · **check-in endpoint + ledger** ✅ · **outbox worker + badges** ✅ · **attendance analytics** ✅ | **Concurrency tests (50 parallel scans of one ticket, exactly 1 success)** ✅ · **k6 load test: door rush + ticket drop** ✅ · first internal Android build to start Play closed testing | Race-condition test and k6 report in the README |
 | 3 | Nov 16–22 | Push notifications (outbox handler) · club-defined badges API | **Expo app shell: auth, event feed, tickets list, profile** ✅ · **event page + claim, live QR ticket** ✅ · **points/badges** ✅ · organizer mode: **scanner screen, live attendee list, manual admission, create/publish/cancel event** ✅ | End-to-end demo on a real Android phone |
-| 4 | Nov 23–29 | Priority and lottery allocation · account deletion (KVKK and Play policy) | Terraform AWS stack · CD pipeline · Play Store listing, privacy policy, Data safety form | Public demo URL, app in closed testing, polished README with architecture and demo video |
+| 4 | Nov 23–29 | Priority and lottery allocation · account deletion (KVKK and Play policy) | **Railway deployment (pulled forward from week 4)** · Play Store listing, privacy policy, Data safety form · Terraform AWS stack (optional) | Public demo URL, app in closed testing, polished README with architecture and demo video |
 
 **Play Store timing.** New personal developer accounts must run a closed test with at least 12
 testers for 14 consecutive days before production access. Club members are the testers. The

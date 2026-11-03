@@ -27,6 +27,12 @@ FROM node:24-alpine AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=build --chown=node:node /out ./
+# Migrations ship with the image so a deploy can apply them before the new
+# version starts (`dbmate --wait up`; Railway runs it as the pre-deploy step).
+# Same dbmate version as the repository's devDependency.
+COPY --from=ghcr.io/amacneil/dbmate:2.37.0 /usr/local/bin/dbmate /usr/local/bin/dbmate
+COPY --chown=node:node db/migrations ./db/migrations
+ENV DBMATE_NO_DUMP_SCHEMA=true
 USER node
 EXPOSE 3000
 CMD ["node", "dist/server.js"]
