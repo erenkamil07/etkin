@@ -1,4 +1,6 @@
-# Local development infrastructure. The API and worker join this file in week 1 (T1.2).
+# Local infrastructure. `pnpm infra:up` starts postgres + redis only; the api
+# service is behind the "app" profile (`pnpm app:up`) so it doesn't clash with
+# `pnpm dev`, which runs the API on the host with hot reload.
 name: etkin
 
 services:
@@ -29,6 +31,29 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+
+  api:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+      DATABASE_URL: postgres://etkin:etkin@postgres:5432/etkin
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 volumes:
   pgdata:

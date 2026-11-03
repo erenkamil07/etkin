@@ -1,19 +1,25 @@
 {
   "name": "etkin",
   "private": true,
-  "description": "Event ticketing, dynamic-QR check-in and community loyalty platform for university clubs",
+  "description": "Event ticketing, dynamic-QR check-in and loyalty platform for university clubs",
   "packageManager": "pnpm@12.14.0",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
+    "dev": "pnpm --filter @etkin/api dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm test:db && pnpm -r test",
+    "test:db": "node db/tests/schema.test.mjs",
     "infra:up": "docker compose up -d --wait",
-    "infra:down": "docker compose down",
+    "infra:down": "docker compose --profile app down",
+    "app:up": "docker compose --profile app up -d --build --wait",
     "db:migrate": "dbmate up",
     "db:rollback": "dbmate rollback",
     "db:new": "dbmate new",
     "db:reset": "docker compose down -v && docker compose up -d --wait && dbmate up",
-    "test:db": "node db/tests/schema.test.mjs"
+    "db:codegen": "pnpm --filter @etkin/api db:codegen"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.10",
