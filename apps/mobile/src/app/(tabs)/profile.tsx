@@ -88,15 +88,19 @@ export default function Profile() {
   const badges = useQuery({
     queryKey: ['me', 'badges'],
     queryFn: async () => {
-      const earned = api.GET('/me/badges').then(({ data, error }) => {
-        if (error) throw error;
-        return data;
-      });
-      const progress = api.GET('/me/badges/progress').then(({ data, error }) => {
-        if (error) throw error;
-        return data;
-      });
-      return { earned: await earned, progress: await progress };
+      // Promise.all, not two awaits: if the first request fails, the second
+      // one's rejection must still be handled (a signed-out user fails both).
+      const [earned, progress] = await Promise.all([
+        api.GET('/me/badges').then(({ data, error }) => {
+          if (error) throw error;
+          return data;
+        }),
+        api.GET('/me/badges/progress').then(({ data, error }) => {
+          if (error) throw error;
+          return data;
+        }),
+      ]);
+      return { earned, progress };
     },
   });
 
@@ -133,9 +137,14 @@ export default function Profile() {
       )}
 
       {/* Club team first: at an event this is the way to the door scanner. */}
-      {me.data && me.data.memberships.length > 0 ? (
+      {me.data ? (
         <>
           <ThemedText type="smallBold">Kulüp yönetimi</ThemedText>
+          {me.data.memberships.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              Bir kulübün ekibinde değilsin. Kulübünü kurarsan etkinlik açıp kapıda bilet okutabilirsin.
+            </ThemedText>
+          ) : null}
           {me.data.memberships.map((membership) => (
             <Card
               key={membership.organizationId}
@@ -154,6 +163,7 @@ export default function Profile() {
               </View>
             </Card>
           ))}
+          <Button title="+ Kulüp oluştur" variant="secondary" onPress={() => router.push('/new-club')} />
         </>
       ) : null}
 
