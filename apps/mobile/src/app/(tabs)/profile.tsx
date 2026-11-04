@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { publicApi } from '@/api/base';
 import { api } from '@/api/client';
 import { useMe } from '@/api/queries';
@@ -249,6 +249,11 @@ export default function Profile() {
       )}
 
       <Button title="Çıkış yap" variant="secondary" loading={signOut.isPending} onPress={() => signOut.mutate()} />
+      <Pressable accessibilityRole="button" onPress={() => router.push('/delete-account')} hitSlop={8}>
+        <ThemedText type="small" themeColor="danger" style={styles.center}>
+          Hesabımı sil
+        </ThemedText>
+      </Pressable>
       <View style={styles.tabBarSpace} />
     </Screen>
   );
@@ -262,4 +267,5 @@ const styles = StyleSheet.create({
   emoji: { fontSize: 32, lineHeight: 40 },
   locked: { opacity: 0.35 },
   tabBarSpace: { height: BottomTabInset + Spacing.six },
+  center: { textAlign: 'center' },
 });

@@ -2,7 +2,7 @@ import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { currentUser } from './plugin.js';
-import { type AuthDeps, getProfile, login, logout, refresh, register } from './service.js';
+import { type AuthDeps, deleteAccount, getProfile, login, logout, refresh, register } from './service.js';
 
 const Email = z.email().max(254);
 const DeviceId = z.string().min(1).max(128).optional().describe('Stable per-install id; tickets bind to it later');
@@ -126,5 +126,24 @@ export const authRoutes: FastifyPluginAsyncZod<{ auth: AuthDeps }> = async (app,
       },
     },
     async (request) => getProfile(auth.db, currentUser(request).id),
+  );
+
+  app.delete(
+    '/me',
+    {
+      onRequest: app.authenticate,
+      // Same budget as login: this endpoint also checks a password.
+      config: { rateLimit: { max: 10, timeWindow: '1 minute' } },
+      schema: {
+        tags: ['auth'],
+        summary: 'Delete your account (password required); personal data is wiped, club history stays anonymous',
+        security: [{ bearerAuth: [] }],
+        body: z.object({ password: z.string().min(1).max(200) }),
+      },
+    },
+    async (request, reply) => {
+      await deleteAccount(auth.db, currentUser(request).id, request.body.password);
+      return reply.status(204).send();
+    },
   );
 };

@@ -19,6 +19,7 @@ const MESSAGES: Record<string, string> = {
   TICKET_TYPE_NOT_FOUND: 'Bilet türü bulunamadı.',
   FORBIDDEN: 'Bunu yapmak için kulüpte yetkin yok.',
   SLUG_TAKEN: 'Bu kısa ad başka bir kulübe ait; başka bir tane seç.',
+  WRONG_PASSWORD: 'Şifre yanlış.',
   INVALID_EVENT_TIMES: 'Etkinliğin bitişi başlangıcından sonra olmalı.',
   INVALID_CHECKIN_WINDOW: 'Kapının kapanışı açılışından sonra olmalı.',
   TICKET_TYPE_NAME_TAKEN: 'Bu etkinlikte aynı adla bir bilet türü zaten var.',

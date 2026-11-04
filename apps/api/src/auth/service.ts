@@ -214,6 +214,76 @@ export async function logout(deps: AuthDeps, refreshToken: string): Promise<void
   if (row) await revokeFamily(deps.db, row.family_id);
 }
 
+/**
+ * Deletes the account as KVKK and Google Play expect while keeping the clubs'
+ * history honest. The row is anonymised rather than removed: name, email,
+ * student number, university and password are wiped (the email is free for a
+ * new account), every session ends and team memberships go. Seats held for
+ * events that haven't started are given back. Past attendance, points and
+ * scan logs stay in the clubs' numbers, tied to nobody.
+ *
+ * A wrong password is 403, not 401: clients treat 401 as "signed out".
+ */
+export async function deleteAccount(db: Database, userId: string, password: string): Promise<void> {
+  const user = await db
+    .selectFrom('users')
+    .select('password_hash')
+    .where('id', '=', userId)
+    .where('deleted_at', 'is', null)
+    .executeTakeFirst();
+  if (!user) throw new AppError(401, 'INVALID_TOKEN', 'Account no longer exists');
+  if (!(await verifyPassword(user.password_hash, password))) {
+    throw new AppError(403, 'WRONG_PASSWORD', 'Password is incorrect');
+  }
+
+  await db.transaction().execute(async (trx) => {
+    const now = new Date();
+    const released = await trx
+      .updateTable('tickets')
+      .set({ status: 'cancelled', cancelled_at: now })
+      .where('user_id', '=', userId)
+      .where('status', '=', 'active')
+      .where('event_id', 'in', trx.selectFrom('events').select('id').where('starts_at', '>', now))
+      .returning('ticket_type_id')
+      .execute();
+    const seatsPerType = new Map<string, number>();
+    for (const { ticket_type_id } of released) {
+      seatsPerType.set(ticket_type_id, (seatsPerType.get(ticket_type_id) ?? 0) + 1);
+    }
+    for (const [ticketTypeId, seats] of seatsPerType) {
+      await trx
+        .updateTable('ticket_types')
+        .set((eb) => ({ issued_count: eb('issued_count', '-', seats) }))
+        .where('id', '=', ticketTypeId)
+        .execute();
+    }
+
+    await trx.updateTable('tickets').set({ bound_device_id: null }).where('user_id', '=', userId).execute();
+    await trx.deleteFrom('organization_members').where('user_id', '=', userId).execute();
+    await trx
+      .updateTable('refresh_tokens')
+      .set({ revoked_at: now })
+      .where('user_id', '=', userId)
+      .where('revoked_at', 'is', null)
+      .execute();
+    await trx
+      .updateTable('users')
+      .set({
+        email: `deleted-${userId}@deleted.invalid`,
+        email_verified_at: null,
+        password_hash: null,
+        full_name: 'Silinmiş kullanıcı',
+        student_number: null,
+        university: null,
+        avatar_url: null,
+        deleted_at: now,
+        updated_at: now,
+      })
+      .where('id', '=', userId)
+      .execute();
+  });
+}
+
 export async function getProfile(db: Database, userId: string) {
   const user = await db
     .selectFrom('users')

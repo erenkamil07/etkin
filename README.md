@@ -182,6 +182,10 @@ as the owner or the scanner, go to Profil → the club → the event → Kapıda
   and photo, and the head count. Admission awards the event's club points through the ledger, and
   every scan is logged. Send an `Idempotency-Key` per physical scan, so retries don't read as
   duplicates.
+- **Account deletion.** `DELETE /me` (password required) anonymises the account: name, email,
+  student number, university and password are wiped and the email is free again, every session
+  ends, team memberships go and seats for events that have not started are given back. Past
+  attendance and points stay in the clubs' numbers, tied to nobody. In the app: Profil → Hesabımı sil.
 - **Points and badges.** `GET /me/points` shows your balance per club and the latest changes,
   with the event behind each one. `GET /me/badges` lists badges such as İlk Adım, Müdavim and
   Kaşif, which the worker awards within about a second of a check-in. `GET /me/badges/progress`

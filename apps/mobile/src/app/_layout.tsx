@@ -42,6 +42,7 @@ export default function RootLayout() {
             <Stack.Screen name="scan/[eventId]" options={{ ...pushed, title: 'Kapı' }} />
             <Stack.Screen name="new-event/[orgId]" options={{ ...pushed, title: 'Yeni etkinlik' }} />
             <Stack.Screen name="new-club" options={{ ...pushed, title: 'Kulüp oluştur' }} />
+            <Stack.Screen name="delete-account" options={{ ...pushed, title: 'Hesabı sil' }} />
           </Stack.Protected>
           <Stack.Protected guard={status === 'signedOut'}>
             <Stack.Screen name="sign-in" />
