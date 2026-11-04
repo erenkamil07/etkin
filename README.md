@@ -155,6 +155,7 @@ the present. The accounts are for local development only:
 | Club owner | `demo.organizer@etkin.dev` | `demo-organizer-2026` |
 | Door scanner | `kapi.demo@etkin.dev` | `demo-kapi-2026` |
 | Student | `ayse.demo@uni.edu.tr` | `correct horse battery` |
+| Second student | `mert.demo@uni.edu.tr` | `mert demo 2026` |
 
 To try the door, open the live event's ticket as the student on one screen. On a phone signed in
 as the owner or the scanner, go to Profil → the club → the event → Kapıda QR okut. Run

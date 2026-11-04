@@ -18,6 +18,13 @@ const ACCOUNTS = {
     fullName: 'Ayşe Yılmaz',
     university: 'ODTÜ',
   },
+  // A second student, so one ticket can be admitted while another is already used.
+  student2: {
+    email: 'mert.demo@uni.edu.tr',
+    password: 'mert demo 2026',
+    fullName: 'Mert Demir',
+    university: 'Mersin Üniversitesi',
+  },
 };
 const CLUB = { slug: 'ieee-demo', name: 'IEEE Öğrenci Kolu' };
 const LIVE_TITLE = 'Canlı Demo: Kapı Testi';
@@ -54,6 +61,7 @@ async function ensureUser(account: { email: string; password: string; fullName: 
 const organizerId = await ensureUser(ACCOUNTS.organizer);
 const scannerId = await ensureUser(ACCOUNTS.scanner);
 await ensureUser(ACCOUNTS.student);
+await ensureUser(ACCOUNTS.student2);
 
 const orgId =
   (await db.selectFrom('organizations').select('id').where('slug', '=', CLUB.slug).executeTakeFirst())?.id ??
