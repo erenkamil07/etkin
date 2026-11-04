@@ -135,7 +135,7 @@ blocked in `app.json`, so the Play listing doesn't have to justify them.
 cd apps/mobile
 npx eas-cli@latest login                 # your Expo account
 npx eas-cli@latest init                  # links the project; adds its id to app.json
-npx eas-cli@latest env:create --environment production --name EXPO_PUBLIC_API_URL --value https://<api> --visibility plaintext
+npx eas-cli@latest env:set --environment production --environment preview --name EXPO_PUBLIC_API_URL --value https://etkin-production.up.railway.app --visibility plaintext
 npx eas-cli@latest build -p android --profile production
 ```
 
