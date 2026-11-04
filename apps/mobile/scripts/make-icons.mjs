@@ -96,3 +96,36 @@ for (const [path, { size, svg: source }] of Object.entries(images)) {
   writeFileSync(new URL(path, assets), png);
   console.log(`${path}: ${size}px, ${(png.length / 1024).toFixed(1)} KB`);
 }
+
+// Google Play's 1024 x 500 feature graphic. Its words are set in the app's own
+// font, read from the font package, so this one doesn't depend on system fonts.
+const font = (weight) =>
+  require.resolve(`@expo-google-fonts/plus-jakarta-sans/${weight}/PlusJakartaSans_${weight}.ttf`);
+const feature = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 500">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="${ORANGE_LIGHT}"/>
+      <stop offset="0.55" stop-color="${ORANGE}"/>
+      <stop offset="1" stop-color="${ORANGE_DEEP}"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="500" fill="url(#bg)"/>
+  <g transform="translate(250 250) scale(0.62) translate(-512 -512)">${mark({ fill: INK, id: 'f' })}</g>
+  <text x="470" y="238" font-family="Plus Jakarta Sans" font-weight="800" font-size="132" fill="${INK}">Etkin</text>
+  <text font-family="Plus Jakarta Sans" font-weight="600" font-size="30" fill="${INK}">
+    <tspan x="476" y="300">Kulüp etkinliklerine bilet al,</tspan>
+    <tspan x="476" y="342">kapıda QR ile gir, puan topla.</tspan>
+  </text>
+</svg>`;
+const featurePng = new Resvg(feature, {
+  fitTo: { mode: 'width', value: 1024 },
+  font: {
+    loadSystemFonts: false,
+    fontFiles: [font('800ExtraBold'), font('600SemiBold')],
+    defaultFontFamily: 'Plus Jakarta Sans',
+  },
+})
+  .render()
+  .asPng();
+writeFileSync(new URL('store/play-feature-graphic-1024x500.png', assets), featurePng);
+console.log(`store/play-feature-graphic-1024x500.png: ${(featurePng.length / 1024).toFixed(1)} KB`);
