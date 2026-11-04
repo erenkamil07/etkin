@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
 import { useMyTickets, useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
@@ -171,6 +171,20 @@ export default function EventDetail() {
               <ErrorBanner error={claim.error} />
             </>
           )}
+
+          {membership ? null : (
+            <Pressable
+              accessibilityRole="button"
+              hitSlop={8}
+              onPress={() =>
+                router.push({ pathname: '/report/[eventId]', params: { eventId: id, title: event.data.title } })
+              }
+            >
+              <ThemedText type="small" themeColor="textSecondary" style={styles.center}>
+                Etkinliği bildir
+              </ThemedText>
+            </Pressable>
+          )}
         </>
       )}
     </Screen>
@@ -181,4 +195,5 @@ const styles = StyleSheet.create({
   heading: { gap: Spacing.one },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   grow: { flex: 1 },
+  center: { textAlign: 'center' },
 });

@@ -375,17 +375,22 @@ export async function cancelEvent(db: Database, orgId: string, eventId: string) 
     if (event.status !== 'draft' && event.status !== 'published') {
       throw new AppError(409, 'INVALID_STATUS_TRANSITION', `A ${event.status} event cannot be cancelled`);
     }
-    await trx.updateTable('events').set({ status: 'cancelled' }).where('id', '=', eventId).execute();
-    // Holders keep a visible, cancelled ticket; claims in flight finished before
-    // the event lock above was granted (they hold it FOR SHARE).
-    await trx
-      .updateTable('tickets')
-      .set({ status: 'cancelled', cancelled_at: new Date() })
-      .where('event_id', '=', eventId)
-      .where('status', '=', 'active')
-      .execute();
+    await cancelLockedEvent(trx, eventId);
   });
   return loadEventDetail(db, eventId);
+}
+
+/** Cancels an event the caller has locked FOR UPDATE, with the tickets still active for it. */
+export async function cancelLockedEvent(trx: Database, eventId: string) {
+  await trx.updateTable('events').set({ status: 'cancelled' }).where('id', '=', eventId).execute();
+  // Holders keep a visible, cancelled ticket; claims in flight finished before
+  // the event lock was granted (they hold it FOR SHARE).
+  await trx
+    .updateTable('tickets')
+    .set({ status: 'cancelled', cancelled_at: new Date() })
+    .where('event_id', '=', eventId)
+    .where('status', '=', 'active')
+    .execute();
 }
 
 /** Housekeeping: published events whose doors have closed become 'completed'. Returns how many. */

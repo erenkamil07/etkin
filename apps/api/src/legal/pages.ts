@@ -4,7 +4,7 @@
 // than none.
 
 export const CONTACT_EMAIL = 'erenkamilgoksel96@gmail.com';
-const UPDATED = '4 Kasım 2026';
+const UPDATED = '5 Kasım 2026';
 
 function page(title: string, body: string): string {
   return `<!doctype html>
@@ -57,6 +57,9 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
   donanım kimliği, reklam kimliği veya konumu toplanmaz.</li>
   <li><strong>Kamera:</strong> yalnızca kulüp ekibi kapıda bilet okuturken kullanılır. Görüntü
   kaydedilmez ve sunucuya gönderilmez; sadece okunan QR kodunun içeriği gönderilir.</li>
+  <li><strong>Bildirimler:</strong> bir etkinliği kurallara aykırı diye bildirirsen seçtiğin sebep,
+  yazdığın açıklama ve bildirimin zamanı. Kimin bildirdiğini kulüp göremez; bildirimleri yalnızca
+  Etkin'in yöneticisi inceler.</li>
   <li><strong>Teknik kayıtlar:</strong> sunucu, güvenlik ve hata ayıklama için istek kayıtları
   (IP adresi, zaman, istenen adres) tutar.</li>
 </ul>
@@ -71,6 +74,8 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
   <li>Kulüplere etkinliklerinin katılım sayılarını göstermek.</li>
   <li>Hizmetin güvenliğini sağlamak ve kötüye kullanımı (ör. art arda yanlış şifre denemeleri)
   engellemek.</li>
+  <li>Bildirilen etkinlikleri incelemek ve <a href="/terms">topluluk kurallarına</a> aykırı olanları
+  kaldırmak.</li>
 </ul>
 <p>Etkin reklam göstermez, verilerini satmaz ve reklam ya da analitik amaçlı takip araçları
 kullanmaz.</p>
@@ -124,6 +129,63 @@ değişiklikleri uygulamada da duyururuz.</p>
 
 <h2>İletişim</h2>
 <p>${mail}</p>`,
+);
+
+export const terms = page(
+  'Etkin Kullanım Koşulları ve Topluluk Kuralları',
+  `<h1>Etkin Kullanım Koşulları ve Topluluk Kuralları</h1>
+<p class="muted">Son güncelleme: ${UPDATED}</p>
+
+<p>Etkin'i kullanarak bu koşulları kabul etmiş olursun. Etkin, üniversite kulüplerinin etkinlik
+açtığı, öğrencilerin bilet alıp kapıda QR kodla girdiği bir uygulamadır. Etkinlikleri kulüpler
+düzenler; bir etkinliğin içeriğinden ve gerçekleşmesinden onu açan kulüp sorumludur.</p>
+
+<h2>Hesabın</h2>
+<ul>
+  <li>Etkin 18 yaş ve üzerindeki kullanıcılar içindir.</li>
+  <li>Hesap açarken doğru bilgi ver; şifreni kimseyle paylaşma. Hesabında yapılanlardan sen
+  sorumlusun.</li>
+  <li>Hesabını istediğin an <strong>Profil → Hesabımı sil</strong> ile silebilirsin.</li>
+</ul>
+
+<h2>Topluluk kuralları</h2>
+<p>Kulüp adları, açıklamaları, etkinlik başlıkları, açıklamaları ve bilet türleri herkese açıktır.
+Bunlarda şunlar yasaktır:</p>
+<ul>
+  <li>Nefret söylemi; ırk, etnik köken, din, cinsiyet, cinsel yönelim, engellilik ya da benzeri
+  özellikler üzerinden ayrımcılık</li>
+  <li>Hakaret, taciz, tehdit ya da birini hedef gösterme</li>
+  <li>Cinsel içerik ya da çıplaklık</li>
+  <li>Şiddet, şiddete çağrı ya da kendine zarar vermeyi özendirme</li>
+  <li>Yasa dışı faaliyetler; uyuşturucu, silah, kumar ya da bahis</li>
+  <li>Sahte ya da yanıltıcı etkinlik; başka bir kulübü veya kişiyi taklit etme</li>
+  <li>Spam, reklam ya da dolandırıcılık</li>
+  <li>Başkalarının kişisel bilgilerini izinsiz paylaşma</li>
+</ul>
+
+<h2>Bildirme ve kaldırma</h2>
+<p>Kurallara aykırı bir etkinlik görürsen etkinlik sayfasındaki <strong>Etkinliği bildir</strong>
+bağlantısını kullan ya da ${mail} adresine yaz. Bildirimi kimin yaptığını kulüp göremez. Bildirimler
+en kısa sürede incelenir. Kurallara aykırı bulunan etkinlik kaldırılır ve biletleri iptal edilir.
+Kuralları tekrar tekrar ya da ağır biçimde çiğneyen kulüplerin ve hesapların erişimi
+kapatılabilir.</p>
+
+<h2>Biletler ve kapı</h2>
+<ul>
+  <li>Bilet kişiye özeldir ve telefonuna bağlıdır; başkasına devredilemez.</li>
+  <li>QR kodunu kopyalamaya, çoğaltmaya ya da kapıdaki kontrolü atlatmaya çalışmak yasaktır.</li>
+  <li>Kulüpler etkinliği iptal edebilir; bu durumda biletin de iptal olur.</li>
+</ul>
+
+<h2>Sorumluluk</h2>
+<p>Etkin olduğu gibi sunulur. Hizmetin kesintisiz ve hatasız çalışması için çabalarız ama bunu
+garanti edemeyiz. Etkinliklerde yaşananlardan etkinliği düzenleyen kulüp sorumludur.</p>
+
+<h2>Değişiklikler</h2>
+<p>Bu koşullar değişirse güncel hali bu sayfada yayımlanır ve tarihi güncellenir.</p>
+
+<h2>İletişim</h2>
+<p>${mail} · Kişisel verilerin için <a href="/privacy">gizlilik politikası</a>.</p>`,
 );
 
 export const accountDeletion = page(

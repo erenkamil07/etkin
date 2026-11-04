@@ -16,6 +16,7 @@ safety form with what the app actually does.
 | Category | Etkinlikler (Events) |
 | Contact email | erenkamilgoksel96@gmail.com |
 | Privacy policy | https://etkin-production.up.railway.app/privacy |
+| Terms and community rules | https://etkin-production.up.railway.app/terms |
 | Account deletion URL | https://etkin-production.up.railway.app/account-deletion |
 | Package | com.erengoksel.etkin |
 
@@ -80,9 +81,24 @@ shows the organizer tools for the demo club this account owns."
 **Ads:** No, the app contains no ads.
 
 **Content rating** (IARC questionnaire): category "All other app types". No violence, sexual
-content, profanity, drugs, gambling or purchases. Users can share content with other users: yes,
-clubs publish events that every user sees; there is no chat or messaging. The app does not share
-the user's location.
+content, profanity, drugs, gambling or purchases, and none in the downloaded app itself (icons,
+door sounds and fonts only). The app does not share the user's location.
+
+User-generated content: clubs publish event text that every user sees, so the answers are:
+
+| Question | Answer |
+|---|---|
+| Users interact or exchange content (voice, text, images)? | Yes: event titles and descriptions; no chat or messaging |
+| Is shared, user-generated content the main source of the app's content? | No: the app is tickets, door check-in and points |
+| Allows nudity to be shared? / Real, uncensored violence? | No / No (text only, no image uploads) |
+| Can users block users or user-generated content? | No |
+| Can users report users or user-generated content? | Yes: "Etkinliği bildir" on every event page (from the release that ships it) |
+| Is chat moderated? | No (there is no chat) |
+| Interactions limited to invited friends? | No |
+
+Google Play's user-generated content policy also asks for terms that define objectionable
+content, which users accept before posting: sign-up links the terms, and creating a club needs the
+community rules ticked.
 
 **Target audience:** 18 and over. Not designed for children.
 
@@ -106,10 +122,19 @@ Data types collected (none is used for advertising or sold):
 | Personal info → User IDs | Required | App functionality, Account management |
 | Personal info → Other info (university, student number) | Optional | App functionality |
 | App activity → Other actions (tickets, check-ins, points) | Required | App functionality |
+| App activity → Other user-generated content (clubs and events you create, reports you file) | Optional | App functionality |
 | Device or other IDs (a random per-install id, not a hardware id) | Required | App functionality, Fraud prevention, security and compliance |
 
 Not collected: location, photos or videos (the camera only reads QR codes on the device),
 contacts, messages, financial info, health, audio, files, calendar, web history.
+
+## Handling reports
+
+Reports land in the review queue and are logged at warn level ("event reported") on Railway.
+To review them in the app, make your own account a platform admin once: Railway → Postgres →
+Database → Data → `users` → set `platform_role` to `admin` on your row, then sign out of the app
+and back in. Profil → Moderasyon then lists reported events: **Etkinliği kaldır** cancels the event
+and its tickets and replaces its text; **Sorun yok, kapat** closes the reports.
 
 ## Releasing to closed testing
 

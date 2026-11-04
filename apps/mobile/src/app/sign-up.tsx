@@ -7,7 +7,7 @@ import { getDeviceId } from '@/auth/device';
 import { startSession } from '@/auth/session';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ErrorBanner, Field, Screen } from '@/components/ui';
-import { PRIVACY_URL } from '@/config';
+import { PRIVACY_URL, TERMS_URL } from '@/config';
 
 interface Form {
   fullName: string;
@@ -95,10 +95,14 @@ export default function SignUp() {
 
       <ThemedText type="small" themeColor="textSecondary">
         Hesap oluşturarak{' '}
+        <ThemedText type="small" themeColor="tint" onPress={() => openBrowserAsync(TERMS_URL)}>
+          Kullanım Koşulları
+        </ThemedText>
+        'nı kabul eder,{' '}
         <ThemedText type="small" themeColor="tint" onPress={() => openBrowserAsync(PRIVACY_URL)}>
           Gizlilik Politikası
         </ThemedText>
-        'nı okuduğunu kabul edersin.
+        'nı okuduğunu onaylarsın.
       </ThemedText>
 
       <Link href="/sign-in">

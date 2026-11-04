@@ -192,6 +192,63 @@ export function Card({ children, onPress }: { children: ReactNode; onPress?: () 
   );
 }
 
+/** One option in a list (radio) or a yes/no agreement (checkbox), with an optional line underneath. */
+export function Choice({
+  label,
+  detail,
+  selected,
+  onPress,
+  kind = 'radio',
+}: {
+  label: ReactNode;
+  detail?: string;
+  selected: boolean;
+  onPress: () => void;
+  kind?: 'radio' | 'checkbox';
+}) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      accessibilityRole={kind}
+      accessibilityState={{ checked: selected }}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.choice,
+        {
+          backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement,
+          borderColor: selected ? theme.tint : theme.border,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.mark,
+          kind === 'radio' ? styles.radio : styles.checkbox,
+          { borderColor: selected ? theme.tint : theme.textSecondary },
+        ]}
+      >
+        {selected ? (
+          <View
+            style={[
+              styles.markFill,
+              kind === 'radio' ? styles.radio : styles.checkboxFill,
+              { backgroundColor: theme.tint },
+            ]}
+          />
+        ) : null}
+      </View>
+      <View style={styles.choiceText}>
+        <ThemedText type="default">{label}</ThemedText>
+        {detail ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {detail}
+          </ThemedText>
+        ) : null}
+      </View>
+    </Pressable>
+  );
+}
+
 /** A coloured note inside the page, e.g. "this event was cancelled". */
 export function Notice({ children, tone }: { children: ReactNode; tone: 'success' | 'warning' | 'danger' }) {
   const theme = useTheme();
@@ -293,6 +350,20 @@ const styles = StyleSheet.create({
   buttonLabel: { fontFamily: Fonts.bold, fontSize: 16, lineHeight: 22 },
   banner: { borderWidth: 1, borderRadius: Radius.medium, padding: Spacing.three },
   card: { borderRadius: Radius.large, borderWidth: 1, padding: Spacing.three, gap: Spacing.one },
+  choice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    borderRadius: Radius.medium,
+    borderWidth: 1,
+    padding: Spacing.three,
+  },
+  choiceText: { flex: 1, gap: 2 },
+  mark: { width: 22, height: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  radio: { borderRadius: 11 },
+  checkbox: { borderRadius: 6 },
+  markFill: { width: 10, height: 10 },
+  checkboxFill: { borderRadius: 2 },
   pill: { alignSelf: 'flex-start', borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
   pillLabel: { fontSize: 12, lineHeight: 18 },
   track: { height: 6, borderRadius: 3, overflow: 'hidden' },

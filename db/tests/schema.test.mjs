@@ -281,6 +281,33 @@ await rejects(
   'badges_criteria_shape',
 );
 
+// --- reports --------------------------------------------------------------
+const report = await one(
+  `INSERT INTO event_reports (event_id, reporter_id, reason) VALUES ($1, $2, 'spam') RETURNING id`,
+  [ev.id, scanner.id],
+);
+await rejects(
+  `INSERT INTO event_reports (event_id, reporter_id, reason) VALUES ($1, $2, 'other')`,
+  'one open report per person per event',
+  [ev.id, scanner.id],
+  'event_reports_open_idx',
+);
+await rejects(
+  `UPDATE event_reports SET resolved_at = now() WHERE id = $1`,
+  'a resolved report records how and by whom',
+  [report.id],
+  'event_reports_resolution_consistency',
+);
+await db.query(
+  `UPDATE event_reports SET resolved_at = now(), resolved_by = $2, resolution = 'dismissed' WHERE id = $1`,
+  [report.id, u.id],
+);
+await db.query(`INSERT INTO event_reports (event_id, reporter_id, reason) VALUES ($1, $2, 'other')`, [
+  ev.id,
+  scanner.id,
+]);
+ok(true, 'the same person can report again once their earlier report is resolved');
+
 // --- reversibility --------------------------------------------------------
 await migrateDown();
 const left = await one(`SELECT count(*)::int AS n FROM pg_tables WHERE schemaname = 'public'`);

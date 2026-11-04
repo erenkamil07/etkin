@@ -22,6 +22,7 @@ import { AppError, registerErrorHandling } from './errors.js';
 import { eventRoutes } from './events/routes.js';
 import { legalRoutes } from './legal/routes.js';
 import { loyaltyRoutes } from './loyalty/routes.js';
+import { moderationRoutes } from './moderation/routes.js';
 import { orgRoutes } from './orgs/routes.js';
 import { healthRoutes, type ReadinessCheck } from './routes/health.js';
 import { ticketRoutes } from './tickets/routes.js';
@@ -83,6 +84,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
         { name: 'check-in', description: 'Admitting people at the door' },
         { name: 'loyalty', description: 'Your club points and badges' },
         { name: 'analytics', description: 'Attendance numbers for organizers' },
+        { name: 'moderation', description: 'Reporting events and reviewing reports' },
         { name: 'health', description: 'Liveness and readiness probes' },
       ],
       components: {
@@ -113,6 +115,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   await app.register(checkInRoutes, { db, qrMasterKey: config.QR_MASTER_KEY });
   await app.register(loyaltyRoutes, { db });
   await app.register(analyticsRoutes, { db });
+  await app.register(moderationRoutes, { db });
 
   return app;
 }

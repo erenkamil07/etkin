@@ -39,6 +39,10 @@ export type OrgRole = "organizer" | "owner" | "scanner";
 
 export type PlatformRole = "admin" | "user";
 
+export type ReportReason = "inappropriate" | "misleading" | "other" | "spam";
+
+export type ReportResolution = "dismissed" | "removed";
+
 export type ScanResult = "accepted" | "duplicate" | "expired_token" | "invalid_token" | "outside_window" | "ticket_cancelled" | "wrong_event";
 
 export type TicketStatus = "active" | "cancelled" | "checked_in";
@@ -79,6 +83,18 @@ export interface CheckIns {
   scanner_device_id: string | null;
   ticket_id: string;
   user_id: string;
+}
+
+export interface EventReports {
+  created_at: Generated<Timestamp>;
+  details: string | null;
+  event_id: string;
+  id: Generated<string>;
+  reason: ReportReason;
+  reporter_id: string;
+  resolution: ReportResolution | null;
+  resolved_at: Timestamp | null;
+  resolved_by: string | null;
 }
 
 export interface Events {
@@ -243,6 +259,7 @@ export interface DB {
   allocation_runs: AllocationRuns;
   badges: Badges;
   check_ins: CheckIns;
+  event_reports: EventReports;
   events: Events;
   organization_members: OrganizationMembers;
   organizations: Organizations;

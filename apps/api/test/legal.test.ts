@@ -35,9 +35,18 @@ describe('legal pages', () => {
     expect(res.body).toContain('Etkin hesap silme');
   });
 
-  it('keeps both pages out of the API docs', async () => {
+  it('publishes the community rules and how to report an event', async () => {
+    const res = await app.inject({ method: 'GET', url: '/terms' });
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toContain('Topluluk kuralları');
+    expect(res.body).toContain('Etkinliği bildir');
+    expect(res.body).not.toContain('<script');
+  });
+
+  it('keeps the pages out of the API docs', async () => {
     const spec = (await app.inject({ method: 'GET', url: '/docs/json' })).json();
     expect(spec.paths).not.toHaveProperty('/privacy');
+    expect(spec.paths).not.toHaveProperty('/terms');
     expect(spec.paths).not.toHaveProperty('/account-deletion');
   });
 });

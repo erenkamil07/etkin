@@ -1,10 +1,11 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { accountDeletion, privacyPolicy } from './pages.js';
+import { accountDeletion, privacyPolicy, terms } from './pages.js';
 
-/** Public pages the Play Store listing links to: the privacy policy and how to delete an account. */
+/** Public pages the Play Store listing and the app link to: privacy, terms and how to delete an account. */
 export const legalRoutes: FastifyPluginAsync = async (app) => {
   for (const [url, html] of [
     ['/privacy', privacyPolicy],
+    ['/terms', terms],
     ['/account-deletion', accountDeletion],
   ] as const) {
     app.get(url, { schema: { hide: true } }, async (_request, reply) =>

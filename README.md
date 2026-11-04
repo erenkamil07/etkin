@@ -118,6 +118,9 @@ tokens live in localStorage instead of the keystore.
   draft or published straight away, with an optional early-access window for members with enough
   club points. Dates are typed as digits and formatted as you go, so the number pad works on every
   phone. If a step fails, trying again resumes where it stopped instead of leaving a second draft.
+- **Reporting and moderation.** Clubs write public text, so anyone can report an event from its
+  page ("Etkinliği bildir"), and a club's owner ticks the community rules before creating it. A
+  platform admin gets a Moderasyon page in the profile to remove an event or dismiss its reports.
 - **Look and feel.** Dark-only, with Etkin orange (`#FF5A1F`) for actions and near-black text on
   it for contrast; Plus Jakarta Sans throughout. The door scanner keeps orange off its screen so
   its amber verdict can't be mistaken for ordinary UI, and each verdict has its own symbol, sound
@@ -138,10 +141,11 @@ The release manifest asks only for camera, vibration and internet. The storage, 
 draw-over-apps and system-settings permissions that the template and some libraries add are
 blocked in `app.json`, so the Play listing doesn't have to justify them.
 
-The Play listing links to two pages the API serves: the privacy policy at
-[/privacy](https://etkin-production.up.railway.app/privacy) and the account deletion steps at
+The Play listing links to pages the API serves: the privacy policy at
+[/privacy](https://etkin-production.up.railway.app/privacy), the terms and community rules at
+[/terms](https://etkin-production.up.railway.app/terms) and the account deletion steps at
 [/account-deletion](https://etkin-production.up.railway.app/account-deletion). The app links to
-the policy from sign-up and the profile.
+the policy and the terms from sign-up and the profile.
 
 ```bash
 cd apps/mobile
@@ -199,6 +203,14 @@ as the owner or the scanner, go to Profil → the club → the event → Kapıda
   student number, university and password are wiped and the email is free again, every session
   ends, team memberships go and seats for events that have not started are given back. Past
   attendance and points stay in the clubs' numbers, tied to nobody. In the app: Profil → Hesabımı sil.
+- **Reports and moderation.** `POST /events/:eventId/reports {reason, details}` reports a published
+  event (`inappropriate`, `misleading`, `spam` or `other`); reporting again updates your open
+  report, and the limit is per person, not per IP, since a campus shares addresses. Platform
+  admins see the queue at `GET /admin/reports`, most reported first and without reporter names.
+  `POST /admin/events/:eventId/remove` cancels the event and its tickets and replaces its text;
+  `.../dismiss-reports` closes the reports and leaves the event. To make an account an admin, set
+  its `users.platform_role` to `admin` in the database, then sign out and in again so the new
+  access token carries the role.
 - **Points and badges.** `GET /me/points` shows your balance per club and the latest changes,
   with the event behind each one. `GET /me/badges` lists badges such as İlk Adım, Müdavim and
   Kaşif, which the worker awards within about a second of a check-in. `GET /me/badges/progress`

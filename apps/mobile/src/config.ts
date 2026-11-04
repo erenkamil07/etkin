@@ -13,5 +13,6 @@ function developmentApiUrl() {
   return `http://${host}:3000`;
 }
 
-/** Served by the API; the Play listing links to the same page. */
+/** Served by the API; the Play listing links to the same pages. */
 export const PRIVACY_URL = `${API_URL}/privacy`;
+export const TERMS_URL = `${API_URL}/terms`;

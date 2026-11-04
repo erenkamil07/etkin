@@ -9,7 +9,7 @@ import type { paths } from '@/api/schema';
 import { currentRefreshToken, endSession } from '@/auth/session';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, ErrorBanner, Loading, ProgressBar, Screen } from '@/components/ui';
-import { PRIVACY_URL } from '@/config';
+import { PRIVACY_URL, TERMS_URL } from '@/config';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { formatDateTime } from '@/format';
 import { useTheme } from '@/hooks/use-theme';
@@ -138,6 +138,22 @@ export default function Profile() {
         </Card>
       )}
 
+      {me.data?.platformRole === 'admin' ? (
+        <Card onPress={() => router.push('/moderation')}>
+          <View style={styles.row}>
+            <View style={styles.grow}>
+              <ThemedText type="default">Moderasyon</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                Bildirilen etkinlikleri incele
+              </ThemedText>
+            </View>
+            <ThemedText type="subtitle" themeColor="textSecondary">
+              ›
+            </ThemedText>
+          </View>
+        </Card>
+      ) : null}
+
       {/* Club team first: at an event this is the way to the door scanner. */}
       {me.data ? (
         <>
@@ -254,6 +270,11 @@ export default function Profile() {
       <Pressable accessibilityRole="link" onPress={() => openBrowserAsync(PRIVACY_URL)} hitSlop={8}>
         <ThemedText type="small" themeColor="textSecondary" style={styles.center}>
           Gizlilik politikası
+        </ThemedText>
+      </Pressable>
+      <Pressable accessibilityRole="link" onPress={() => openBrowserAsync(TERMS_URL)} hitSlop={8}>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.center}>
+          Kullanım koşulları ve topluluk kuralları
         </ThemedText>
       </Pressable>
       <Pressable accessibilityRole="button" onPress={() => router.push('/delete-account')} hitSlop={8}>

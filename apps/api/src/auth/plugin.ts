@@ -16,6 +16,8 @@ declare module 'fastify' {
      * in that club (owner > organizer > scanner). Platform admins always pass.
      */
     requireOrgRole: (minimum: OrgRole) => (request: FastifyRequest) => Promise<void>;
+    /** preHandler: requires a platform admin (moderation). */
+    requireAdmin: (request: FastifyRequest) => Promise<void>;
   }
   interface FastifyRequest {
     user: AuthUser | null;
@@ -80,6 +82,12 @@ export const authPlugin = fp<{ db: Database; accessTokens: AccessTokens }>(
       const { orgId } = request.params as { orgId?: string };
       if (!orgId) throw new Error('requireOrgRole needs a route with an :orgId param');
       await assertOrgRole(db, currentUser(request), orgId, minimum);
+    });
+
+    app.decorate('requireAdmin', async (request: FastifyRequest) => {
+      if (currentUser(request).platformRole !== 'admin') {
+        throw new AppError(403, 'FORBIDDEN', 'Requires a platform admin');
+      }
     });
   },
   { name: 'auth' },
