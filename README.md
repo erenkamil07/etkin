@@ -118,6 +118,13 @@ tokens live in localStorage instead of the keystore.
   draft or published straight away, with an optional early-access window for members with enough
   club points. Dates are typed as digits and formatted as you go, so the number pad works on every
   phone. If a step fails, trying again resumes where it stopped instead of leaving a second draft.
+- **Look and feel.** Dark-only, with Etkin orange (`#FF5A1F`) for actions and near-black text on
+  it for contrast; Plus Jakarta Sans throughout. The door scanner keeps orange off its screen so
+  its amber verdict can't be mistaken for ordinary UI, and each verdict has its own symbol, sound
+  and vibration. The icon, Android adaptive and themed icons, splash image and Play Store icon
+  are drawn from geometry by [make-icons.mjs](apps/mobile/scripts/make-icons.mjs), and the door
+  sounds are synthesised by [make-door-sounds.mjs](apps/mobile/scripts/make-door-sounds.mjs), so
+  there are no third-party assets to license.
 
 ### Android builds (EAS)
 

@@ -1,11 +1,13 @@
 import { useMutation } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { useState } from 'react';
+import { Image, StyleSheet, View } from 'react-native';
 import { publicApi } from '@/api/base';
 import { getDeviceId } from '@/auth/device';
 import { startSession } from '@/auth/session';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ErrorBanner, Field, Screen } from '@/components/ui';
+import { Spacing } from '@/constants/theme';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -23,8 +25,13 @@ export default function SignIn() {
 
   return (
     <Screen>
-      <ThemedText type="subtitle">Etkin</ThemedText>
-      <ThemedText themeColor="textSecondary">Kulüp etkinliklerine katıl, kapıda QR ile gir, puan topla.</ThemedText>
+      <View style={styles.brand}>
+        <Image source={MARK} style={styles.mark} accessibilityIgnoresInvertColors />
+        <ThemedText type="title">Etkin</ThemedText>
+        <ThemedText themeColor="textSecondary" style={styles.center}>
+          Kulüp etkinliklerine katıl, kapıda QR ile gir, puan topla.
+        </ThemedText>
+      </View>
 
       <Field
         label="E-posta"
@@ -55,3 +62,12 @@ export default function SignIn() {
     </Screen>
   );
 }
+
+// The same orange ticket mark as the splash screen.
+const MARK = require('../../assets/images/splash-icon.png');
+
+const styles = StyleSheet.create({
+  brand: { alignItems: 'center', gap: Spacing.one, paddingTop: Spacing.five, paddingBottom: Spacing.three },
+  mark: { width: 112, height: 112 },
+  center: { textAlign: 'center' },
+});
