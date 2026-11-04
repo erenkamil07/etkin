@@ -12,3 +12,6 @@ function developmentApiUrl() {
   const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? 'localhost';
   return `http://${host}:3000`;
 }
+
+/** Served by the API; the Play listing links to the same page. */
+export const PRIVACY_URL = `${API_URL}/privacy`;

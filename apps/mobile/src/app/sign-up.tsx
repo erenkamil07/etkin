@@ -1,11 +1,13 @@
 import { useMutation } from '@tanstack/react-query';
 import { Link } from 'expo-router';
+import { openBrowserAsync } from 'expo-web-browser';
 import { useState } from 'react';
 import { publicApi } from '@/api/base';
 import { getDeviceId } from '@/auth/device';
 import { startSession } from '@/auth/session';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ErrorBanner, Field, Screen } from '@/components/ui';
+import { PRIVACY_URL } from '@/config';
 
 interface Form {
   fullName: string;
@@ -90,6 +92,14 @@ export default function SignUp() {
 
       <ErrorBanner error={signUp.error} />
       <Button title="Hesabı oluştur" loading={signUp.isPending} onPress={submit} />
+
+      <ThemedText type="small" themeColor="textSecondary">
+        Hesap oluşturarak{' '}
+        <ThemedText type="small" themeColor="tint" onPress={() => openBrowserAsync(PRIVACY_URL)}>
+          Gizlilik Politikası
+        </ThemedText>
+        'nı okuduğunu kabul edersin.
+      </ThemedText>
 
       <Link href="/sign-in">
         <ThemedText type="linkPrimary">Zaten hesabın var mı? Giriş yap</ThemedText>

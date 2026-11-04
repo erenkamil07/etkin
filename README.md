@@ -131,6 +131,11 @@ The release manifest asks only for camera, vibration and internet. The storage, 
 draw-over-apps and system-settings permissions that the template and some libraries add are
 blocked in `app.json`, so the Play listing doesn't have to justify them.
 
+The Play listing links to two pages the API serves: the privacy policy at
+[/privacy](https://etkin-production.up.railway.app/privacy) and the account deletion steps at
+[/account-deletion](https://etkin-production.up.railway.app/account-deletion). The app links to
+the policy from sign-up and the profile.
+
 ```bash
 cd apps/mobile
 npx eas-cli@latest login                 # your Expo account

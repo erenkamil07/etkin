@@ -20,6 +20,7 @@ import type { Config } from './config.js';
 import type { Database } from './db.js';
 import { AppError, registerErrorHandling } from './errors.js';
 import { eventRoutes } from './events/routes.js';
+import { legalRoutes } from './legal/routes.js';
 import { loyaltyRoutes } from './loyalty/routes.js';
 import { orgRoutes } from './orgs/routes.js';
 import { healthRoutes, type ReadinessCheck } from './routes/health.js';
@@ -102,6 +103,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   await app.register(authPlugin, { db, accessTokens });
 
   await app.register(healthRoutes, { checks: readinessChecks });
+  await app.register(legalRoutes);
   await app.register(authRoutes, {
     auth: { db, accessTokens, refreshTokenTtlDays: config.REFRESH_TOKEN_TTL_DAYS },
   });

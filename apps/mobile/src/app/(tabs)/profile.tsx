@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { openBrowserAsync } from 'expo-web-browser';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { publicApi } from '@/api/base';
 import { api } from '@/api/client';
@@ -8,6 +9,7 @@ import type { paths } from '@/api/schema';
 import { currentRefreshToken, endSession } from '@/auth/session';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, ErrorBanner, Loading, ProgressBar, Screen } from '@/components/ui';
+import { PRIVACY_URL } from '@/config';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { formatDateTime } from '@/format';
 import { useTheme } from '@/hooks/use-theme';
@@ -249,6 +251,11 @@ export default function Profile() {
       )}
 
       <Button title="Çıkış yap" variant="secondary" loading={signOut.isPending} onPress={() => signOut.mutate()} />
+      <Pressable accessibilityRole="link" onPress={() => openBrowserAsync(PRIVACY_URL)} hitSlop={8}>
+        <ThemedText type="small" themeColor="textSecondary" style={styles.center}>
+          Gizlilik politikası
+        </ThemedText>
+      </Pressable>
       <Pressable accessibilityRole="button" onPress={() => router.push('/delete-account')} hitSlop={8}>
         <ThemedText type="small" themeColor="danger" style={styles.center}>
           Hesabımı sil
