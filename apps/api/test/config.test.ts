@@ -11,7 +11,19 @@ const required = {
 describe('loadConfig', () => {
   it('applies defaults', () => {
     const config = loadConfig(required);
-    expect(config).toMatchObject({ NODE_ENV: 'development', PORT: 3000, DATABASE_POOL_MAX: 10, CORS_ORIGINS: [] });
+    expect(config).toMatchObject({
+      NODE_ENV: 'development',
+      PORT: 3000,
+      DATABASE_POOL_MAX: 10,
+      CORS_ORIGINS: [],
+      RUN_WORKER_IN_API: false,
+    });
+  });
+
+  it('reads RUN_WORKER_IN_API as a boolean', () => {
+    expect(loadConfig({ ...required, RUN_WORKER_IN_API: 'true' }).RUN_WORKER_IN_API).toBe(true);
+    expect(loadConfig({ ...required, RUN_WORKER_IN_API: 'false' }).RUN_WORKER_IN_API).toBe(false);
+    expect(() => loadConfig({ ...required, RUN_WORKER_IN_API: 'sometimes' })).toThrow('RUN_WORKER_IN_API');
   });
 
   it('coerces numbers and splits CORS origins', () => {

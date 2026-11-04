@@ -216,29 +216,33 @@ toward unearned badges is computed by the same function that decides awards, so 
 
 ## 7. Deployment
 
-**Now: Railway.** The API runs on [Railway](https://railway.com) in EU West (Amsterdam) as two
-services built from the same Dockerfile, next to Railway's PostgreSQL 18 and Redis:
+**Now: Railway.** The API runs on [Railway](https://railway.com) in EU West (Amsterdam), next to
+Railway's PostgreSQL 18 and Redis:
 
 ```
-https://<name>.up.railway.app → etkin  (API: dbmate up before each deploy, /health/ready check)
-                                worker (node dist/worker.js)
-                                ├── PostgreSQL 18 (private network, volume)
-                                └── Redis (private network)
+https://etkin-production.up.railway.app → etkin (API + outbox worker in one process)
+                                          ├── PostgreSQL 18 (private network, volume)
+                                          └── Redis (private network)
 ```
+
+The outbox worker runs inside the API process (`RUN_WORKER_IN_API=true`) instead of as its own
+service: one instance is plenty for a campus app, it stays within Railway's three-service starter
+limit, and SKIP LOCKED makes it safe either way. On shutdown the API stops the worker after its
+current batch, before closing the database pool. When traffic needs more instances, set the flag
+to false and run `node dist/worker.js` from the same image as a separate service.
 
 Railway builds and deploys on every push to `main`. Migrations ship inside the image and run as
 the pre-deploy step, so a failed migration stops the deploy before the new code starts. Railway
 has retired file-based config for new services, so the settings live in its dashboard:
 
-| Setting | `etkin` (API) | `worker` |
-|---|---|---|
-| Source | GitHub `erenkamil07/etkin`, root `/` | same |
-| Region | EU West | EU West |
-| `RAILWAY_DOCKERFILE_PATH` | `apps/api/Dockerfile` | `apps/api/Dockerfile` |
-| Pre-deploy command | `dbmate --wait up` | none |
-| Start command | image default (`node dist/server.js`) | `node dist/worker.js` |
-| Health check | `/health/ready` | none |
-| Variables | `NODE_ENV=production`, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `REDIS_URL=${{Redis.REDIS_URL}}`, `JWT_ACCESS_SECRET`, `QR_MASTER_KEY` | same, with the two secrets referenced from `etkin` (`${{etkin.QR_MASTER_KEY}}`) |
+| Setting | `etkin` |
+|---|---|
+| Source | GitHub `erenkamil07/etkin`, root `/` |
+| Region | EU West |
+| Pre-deploy command | `dbmate --wait up` |
+| Start command | image default (`node dist/server.js`) |
+| Health check | `/health/ready` |
+| Variables | `RAILWAY_DOCKERFILE_PATH=apps/api/Dockerfile`, `NODE_ENV=production`, `RUN_WORKER_IN_API=true`, `DATABASE_URL=${{Postgres.DATABASE_URL}}`, `REDIS_URL=${{Redis.REDIS_URL}}`, `JWT_ACCESS_SECRET`, `QR_MASTER_KEY` |
 
 The two secrets live only in Railway's variables, never in the repository or the database.
 

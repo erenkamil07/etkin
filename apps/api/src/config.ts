@@ -17,6 +17,8 @@ const ConfigSchema = z.object({
     .base64()
     .transform((value) => new Uint8Array(Buffer.from(value, 'base64')))
     .refine((key) => key.length >= 32, 'must decode to at least 32 bytes'),
+  // Run the outbox worker inside the API process instead of as its own service.
+  RUN_WORKER_IN_API: z.stringbool().default(false),
   // Comma-separated browser origins (the Expo Web dashboard). Native apps don't send Origin.
   CORS_ORIGINS: z
     .string()
