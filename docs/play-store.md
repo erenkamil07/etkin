@@ -102,10 +102,11 @@ content, which users accept before posting: sign-up links the terms, and creatin
 community rules ticked.
 
 **Payments:** none in the app. Paid events show a price and the club's own payment note (at the
-door, bank transfer); the ticket only holds the seat. So there is no Google Play Billing, no
-"digital purchases" in the rating questionnaire and no financial data in Data safety. Event
-tickets are a physical service, so if card payments come later they go through a Turkish payment
-provider (iyzico, PayTR), not Play Billing, and Data safety gains "Purchase history".
+door, bank transfer); the ticket only holds the seat. So there is no Google Play Billing and no
+"digital purchases" in the rating questionnaire. The payment note can hold the club's IBAN, which
+Data safety counts as financial info (see below). Event tickets are a physical service, so if card
+payments come later they go through a Turkish payment provider (iyzico, PayTR), not Play Billing,
+and Data safety gains "Purchase history".
 
 **Target audience:** 18 and over. Not designed for children.
 
@@ -130,10 +131,13 @@ Data types collected (none is used for advertising or sold):
 | Personal info → Other info (university, student number) | Optional | App functionality |
 | App activity → Other actions (tickets, check-ins, points) | Required | App functionality |
 | App activity → Other user-generated content (clubs and events you create, reports you file) | Optional | App functionality |
+| Financial info → User payment info (an IBAN a club owner writes in a paid event's payment note) | Optional | App functionality |
 | Device or other IDs (a random per-install id, not a hardware id) | Required | App functionality, Fraud prevention, security and compliance |
 
 Not collected: location, photos or videos (the camera only reads QR codes on the device),
-contacts, messages, financial info, health, audio, files, calendar, web history.
+contacts, messages, card details or purchase history, health, audio, files, calendar, web history.
+Other users seeing a payment note is not "sharing" in Play's sense: the club owner publishes it
+on purpose.
 
 ## Handling reports
 
