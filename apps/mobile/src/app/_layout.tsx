@@ -1,9 +1,18 @@
+import {
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+  useFonts,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
 import { restoreSession, useSessionStatus } from '@/auth/session';
+import { Colors, Fonts } from '@/constants/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -11,26 +20,56 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
 });
 
+/** Headers and screen backgrounds in Etkin's colours. */
+const navigationTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    primary: Colors.tint,
+    background: Colors.background,
+    card: Colors.background,
+    text: Colors.text,
+    border: Colors.border,
+    notification: Colors.tint,
+  },
+  fonts: {
+    ...DarkTheme.fonts,
+    regular: { fontFamily: Fonts.regular, fontWeight: '400' as const },
+    medium: { fontFamily: Fonts.medium, fontWeight: '500' as const },
+    bold: { fontFamily: Fonts.bold, fontWeight: '700' as const },
+    heavy: { fontFamily: Fonts.extrabold, fontWeight: '800' as const },
+  },
+};
+
 /** Pages opened over the tabs get a header with a back button. */
 const pushed = { headerShown: true, headerBackButtonDisplayMode: 'minimal' } as const;
 
 export default function RootLayout() {
   const status = useSessionStatus();
-  const scheme = useColorScheme();
+  const [fontsLoaded, fontError] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+  });
+  // A font that fails to load falls back to the system font rather than blocking the app.
+  const ready = status !== 'loading' && (fontsLoaded || fontError !== null);
 
   useEffect(() => {
     restoreSession();
   }, []);
   useEffect(() => {
-    if (status !== 'loading') SplashScreen.hideAsync();
-  }, [status]);
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
 
-  // Keep the splash screen up until we know whether someone is signed in.
-  if (status === 'loading') return null;
+  // Keep the splash screen up until the fonts are in and we know whether someone is signed in.
+  if (!ready) return null;
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <StatusBar style="light" />
+      <ThemeProvider value={navigationTheme}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Protected guard={status === 'signedIn'}>
             <Stack.Screen name="(tabs)" />

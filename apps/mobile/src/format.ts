@@ -21,3 +21,19 @@ export const formatClock = (ms: number) => clock.format(new Date(ms));
 /** "Ücretsiz" or "₺150,00". */
 export const formatPrice = (cents: number, currency: string) =>
   cents === 0 ? 'Ücretsiz' : new Intl.NumberFormat('tr-TR', { style: 'currency', currency }).format(cents / 100);
+
+const dayOfMonth = new Intl.DateTimeFormat('tr-TR', { day: 'numeric' });
+const shortMonth = new Intl.DateTimeFormat('tr-TR', { month: 'short' });
+const weekdayAndTime = new Intl.DateTimeFormat('tr-TR', { weekday: 'long', hour: '2-digit', minute: '2-digit' });
+
+/** The parts of a calendar-page date badge: "8" and "KAS". */
+export const dateBadge = (iso: string) => {
+  const date = new Date(iso);
+  return {
+    day: dayOfMonth.format(date),
+    month: shortMonth.format(date).replace('.', '').toLocaleUpperCase('tr'),
+  };
+};
+
+/** "Pazar 18:00", next to a date badge. */
+export const formatWeekdayTime = (iso: string) => weekdayAndTime.format(new Date(iso));

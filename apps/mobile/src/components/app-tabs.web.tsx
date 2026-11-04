@@ -30,8 +30,8 @@ function TabButton({ children, isFocused, ref: _ref, ...props }: TabTriggerSlotP
   const theme = useTheme();
   return (
     <Pressable {...props} style={({ pressed }) => pressed && { opacity: 0.7 }}>
-      <View style={[styles.button, { backgroundColor: isFocused ? theme.backgroundSelected : 'transparent' }]}>
-        <ThemedText type="smallBold" themeColor={isFocused ? 'text' : 'textSecondary'}>
+      <View style={[styles.button, { backgroundColor: isFocused ? theme.tintSoft : 'transparent' }]}>
+        <ThemedText type="smallBold" themeColor={isFocused ? 'tint' : 'textSecondary'}>
           {children}
         </ThemedText>
       </View>
@@ -43,7 +43,9 @@ function TabBar(props: TabListProps) {
   const theme = useTheme();
   return (
     <View {...props} style={styles.container}>
-      <View style={[styles.bar, { backgroundColor: theme.backgroundElement }]}>{props.children}</View>
+      <View style={[styles.bar, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+        {props.children}
+      </View>
     </View>
   );
 }
@@ -56,6 +58,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MaxContentWidth,
     borderRadius: Spacing.five,
+    borderWidth: 1,
     padding: Spacing.two,
   },
   button: { paddingVertical: Spacing.two, paddingHorizontal: Spacing.three, borderRadius: Spacing.three },

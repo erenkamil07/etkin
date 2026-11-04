@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { problemMessage } from '@/api/errors';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Fonts, MaxContentWidth, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ThemedText } from './themed-text';
 
@@ -56,20 +56,32 @@ export function Field({
   label,
   error,
   style,
+  onFocus,
+  onBlur,
   ...input
 }: TextInputProps & { label: string; error?: string | undefined }) {
   const theme = useTheme();
+  const [focused, setFocused] = useState(false);
   return (
     <View style={styles.field}>
       <ThemedText type="smallBold">{label}</ThemedText>
       <TextInput
         placeholderTextColor={theme.textSecondary}
+        selectionColor={theme.tint}
         {...input}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
         style={[
           styles.input,
           {
             color: theme.text,
-            borderColor: error ? theme.danger : theme.border,
+            borderColor: error ? theme.danger : focused ? theme.tint : theme.border,
             backgroundColor: theme.backgroundElement,
           },
           style,
@@ -84,6 +96,9 @@ export function Field({
   );
 }
 
+// White text needs a deeper red than the danger accent to stay readable (4.8:1).
+const DANGER_BUTTON = '#DC2626';
+
 export function Button({
   title,
   onPress,
@@ -96,21 +111,34 @@ export function Button({
   variant?: 'primary' | 'secondary' | 'danger';
 }) {
   const theme = useTheme();
-  const background = { primary: theme.tint, secondary: theme.backgroundElement, danger: theme.danger }[variant];
-  const color = variant === 'secondary' ? theme.text : theme.onTint;
+  const look = {
+    primary: { background: theme.tint, pressed: theme.glow, color: theme.onTint, border: theme.tint },
+    secondary: {
+      background: theme.backgroundElement,
+      pressed: theme.backgroundSelected,
+      color: theme.text,
+      border: theme.border,
+    },
+    danger: { background: DANGER_BUTTON, pressed: theme.danger, color: '#FFFFFF', border: DANGER_BUTTON },
+  }[variant];
   return (
     <Pressable
       accessibilityRole="button"
       disabled={loading}
       onPress={onPress}
-      style={({ pressed }) => [styles.button, { backgroundColor: background, opacity: pressed || loading ? 0.7 : 1 }]}
+      style={({ pressed }) => [
+        styles.button,
+        {
+          backgroundColor: pressed ? look.pressed : look.background,
+          borderColor: look.border,
+          opacity: loading ? 0.7 : 1,
+        },
+      ]}
     >
       {loading ? (
-        <ActivityIndicator color={color} />
+        <ActivityIndicator color={look.color} />
       ) : (
-        <ThemedText type="smallBold" style={{ color }}>
-          {title}
-        </ThemedText>
+        <ThemedText style={[styles.buttonLabel, { color: look.color }]}>{title}</ThemedText>
       )}
     </Pressable>
   );
@@ -130,7 +158,13 @@ export function ErrorBanner({ error }: { error: unknown }) {
   const theme = useTheme();
   if (!error) return null;
   return (
-    <View accessibilityRole="alert" style={[styles.banner, { borderColor: theme.danger }]}>
+    <View
+      accessibilityRole="alert"
+      style={[
+        styles.banner,
+        { borderColor: withAlpha(theme.danger, 0.4), backgroundColor: withAlpha(theme.danger, 0.1) },
+      ]}
+    >
       <ThemedText type="small" style={{ color: theme.danger }}>
         {problemMessage(error)}
       </ThemedText>
@@ -145,9 +179,12 @@ export function ErrorBanner({ error }: { error: unknown }) {
 
 export function Card({ children, onPress }: { children: ReactNode; onPress?: () => void }) {
   const theme = useTheme();
-  const style = [styles.card, { backgroundColor: theme.backgroundElement }];
+  const style = [styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }];
   return onPress ? (
-    <Pressable onPress={onPress} style={({ pressed }) => [...style, pressed && { opacity: 0.8 }]}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [...style, pressed && { backgroundColor: theme.backgroundSelected }]}
+    >
       {children}
     </Pressable>
   ) : (
@@ -159,8 +196,33 @@ export function Card({ children, onPress }: { children: ReactNode; onPress?: () 
 export function Notice({ children, tone }: { children: ReactNode; tone: 'success' | 'warning' | 'danger' }) {
   const theme = useTheme();
   return (
-    <View style={[styles.banner, { borderColor: theme[tone] }]}>
+    <View
+      style={[
+        styles.banner,
+        { borderColor: withAlpha(theme[tone], 0.4), backgroundColor: withAlpha(theme[tone], 0.1) },
+      ]}
+    >
       <ThemedText type="small" style={{ color: theme[tone] }}>
+        {children}
+      </ThemedText>
+    </View>
+  );
+}
+
+/** A small rounded label: "Son 5 yer", "Tükendi", "Kullanıldı". */
+export function Pill({
+  children,
+  tone = 'neutral',
+}: {
+  children: ReactNode;
+  tone?: 'neutral' | 'tint' | 'success' | 'warning' | 'danger';
+}) {
+  const theme = useTheme();
+  const color = tone === 'neutral' ? theme.textSecondary : theme[tone];
+  const background = tone === 'neutral' ? theme.backgroundSelected : withAlpha(theme[tone], 0.14);
+  return (
+    <View style={[styles.pill, { backgroundColor: background }]}>
+      <ThemedText type="smallBold" style={[styles.pillLabel, { color }]}>
         {children}
       </ThemedText>
     </View>
@@ -214,20 +276,25 @@ const styles = StyleSheet.create({
   field: { gap: Spacing.one },
   input: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: Radius.medium,
     paddingHorizontal: Spacing.three,
-    paddingVertical: 12,
+    paddingVertical: 14,
+    fontFamily: Fonts.medium,
     fontSize: 16,
   },
   button: {
-    minHeight: 48,
-    borderRadius: 12,
+    minHeight: 52,
+    borderRadius: Radius.medium,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: Spacing.four,
   },
-  banner: { borderWidth: 1, borderRadius: 12, padding: Spacing.three },
-  card: { borderRadius: 16, padding: Spacing.three, gap: Spacing.one },
+  buttonLabel: { fontFamily: Fonts.bold, fontSize: 16, lineHeight: 22 },
+  banner: { borderWidth: 1, borderRadius: Radius.medium, padding: Spacing.three },
+  card: { borderRadius: Radius.large, borderWidth: 1, padding: Spacing.three, gap: Spacing.one },
+  pill: { alignSelf: 'flex-start', borderRadius: Radius.pill, paddingHorizontal: 10, paddingVertical: 3 },
+  pillLabel: { fontSize: 12, lineHeight: 18 },
   track: { height: 6, borderRadius: 3, overflow: 'hidden' },
   bar: { height: '100%' },
   loading: { marginTop: Spacing.five },

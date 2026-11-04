@@ -1,67 +1,50 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://unistyl.es/), etc.
- */
-
 import '@/global.css';
 
 import { Platform } from 'react-native';
 
+/**
+ * Etkin is dark-only: a warm near-black that keeps the orange from glowing like
+ * neon. Text on orange is near-black, not white: white on #FF5A1F is about
+ * 3.1:1 contrast (below the 4.5:1 body-text minimum), near-black is about 6:1.
+ * The door scanner keeps orange out of its screen entirely, so its amber
+ * "warning" verdict can never be mistaken for ordinary UI.
+ */
 export const Colors = {
-  light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-    tint: '#4F46E5',
-    onTint: '#FFFFFF',
-    border: '#D9D9E0',
-    danger: '#DC2626',
-    success: '#15803D',
-    warning: '#B45309',
-  },
-  dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-    tint: '#A5B4FC',
-    onTint: '#0B0B12',
-    border: '#3A3D44',
-    danger: '#F87171',
-    success: '#4ADE80',
-    warning: '#FBBF24',
-  },
+  background: '#0F0F12',
+  backgroundElement: '#18181B',
+  backgroundSelected: '#26262B',
+  border: '#2A2A30',
+  text: '#FFFFFF',
+  textSecondary: '#A1A1AA',
+  /** Brand orange: primary buttons, active tabs, event highlights. */
+  tint: '#FF5A1F',
+  /** Orange at low opacity, for date badges and chips on dark cards. */
+  tintSoft: 'rgba(255, 90, 31, 0.14)',
+  /** Pressed states and the faint glow behind highlighted cards. */
+  glow: '#FF7A45',
+  onTint: '#0F0F12',
+  success: '#10B981',
+  warning: '#F59E0B',
+  danger: '#EF4444',
 } as const;
 
-export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+export type ThemeColor = keyof typeof Colors;
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
+/** A `#RRGGBB` colour at the given opacity, for tinted backgrounds and borders. */
+export function withAlpha(hex: string, alpha: number): string {
+  const value = Number.parseInt(hex.slice(1), 16);
+  return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+}
+
+/** Plus Jakarta Sans, loaded in the root layout before the splash screen hides. */
+export const Fonts = {
+  regular: 'PlusJakartaSans_400Regular',
+  medium: 'PlusJakartaSans_500Medium',
+  semibold: 'PlusJakartaSans_600SemiBold',
+  bold: 'PlusJakartaSans_700Bold',
+  extrabold: 'PlusJakartaSans_800ExtraBold',
+  mono: Platform.select({ ios: 'ui-monospace', web: 'var(--font-mono)', default: 'monospace' }),
+} as const;
 
 export const Spacing = {
   half: 2,
@@ -71,6 +54,13 @@ export const Spacing = {
   four: 24,
   five: 32,
   six: 64,
+} as const;
+
+export const Radius = {
+  small: 10,
+  medium: 14,
+  large: 20,
+  pill: 999,
 } as const;
 
 export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;

@@ -9,7 +9,7 @@ import { api } from '@/api/client';
 import { type MyTicket, useMe } from '@/api/queries';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, confirmAction, ErrorBanner, Loading, Notice, ProgressBar, Screen } from '@/components/ui';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { Fonts, MaxContentWidth, Spacing } from '@/constants/theme';
 import { formatClock, formatDateTime } from '@/format';
 import { useNow } from '@/hooks/use-now';
 import { useTicketDisplay } from '@/hooks/use-ticket-display';
@@ -185,5 +185,5 @@ const styles = StyleSheet.create({
   center: { textAlign: 'center' },
   qrBlock: { alignItems: 'center', gap: Spacing.two },
   paper: { backgroundColor: '#FFFFFF', padding: Spacing.three, borderRadius: 16 },
-  clock: { fontSize: 28, lineHeight: 36, fontWeight: 700, fontVariant: ['tabular-nums'] },
+  clock: { fontFamily: Fonts.extrabold, fontSize: 28, lineHeight: 36, fontVariant: ['tabular-nums'] },
 });

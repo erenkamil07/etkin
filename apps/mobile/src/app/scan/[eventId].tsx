@@ -128,10 +128,7 @@ export default function Scan() {
         <Pressable
           accessibilityRole="alert"
           onPress={() => setShown(null)}
-          style={[
-            styles.panel,
-            { backgroundColor: Colors.light[panel.tone], paddingBottom: insets.bottom + Spacing.four },
-          ]}
+          style={[styles.panel, { backgroundColor: Colors[panel.tone], paddingBottom: insets.bottom + Spacing.four }]}
         >
           <ThemedText type="subtitle" style={styles.onPanel}>
             {panel.title}

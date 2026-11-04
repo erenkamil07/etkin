@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
+import { EventCard } from '@/components/event-card';
 import { ThemedText } from '@/components/themed-text';
-import { Card, ErrorBanner, Loading, Screen } from '@/components/ui';
+import { ErrorBanner, Loading, Screen } from '@/components/ui';
 import { BottomTabInset, Spacing } from '@/constants/theme';
-import { formatDateTime } from '@/format';
 
 export default function Events() {
   const events = useQuery({
@@ -19,7 +19,12 @@ export default function Events() {
 
   return (
     <Screen scroll={false}>
-      <ThemedText type="subtitle">Etkinlikler</ThemedText>
+      <View>
+        <ThemedText type="subtitle">Etkinlikler</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          Kulüplerin yaklaşan etkinlikleri
+        </ThemedText>
+      </View>
       {events.isPending ? (
         <Loading />
       ) : events.error ? (
@@ -31,21 +36,20 @@ export default function Events() {
           refreshing={events.isRefetching}
           onRefresh={() => events.refetch()}
           contentContainerStyle={styles.list}
-          ListEmptyComponent={<ThemedText themeColor="textSecondary">Yaklaşan etkinlik yok.</ThemedText>}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <ThemedText style={styles.emptyIcon}>🎟️</ThemedText>
+              <ThemedText type="smallBold">Şimdilik yaklaşan etkinlik yok</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.center}>
+                Kulüpler yeni etkinlik açınca burada görünecek.
+              </ThemedText>
+            </View>
+          }
           renderItem={({ item }) => (
-            <Card onPress={() => router.push({ pathname: '/events/[id]', params: { id: item.id } })}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                {item.organization.name}
-              </ThemedText>
-              <ThemedText type="default">{item.title}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {formatDateTime(item.startsAt)}
-                {item.locationName ? ` · ${item.locationName}` : ''}
-              </ThemedText>
-              <ThemedText type="small">
-                {item.remaining > 0 ? `${item.remaining} / ${item.capacity} yer kaldı` : 'Tükendi'}
-              </ThemedText>
-            </Card>
+            <EventCard
+              event={item}
+              onPress={() => router.push({ pathname: '/events/[id]', params: { id: item.id } })}
+            />
           )}
         />
       )}
@@ -55,4 +59,7 @@ export default function Events() {
 
 const styles = StyleSheet.create({
   list: { gap: Spacing.three, paddingBottom: BottomTabInset + Spacing.six },
+  empty: { alignItems: 'center', gap: Spacing.one, paddingTop: Spacing.six },
+  emptyIcon: { fontSize: 44, lineHeight: 56 },
+  center: { textAlign: 'center' },
 });
