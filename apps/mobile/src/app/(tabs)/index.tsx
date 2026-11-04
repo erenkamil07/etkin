@@ -4,8 +4,9 @@ import { FlatList, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
 import { EventCard, seatsLeft } from '@/components/event-card';
 import { ThemedText } from '@/components/themed-text';
-import { ErrorBanner, Loading, Screen } from '@/components/ui';
+import { ErrorBanner, Loading, Pill, Screen } from '@/components/ui';
 import { BottomTabInset, Spacing } from '@/constants/theme';
+import { formatPrice } from '@/format';
 
 export default function Events() {
   const events = useQuery({
@@ -50,7 +51,14 @@ export default function Events() {
             return (
               <EventCard
                 event={item}
-                footer={seats.pill}
+                footer={
+                  <View style={styles.pills}>
+                    {seats.pill}
+                    {item.priceFromCents > 0 ? (
+                      <Pill tone="tint">{formatPrice(item.priceFromCents, 'TRY')}</Pill>
+                    ) : null}
+                  </View>
+                }
                 highlight={seats.fewLeft}
                 onPress={() => router.push({ pathname: '/events/[id]', params: { id: item.id } })}
               />
@@ -64,6 +72,7 @@ export default function Events() {
 
 const styles = StyleSheet.create({
   list: { gap: Spacing.three, paddingBottom: BottomTabInset + Spacing.six },
+  pills: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   empty: { alignItems: 'center', gap: Spacing.one, paddingTop: Spacing.six },
   emptyIcon: { fontSize: 44, lineHeight: 56 },
   center: { textAlign: 'center' },

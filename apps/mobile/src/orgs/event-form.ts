@@ -7,6 +7,8 @@ type NewTicketType =
 export interface TicketTypeDraft {
   name: string;
   capacity: string;
+  /** In lira, as typed: "150" or "149,90". Only read for paid events. */
+  price: string;
 }
 
 /** What the form holds: everything as typed, so half-typed values never throw. */
@@ -19,6 +21,10 @@ export interface EventDraft {
   hours: string;
   points: string;
   ticketTypes: TicketTypeDraft[];
+  /** Paid events show a price per ticket type; the club collects the money, not Etkin. */
+  paid: boolean;
+  priceIncludes: string;
+  paymentInfo: string;
   /** Members with enough club points buy before everyone else. */
   priority: boolean;
   priorityPoints: string;
@@ -29,7 +35,16 @@ export type DraftErrors = Partial<Record<Exclude<keyof EventDraft, 'ticketTypes'
   ticketTypes?: Partial<Record<keyof TicketTypeDraft, string>>[];
 };
 
-export const emptyTicketType = (): TicketTypeDraft => ({ name: 'Standart', capacity: '' });
+export const emptyTicketType = (): TicketTypeDraft => ({ name: 'Standart', capacity: '', price: '' });
+
+/** Starting points for the payment note; the club fills in the details. */
+export const PAYMENT_TEMPLATES = [
+  { label: 'Kapıda nakit', text: 'Ödemeler etkinlik günü kapıda nakit olarak yapılmaktadır.' },
+  {
+    label: 'IBAN ile havale',
+    text: "Ödemeler şu IBAN'a yapılacak: TR.. (Alıcı: Ad Soyad). Açıklamaya adını ve öğrenci numaranı yaz.",
+  },
+];
 
 export const emptyDraft = (): EventDraft => ({
   title: '',
@@ -40,6 +55,9 @@ export const emptyDraft = (): EventDraft => ({
   hours: '2',
   points: '1',
   ticketTypes: [emptyTicketType()],
+  paid: false,
+  priceIncludes: '',
+  paymentInfo: '',
   priority: false,
   priorityPoints: '3',
   priorityHours: '24',
@@ -89,6 +107,15 @@ function parseMoment(date: string, time: string): Date | null {
 const wholeNumber = (value: string) => (/^\d+$/.test(value.trim()) ? Number(value) : Number.NaN);
 const decimal = (value: string) => Number(value.trim().replace(',', '.'));
 
+/** "150" or "149,90" lira → kuruş. NaN for anything else, "1.500" included (ambiguous in Turkish). */
+function priceInKurus(value: string): number {
+  const match = /^(\d{1,6})(?:[.,](\d{1,2}))?$/.exec(value.trim());
+  if (!match) return Number.NaN;
+  return Number(match[1]) * 100 + Number((match[2] ?? '').padEnd(2, '0'));
+}
+
+const MAX_NOTE = 500;
+
 /**
  * Checks the draft and turns it into API requests. The API validates
  * everything again; this only explains mistakes in Turkish before sending.
@@ -120,9 +147,18 @@ export function buildEvent(
     names.add(name);
     const capacity = wholeNumber(type.capacity);
     if (!(capacity >= 1 && capacity <= 100_000)) found.capacity = '1 ile 100.000 arası.';
+    if (draft.paid && !(priceInKurus(type.price) > 0)) found.price = 'TL olarak yaz (ör. 150).';
     return found;
   });
   if (typeErrors.some((found) => Object.keys(found).length > 0)) errors.ticketTypes = typeErrors;
+
+  const paymentInfo = draft.paymentInfo.trim();
+  const priceIncludes = draft.priceIncludes.trim();
+  if (draft.paid) {
+    if (!paymentInfo) errors.paymentInfo = 'Ödemenin nasıl ve nereye yapılacağını yaz.';
+    else if (paymentInfo.length > MAX_NOTE) errors.paymentInfo = `En fazla ${MAX_NOTE} karakter.`;
+    if (priceIncludes.length > MAX_NOTE) errors.priceIncludes = `En fazla ${MAX_NOTE} karakter.`;
+  }
 
   const priorityPoints = wholeNumber(draft.priorityPoints);
   const priorityHours = decimal(draft.priorityHours);
@@ -145,10 +181,12 @@ export function buildEvent(
       startsAt: startsAt.toISOString(),
       endsAt: new Date(startsAt.getTime() + hours * 3_600_000).toISOString(),
       checkinPoints: points,
+      ...(draft.paid ? { priceIncludes: priceIncludes || null, paymentInfo } : {}),
     },
     ticketTypes: draft.ticketTypes.map((type) => ({
       name: type.name.trim(),
       capacity: wholeNumber(type.capacity),
+      ...(draft.paid ? { priceCents: priceInKurus(type.price) } : {}),
       // Early access opens now; everyone else can buy `priorityHours` later.
       ...(draft.priority
         ? {

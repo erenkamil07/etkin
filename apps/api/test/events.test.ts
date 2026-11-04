@@ -259,6 +259,64 @@ describe('publishing and cancelling', () => {
   });
 });
 
+describe('paid events', () => {
+  const PAYMENT = 'Ödemeler kapıda nakit yapılmaktadır.';
+
+  it('keeps what the price covers and how to pay with the event', async () => {
+    const event = await draft({ priceIncludes: 'Yemek ve sertifika', paymentInfo: PAYMENT });
+    expect(event).toMatchObject({ priceIncludes: 'Yemek ve sertifika', paymentInfo: PAYMENT });
+    const edited = await manage('PATCH', `/${event.id}`, { paymentInfo: 'IBAN: TR00 0000 0000 0000 0000 0000 00' });
+    expect(edited.json()).toMatchObject({
+      priceIncludes: 'Yemek ve sertifika',
+      paymentInfo: expect.stringContaining('IBAN'),
+    });
+  });
+
+  it("won't publish a paid event that doesn't say how to pay", async () => {
+    const event = await draft();
+    await addTicketType(event.id, { priceCents: 15_000 });
+    const refused = await manage('POST', `/${event.id}/publish`);
+    expect(refused.statusCode).toBe(409);
+    expect(refused.json().code).toBe('PAYMENT_INFO_REQUIRED');
+
+    await manage('PATCH', `/${event.id}`, { paymentInfo: PAYMENT });
+    expect((await manage('POST', `/${event.id}/publish`)).statusCode).toBe(200);
+  });
+
+  it('keeps a published event payable: no paid ticket without payment info, no removing it', async () => {
+    const event = await draft();
+    await addTicketType(event.id, {});
+    await manage('POST', `/${event.id}/publish`);
+    const paidType = await addTicketType(event.id, { name: 'VIP', priceCents: 20_000 });
+    expect(paidType.json().code).toBe('PAYMENT_INFO_REQUIRED');
+
+    await manage('PATCH', `/${event.id}`, { paymentInfo: PAYMENT });
+    expect((await addTicketType(event.id, { name: 'VIP', priceCents: 20_000 })).statusCode).toBe(201);
+    const cleared = await manage('PATCH', `/${event.id}`, { paymentInfo: null });
+    expect(cleared.json().code).toBe('PAYMENT_INFO_REQUIRED');
+  });
+
+  it('shows the cheapest ticket in the feed', async () => {
+    const club = await newClub('feed-prices');
+    const event = await draft({ paymentInfo: PAYMENT }, club);
+    const add = (name: string, priceCents: number) =>
+      app.inject({
+        method: 'POST',
+        url: `/orgs/${club}/events/${event.id}/ticket-types`,
+        headers: bearer(owner.token),
+        payload: { name, capacity: 10, priceCents },
+      });
+    await add('Üye', 10_000);
+    await add('Misafir', 15_000);
+    await app.inject({ method: 'POST', url: `/orgs/${club}/events/${event.id}/publish`, headers: bearer(owner.token) });
+
+    const feed = await app.inject({ method: 'GET', url: `/events?orgId=${club}` });
+    expect(feed.json().items).toEqual([
+      expect.objectContaining({ id: event.id, priceFromCents: 10_000, paymentInfo: PAYMENT }),
+    ]);
+  });
+});
+
 describe('editing', () => {
   it('moves the check-in window with the event unless one is sent', async () => {
     const event = await draft();
@@ -268,12 +326,15 @@ describe('editing', () => {
     expect(Date.parse(moved.startsAt) - Date.parse(moved.checkinOpensAt)).toBe(HOUR);
     expect(moved.checkinClosesAt).toBe(moved.endsAt);
 
+    // One clock reading for all four, so a millisecond ticking between calls can't skew the gap.
+    const start = Date.now() + 11 * DAY;
+    const iso = (ms: number) => new Date(ms).toISOString();
     const custom = (
       await manage('PATCH', `/${event.id}`, {
-        startsAt: at(11 * DAY),
-        endsAt: at(11 * DAY + 3 * HOUR),
-        checkinOpensAt: at(11 * DAY - 30 * 60_000),
-        checkinClosesAt: at(11 * DAY + HOUR),
+        startsAt: iso(start),
+        endsAt: iso(start + 3 * HOUR),
+        checkinOpensAt: iso(start - 30 * 60_000),
+        checkinClosesAt: iso(start + HOUR),
       })
     ).json();
     expect(Date.parse(custom.startsAt) - Date.parse(custom.checkinOpensAt)).toBe(30 * 60_000);

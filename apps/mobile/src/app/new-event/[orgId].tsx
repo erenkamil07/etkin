@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Switch, View } from 'react-native';
 import { api } from '@/api/client';
 import { ThemedText } from '@/components/themed-text';
-import { Button, ErrorBanner, Field, Notice, Screen } from '@/components/ui';
+import { Button, ErrorBanner, Field, Notice, Screen, Segmented } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -14,6 +14,7 @@ import {
   type EventDraft,
   emptyDraft,
   emptyTicketType,
+  PAYMENT_TEMPLATES,
   typeDate,
   typeTime,
 } from '@/orgs/event-form';
@@ -168,6 +169,16 @@ export default function NewEvent() {
         Kapı, etkinlikten 1 saat önce açılır ve etkinlik bitince kapanır.
       </ThemedText>
 
+      <ThemedText type="smallBold">Ücret</ThemedText>
+      <Segmented
+        options={[
+          { value: 'free', label: 'Ücretsiz' },
+          { value: 'paid', label: 'Ücretli' },
+        ]}
+        value={draft.paid ? 'paid' : 'free'}
+        onChange={(value) => set('paid')(value === 'paid')}
+      />
+
       <ThemedText type="smallBold">Bilet türleri</ThemedText>
       {draft.ticketTypes.map((type, index) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: rows have no id until saved, and only the last one is removed
@@ -180,7 +191,7 @@ export default function NewEvent() {
               error={errors.ticketTypes?.[index]?.name}
             />
           </View>
-          <View style={styles.capacity}>
+          <View style={styles.number}>
             <Field
               label="Kontenjan"
               value={type.capacity}
@@ -189,6 +200,18 @@ export default function NewEvent() {
               error={errors.ticketTypes?.[index]?.capacity}
             />
           </View>
+          {draft.paid ? (
+            <View style={styles.number}>
+              <Field
+                label="Fiyat (₺)"
+                value={type.price}
+                onChangeText={(price) => setTicketType(index, { price })}
+                keyboardType="decimal-pad"
+                placeholder="150"
+                error={errors.ticketTypes?.[index]?.price}
+              />
+            </View>
+          ) : null}
         </View>
       ))}
       <View style={styles.chips}>
@@ -200,6 +223,42 @@ export default function NewEvent() {
           <Chip label="Sonuncuyu kaldır" onPress={() => set('ticketTypes')(draft.ticketTypes.slice(0, -1))} />
         ) : null}
       </View>
+
+      {draft.paid ? (
+        <>
+          <Field
+            label="Ücrete dahil olanlar (isteğe bağlı)"
+            placeholder="Ör. yemek, sertifika, ulaşım"
+            value={draft.priceIncludes}
+            onChangeText={set('priceIncludes')}
+            multiline
+            numberOfLines={2}
+            maxLength={500}
+            style={styles.multiline}
+            error={errors.priceIncludes}
+          />
+          <Field
+            label="Ödeme bilgisi"
+            placeholder="Ödemenin nasıl ve nereye yapılacağı"
+            value={draft.paymentInfo}
+            onChangeText={set('paymentInfo')}
+            multiline
+            numberOfLines={3}
+            maxLength={500}
+            style={styles.multiline}
+            error={errors.paymentInfo}
+          />
+          <View style={styles.chips}>
+            {PAYMENT_TEMPLATES.map((template) => (
+              <Chip key={template.label} label={template.label} onPress={() => set('paymentInfo')(template.text)} />
+            ))}
+          </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            Etkin ödeme almaz; öğrenciler bilet alıp yerini ayırır, ücreti doğrudan kulübe öder. Bu bilgi etkinlik
+            sayfasında herkese görünür.
+          </ThemedText>
+        </>
+      ) : null}
 
       <View style={styles.switchRow}>
         <View style={styles.grow}>
@@ -253,7 +312,7 @@ export default function NewEvent() {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: Spacing.two, alignItems: 'flex-start' },
   grow: { flex: 1 },
-  capacity: { width: 120 },
+  number: { width: 104 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: Spacing.three, paddingVertical: Spacing.one },
   multiline: { minHeight: 88, textAlignVertical: 'top' },

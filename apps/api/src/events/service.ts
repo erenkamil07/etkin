@@ -16,6 +16,8 @@ export interface EventInput {
   checkinOpensAt?: Date | undefined;
   checkinClosesAt?: Date | undefined;
   checkinPoints?: number | undefined;
+  priceIncludes?: string | null | undefined;
+  paymentInfo?: string | null | undefined;
 }
 
 export type EventPatch = Partial<EventInput>;
@@ -67,6 +69,8 @@ const EVENT_COLUMNS = [
   'e.checkin_opens_at',
   'e.checkin_closes_at',
   'e.checkin_points',
+  'e.price_includes',
+  'e.payment_info',
   'e.status',
   'e.published_at',
 ] as const;
@@ -85,6 +89,8 @@ interface EventRow {
   checkin_opens_at: Date;
   checkin_closes_at: Date;
   checkin_points: number;
+  price_includes: string | null;
+  payment_info: string | null;
   status: EventStatus;
   published_at: Date | null;
 }
@@ -102,22 +108,27 @@ function toEvent(row: EventRow) {
     checkinOpensAt: iso(row.checkin_opens_at),
     checkinClosesAt: iso(row.checkin_closes_at),
     checkinPoints: row.checkin_points,
+    priceIncludes: row.price_includes,
+    paymentInfo: row.payment_info,
     status: row.status,
     publishedAt: isoOrNull(row.published_at),
   };
 }
 
-// Capacity totals across an event's ticket types, for list cards ("12 places left").
+// Totals across an event's ticket types, for list cards ("12 places left", "₺150'den").
 // Queries using these must alias events as "e".
 const CAPACITY_TOTALS = [
   sql<number>`(select coalesce(sum(tt.capacity), 0)::int from ticket_types tt where tt.event_id = e.id)`.as('capacity'),
   sql<number>`(select coalesce(sum(tt.capacity - tt.issued_count), 0)::int from ticket_types tt where tt.event_id = e.id)`.as(
     'remaining',
   ),
+  sql<number>`(select coalesce(min(tt.price_cents), 0)::int from ticket_types tt where tt.event_id = e.id)`.as(
+    'price_from_cents',
+  ),
 ];
 
-function toEventSummary(row: EventRow & { capacity: number; remaining: number }) {
-  return { ...toEvent(row), capacity: row.capacity, remaining: row.remaining };
+function toEventSummary(row: EventRow & { capacity: number; remaining: number; price_from_cents: number }) {
+  return { ...toEvent(row), capacity: row.capacity, remaining: row.remaining, priceFromCents: row.price_from_cents };
 }
 
 const TICKET_TYPE_COLUMNS = [
@@ -278,6 +289,25 @@ async function lockEvent(trx: Database, orgId: string, eventId: string) {
   return event;
 }
 
+/**
+ * Etkin takes no money: a published event with a paid ticket type must say how
+ * to pay the club. Runs inside the write's transaction, after the change.
+ */
+async function assertPaymentInfo(trx: Database, eventId: string) {
+  const event = await trx
+    .selectFrom('events as e')
+    .select([
+      'e.status',
+      'e.payment_info',
+      sql<boolean>`exists (select 1 from ticket_types tt where tt.event_id = e.id and tt.price_cents > 0)`.as('paid'),
+    ])
+    .where('e.id', '=', eventId)
+    .executeTakeFirstOrThrow();
+  if (event.status === 'published' && event.paid && !event.payment_info) {
+    throw new AppError(409, 'PAYMENT_INFO_REQUIRED', 'A published paid event needs paymentInfo: how to pay the club');
+  }
+}
+
 function assertEditable(status: EventStatus) {
   if (status === 'cancelled' || status === 'completed') {
     throw new AppError(409, 'EVENT_NOT_EDITABLE', `A ${status} event can no longer be changed`);
@@ -300,6 +330,8 @@ export async function createEvent(db: Database, orgId: string, createdBy: string
       checkin_opens_at: input.checkinOpensAt ?? window.checkin_opens_at,
       checkin_closes_at: input.checkinClosesAt ?? window.checkin_closes_at,
       checkin_points: input.checkinPoints,
+      price_includes: input.priceIncludes ?? null,
+      payment_info: input.paymentInfo ?? null,
     })
     .returning('id')
     .executeTakeFirstOrThrow();
@@ -331,10 +363,13 @@ export async function updateEvent(db: Database, orgId: string, eventId: string, 
         checkin_opens_at: patch.checkinOpensAt,
         checkin_closes_at: patch.checkinClosesAt,
         checkin_points: patch.checkinPoints,
+        price_includes: patch.priceIncludes,
+        payment_info: patch.paymentInfo,
         ...resetWindow,
       })
       .where('id', '=', eventId)
       .execute();
+    await assertPaymentInfo(trx, eventId);
   });
   return loadEventDetail(db, eventId);
 }
@@ -365,6 +400,7 @@ export async function publishEvent(db: Database, orgId: string, eventId: string)
       .set({ status: 'published', published_at: new Date() })
       .where('id', '=', eventId)
       .execute();
+    await assertPaymentInfo(trx, eventId);
   });
   return loadEventDetail(db, eventId);
 }
@@ -437,6 +473,7 @@ export async function createTicketType(db: Database, orgId: string, eventId: str
       })
       .returning(TICKET_TYPE_COLUMNS)
       .executeTakeFirstOrThrow();
+    await assertPaymentInfo(trx, eventId);
     return toTicketType(row);
   });
 }
@@ -469,6 +506,7 @@ export async function updateTicketType(
       .returning(TICKET_TYPE_COLUMNS)
       .executeTakeFirst();
     if (!row) throw ticketTypeNotFound();
+    await assertPaymentInfo(trx, eventId);
     return toTicketType(row);
   });
 }

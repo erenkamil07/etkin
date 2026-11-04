@@ -28,6 +28,7 @@ const MESSAGES: Record<string, string> = {
   EVENT_NOT_EDITABLE: 'Bu etkinlik artık değiştirilemez.',
   EVENT_ALREADY_ENDED: 'Etkinlik bitmiş; artık yayınlanamaz.',
   NO_TICKET_TYPES: 'Yayınlamak için en az bir bilet türü ekle.',
+  PAYMENT_INFO_REQUIRED: 'Ücretli etkinlikte ödemenin nasıl yapılacağını yazmalısın.',
   INVALID_STATUS_TRANSITION: 'Etkinlik bu durumdayken bu işlem yapılamaz.',
 };
 

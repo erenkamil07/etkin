@@ -724,12 +724,18 @@ export interface paths {
                                 /** Format: date-time */
                                 checkinClosesAt: string;
                                 checkinPoints: number;
+                                /** @description What the ticket price covers, in the club's words */
+                                priceIncludes: string | null;
+                                /** @description How to pay the club; Etkin itself takes no money */
+                                paymentInfo: string | null;
                                 /** @enum {string} */
                                 status: "draft" | "published" | "cancelled" | "completed";
                                 /** Format: date-time */
                                 publishedAt: string | null;
                                 capacity: number;
                                 remaining: number;
+                                /** @description Cheapest ticket type; 0 when any ticket is free */
+                                priceFromCents: number;
                             }[];
                             nextCursor: string | null;
                         };
@@ -792,6 +798,10 @@ export interface paths {
                             /** Format: date-time */
                             checkinClosesAt: string;
                             checkinPoints: number;
+                            /** @description What the ticket price covers, in the club's words */
+                            priceIncludes: string | null;
+                            /** @description How to pay the club; Etkin itself takes no money */
+                            paymentInfo: string | null;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
@@ -880,12 +890,18 @@ export interface paths {
                             /** Format: date-time */
                             checkinClosesAt: string;
                             checkinPoints: number;
+                            /** @description What the ticket price covers, in the club's words */
+                            priceIncludes: string | null;
+                            /** @description How to pay the club; Etkin itself takes no money */
+                            paymentInfo: string | null;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
                             publishedAt: string | null;
                             capacity: number;
                             remaining: number;
+                            /** @description Cheapest ticket type; 0 when any ticket is free */
+                            priceFromCents: number;
                         }[];
                     };
                 };
@@ -926,6 +942,10 @@ export interface paths {
                         checkinClosesAt?: string;
                         /** @description Points awarded at the door; default 1 */
                         checkinPoints?: number;
+                        /** @description Paid events: what the price covers, e.g. "Yemek ve sertifika" */
+                        priceIncludes?: string | null;
+                        /** @description Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type */
+                        paymentInfo?: string | null;
                     };
                 };
             };
@@ -958,6 +978,10 @@ export interface paths {
                             /** Format: date-time */
                             checkinClosesAt: string;
                             checkinPoints: number;
+                            /** @description What the ticket price covers, in the club's words */
+                            priceIncludes: string | null;
+                            /** @description How to pay the club; Etkin itself takes no money */
+                            paymentInfo: string | null;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
@@ -1066,6 +1090,10 @@ export interface paths {
                         checkinClosesAt?: string;
                         /** @description Points awarded at the door; default 1 */
                         checkinPoints?: number;
+                        /** @description Paid events: what the price covers, e.g. "Yemek ve sertifika" */
+                        priceIncludes?: string | null;
+                        /** @description Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type */
+                        paymentInfo?: string | null;
                     };
                 };
             };
@@ -1098,6 +1126,10 @@ export interface paths {
                             /** Format: date-time */
                             checkinClosesAt: string;
                             checkinPoints: number;
+                            /** @description What the ticket price covers, in the club's words */
+                            priceIncludes: string | null;
+                            /** @description How to pay the club; Etkin itself takes no money */
+                            paymentInfo: string | null;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
@@ -1183,6 +1215,10 @@ export interface paths {
                             /** Format: date-time */
                             checkinClosesAt: string;
                             checkinPoints: number;
+                            /** @description What the ticket price covers, in the club's words */
+                            priceIncludes: string | null;
+                            /** @description How to pay the club; Etkin itself takes no money */
+                            paymentInfo: string | null;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
@@ -1272,6 +1308,10 @@ export interface paths {
                             /** Format: date-time */
                             checkinClosesAt: string;
                             checkinPoints: number;
+                            /** @description What the ticket price covers, in the club's words */
+                            priceIncludes: string | null;
+                            /** @description How to pay the club; Etkin itself takes no money */
+                            paymentInfo: string | null;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
@@ -1337,7 +1377,7 @@ export interface paths {
                         name: string;
                         description?: string | null;
                         capacity: number;
-                        /** @description Informational for now; 0 = free */
+                        /** @description Shown to buyers and paid to the club as the event says (paymentInfo), not through Etkin; 0 = free */
                         priceCents?: number;
                         /**
                          * @description fcfs: first come first served; priority: early window for loyal members; lottery: points-weighted draw
@@ -1456,7 +1496,7 @@ export interface paths {
                         name?: string;
                         description?: string | null;
                         capacity?: number;
-                        /** @description Informational for now; 0 = free */
+                        /** @description Shown to buyers and paid to the club as the event says (paymentInfo), not through Etkin; 0 = free */
                         priceCents?: number;
                         /**
                          * @description fcfs: first come first served; priority: early window for loyal members; lottery: points-weighted draw

@@ -118,6 +118,10 @@ tokens live in localStorage instead of the keystore.
   draft or published straight away, with an optional early-access window for members with enough
   club points. Dates are typed as digits and formatted as you go, so the number pad works on every
   phone. If a step fails, trying again resumes where it stopped instead of leaving a second draft.
+- **Paid events, no payments.** An event is free or paid. A paid one has a price per ticket type,
+  what the price covers and how to pay the club (at the door, by bank transfer), with one-tap
+  templates for the usual two. The ticket holds the seat and the club collects the money, so the
+  app handles no card data and needs no payment licence. The feed shows the price on the card.
 - **Reporting and moderation.** Clubs write public text, so anyone can report an event from its
   page ("Etkinliği bildir"), and a club's owner ticks the community rules before creating it. A
   platform admin gets a Moderasyon page in the profile to remove an event or dismiss its reports.
@@ -183,7 +187,10 @@ as the owner or the scanner, go to Profil → the club → the event → Kapıda
 - **Clubs and events.** Anyone signed in can create a club and becomes its owner. The owner adds
   organizers and door scanners by email. Organizers create draft events, add ticket types and
   publish. `GET /events` is the public feed (cursor-paginated). Drafts are visible only to the
-  club's team.
+  club's team. A ticket type's `priceCents` is shown to buyers and paid to the club, not through
+  Etkin, so a published event with a paid ticket type must carry `paymentInfo` (how to pay) and may
+  say what the price covers (`priceIncludes`); otherwise the change is refused with
+  `PAYMENT_INFO_REQUIRED`.
 - **Tickets.** `POST /events/:eventId/tickets` claims a seat. Repeating the call returns the ticket
   you already hold, so retries and double taps are safe. Eligibility follows the ticket type:
   sales window, minimum club points, and an early window for loyal members. `GET /me/tickets` lists

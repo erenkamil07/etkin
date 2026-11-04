@@ -58,10 +58,16 @@ const EventBase = z.object({
   checkinOpensAt: DateTimeOutput,
   checkinClosesAt: DateTimeOutput,
   checkinPoints: z.number().int(),
+  priceIncludes: z.string().nullable().describe("What the ticket price covers, in the club's words"),
+  paymentInfo: z.string().nullable().describe('How to pay the club; Etkin itself takes no money'),
   status: z.enum(['draft', 'published', 'cancelled', 'completed']),
   publishedAt: DateTimeOutput.nullable(),
 });
-const EventSummary = EventBase.extend({ capacity: z.number().int(), remaining: z.number().int() });
+const EventSummary = EventBase.extend({
+  capacity: z.number().int(),
+  remaining: z.number().int(),
+  priceFromCents: z.number().int().describe('Cheapest ticket type; 0 when any ticket is free'),
+});
 const EventDetail = EventBase.extend({ ticketTypes: z.array(TicketType) });
 
 const text = (max: number) => z.string().trim().max(max).nullable().optional();
@@ -81,13 +87,23 @@ const EventBody = z.object({
   checkinOpensAt: DateTimeInput.optional().describe('Defaults to one hour before startsAt'),
   checkinClosesAt: DateTimeInput.optional().describe('Defaults to endsAt'),
   checkinPoints: z.number().int().min(0).max(100).optional().describe('Points awarded at the door; default 1'),
+  priceIncludes: text(500).describe('Paid events: what the price covers, e.g. "Yemek ve sertifika"'),
+  paymentInfo: text(500).describe(
+    'Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type',
+  ),
 });
 
 const TicketTypeBody = z.object({
   name: z.string().trim().min(1).max(80),
   description: text(1000),
   capacity: z.number().int().positive().max(100_000),
-  priceCents: z.number().int().min(0).max(10_000_000).optional().describe('Informational for now; 0 = free'),
+  priceCents: z
+    .number()
+    .int()
+    .min(0)
+    .max(10_000_000)
+    .optional()
+    .describe('Shown to buyers and paid to the club as the event says (paymentInfo), not through Etkin; 0 = free'),
   allocationMode: AllocationModeSchema.optional(),
   minPointsRequired: z.number().int().min(0).optional().describe('Club points needed to claim at all'),
   priorityPointsThreshold: z.number().int().positive().nullable().optional(),

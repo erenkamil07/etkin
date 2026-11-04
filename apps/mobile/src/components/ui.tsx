@@ -192,6 +192,42 @@ export function Card({ children, onPress }: { children: ReactNode; onPress?: () 
   );
 }
 
+/** Two or three side-by-side options where exactly one is on, e.g. "Ücretsiz | Ücretli". */
+export function Segmented<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  const theme = useTheme();
+  return (
+    <View
+      accessibilityRole="radiogroup"
+      style={[styles.segmented, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}
+    >
+      {options.map((option) => {
+        const selected = option.value === value;
+        return (
+          <Pressable
+            key={option.value}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: selected }}
+            onPress={() => onChange(option.value)}
+            style={[styles.segment, selected && { backgroundColor: theme.tint }]}
+          >
+            <ThemedText style={[styles.segmentLabel, { color: selected ? theme.onTint : theme.textSecondary }]}>
+              {option.label}
+            </ThemedText>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 /** One option in a list (radio) or a yes/no agreement (checkbox), with an optional line underneath. */
 export function Choice({
   label,
@@ -359,6 +395,9 @@ const styles = StyleSheet.create({
     padding: Spacing.three,
   },
   choiceText: { flex: 1, gap: 2 },
+  segmented: { flexDirection: 'row', borderWidth: 1, borderRadius: Radius.medium, padding: 4, gap: 4 },
+  segment: { flex: 1, minHeight: 44, borderRadius: Radius.small, alignItems: 'center', justifyContent: 'center' },
+  segmentLabel: { fontFamily: Fonts.bold, fontSize: 15 },
   mark: { width: 22, height: 22, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radio: { borderRadius: 11 },
   checkbox: { borderRadius: 6 },

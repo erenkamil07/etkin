@@ -44,6 +44,7 @@ Etkin, üniversite kulüplerinin etkinlik uygulaması. Öğrenciler etkinliklere
 
 KULÜPLER İÇİN
 • Etkinliğini ve bilet türlerini dakikalar içinde oluştur, taslak olarak sakla ya da hemen yayınla.
+• Ücretli etkinliklerde fiyatı, ücrete dahil olanları ve ödeme bilgisini yaz; ödeme doğrudan kulübüne yapılır.
 • Sadık üyelerine erken erişim tanı: belirli puanın üstündekiler satışa önce girsin.
 • Kapıda telefonunla QR okut: yeşil "Giriş onaylandı", kırmızı "Zaten kullanıldı", amber "Başka etkinliğin bileti". Her sonucun kendi sesi ve titreşimi var.
 • Aynı bilet iki kez içeri alınamaz; iki kapıda aynı anda okutulsa bile.
@@ -99,6 +100,12 @@ User-generated content: clubs publish event text that every user sees, so the an
 Google Play's user-generated content policy also asks for terms that define objectionable
 content, which users accept before posting: sign-up links the terms, and creating a club needs the
 community rules ticked.
+
+**Payments:** none in the app. Paid events show a price and the club's own payment note (at the
+door, bank transfer); the ticket only holds the seat. So there is no Google Play Billing, no
+"digital purchases" in the rating questionnaire and no financial data in Data safety. Event
+tickets are a physical service, so if card payments come later they go through a Turkish payment
+provider (iyzico, PayTR), not Play Billing, and Data safety gains "Purchase history".
 
 **Target audience:** 18 and over. Not designed for children.
 

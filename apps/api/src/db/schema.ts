@@ -109,6 +109,8 @@ export interface Events {
   id: Generated<string>;
   location_name: string | null;
   organization_id: string;
+  payment_info: string | null;
+  price_includes: string | null;
   published_at: Timestamp | null;
   starts_at: Timestamp;
   status: Generated<EventStatus>;

@@ -109,7 +109,14 @@ export async function removeEvent(db: Database, eventId: string, adminId: string
     if (event.status === 'draft' || event.status === 'published') await cancelLockedEvent(trx, eventId);
     await trx
       .updateTable('events')
-      .set({ title: REMOVED_TITLE, description: REMOVED_DESCRIPTION, location_name: null, cover_image_url: null })
+      .set({
+        title: REMOVED_TITLE,
+        description: REMOVED_DESCRIPTION,
+        location_name: null,
+        cover_image_url: null,
+        price_includes: null,
+        payment_info: null,
+      })
       .where('id', '=', eventId)
       .execute();
     await resolveOpenReports(trx, eventId, 'removed', adminId);

@@ -118,6 +118,31 @@ export default function EventDetail() {
             <Notice tone="success">Kapıda biletin okutulunca {event.data.checkinPoints} kulüp puanı kazanırsın.</Notice>
           ) : null}
 
+          {event.data.ticketTypes.some((type) => type.priceCents > 0) ? (
+            <Card>
+              <ThemedText type="smallBold">Ücretli etkinlik</ThemedText>
+              {event.data.priceIncludes ? (
+                <ThemedText type="small">
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Ücrete dahil:{' '}
+                  </ThemedText>
+                  {event.data.priceIncludes}
+                </ThemedText>
+              ) : null}
+              {event.data.paymentInfo ? (
+                <ThemedText type="small">
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Ödeme:{' '}
+                  </ThemedText>
+                  {event.data.paymentInfo}
+                </ThemedText>
+              ) : null}
+              <ThemedText type="small" themeColor="textSecondary">
+                Bilet yerini ayırır; ücret doğrudan kulübe ödenir. Etkin ödemelere aracılık etmez.
+              </ThemedText>
+            </Card>
+          ) : null}
+
           {held ? (
             <Card>
               <ThemedText type="smallBold">Bu etkinlik için biletin var</ThemedText>

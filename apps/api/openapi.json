@@ -1252,6 +1252,16 @@
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
                           },
+                          "priceIncludes": {
+                            "nullable": true,
+                            "description": "What the ticket price covers, in the club's words",
+                            "type": "string"
+                          },
+                          "paymentInfo": {
+                            "nullable": true,
+                            "description": "How to pay the club; Etkin itself takes no money",
+                            "type": "string"
+                          },
                           "status": {
                             "type": "string",
                             "enum": [
@@ -1276,6 +1286,12 @@
                             "type": "integer",
                             "minimum": -9007199254740991,
                             "maximum": 9007199254740991
+                          },
+                          "priceFromCents": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Cheapest ticket type; 0 when any ticket is free"
                           }
                         },
                         "required": [
@@ -1290,10 +1306,13 @@
                           "checkinOpensAt",
                           "checkinClosesAt",
                           "checkinPoints",
+                          "priceIncludes",
+                          "paymentInfo",
                           "status",
                           "publishedAt",
                           "capacity",
-                          "remaining"
+                          "remaining",
+                          "priceFromCents"
                         ],
                         "additionalProperties": false
                       }
@@ -1408,6 +1427,16 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "priceIncludes": {
+                      "nullable": true,
+                      "description": "What the ticket price covers, in the club's words",
+                      "type": "string"
+                    },
+                    "paymentInfo": {
+                      "nullable": true,
+                      "description": "How to pay the club; Etkin itself takes no money",
+                      "type": "string"
+                    },
                     "status": {
                       "type": "string",
                       "enum": [
@@ -1532,6 +1561,8 @@
                     "checkinOpensAt",
                     "checkinClosesAt",
                     "checkinPoints",
+                    "priceIncludes",
+                    "paymentInfo",
                     "status",
                     "publishedAt",
                     "ticketTypes"
@@ -1644,6 +1675,16 @@
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991
                       },
+                      "priceIncludes": {
+                        "nullable": true,
+                        "description": "What the ticket price covers, in the club's words",
+                        "type": "string"
+                      },
+                      "paymentInfo": {
+                        "nullable": true,
+                        "description": "How to pay the club; Etkin itself takes no money",
+                        "type": "string"
+                      },
                       "status": {
                         "type": "string",
                         "enum": [
@@ -1668,6 +1709,12 @@
                         "type": "integer",
                         "minimum": -9007199254740991,
                         "maximum": 9007199254740991
+                      },
+                      "priceFromCents": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Cheapest ticket type; 0 when any ticket is free"
                       }
                     },
                     "required": [
@@ -1682,10 +1729,13 @@
                       "checkinOpensAt",
                       "checkinClosesAt",
                       "checkinPoints",
+                      "priceIncludes",
+                      "paymentInfo",
                       "status",
                       "publishedAt",
                       "capacity",
-                      "remaining"
+                      "remaining",
+                      "priceFromCents"
                     ],
                     "additionalProperties": false
                   }
@@ -1755,6 +1805,18 @@
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 100
+                  },
+                  "priceIncludes": {
+                    "description": "Paid events: what the price covers, e.g. \"Yemek ve sertifika\"",
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "paymentInfo": {
+                    "description": "Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type",
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
                   }
                 },
                 "required": [
@@ -1857,6 +1919,16 @@
                       "type": "integer",
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
+                    },
+                    "priceIncludes": {
+                      "nullable": true,
+                      "description": "What the ticket price covers, in the club's words",
+                      "type": "string"
+                    },
+                    "paymentInfo": {
+                      "nullable": true,
+                      "description": "How to pay the club; Etkin itself takes no money",
+                      "type": "string"
                     },
                     "status": {
                       "type": "string",
@@ -1982,6 +2054,8 @@
                     "checkinOpensAt",
                     "checkinClosesAt",
                     "checkinPoints",
+                    "priceIncludes",
+                    "paymentInfo",
                     "status",
                     "publishedAt",
                     "ticketTypes"
@@ -2055,6 +2129,18 @@
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 100
+                  },
+                  "priceIncludes": {
+                    "description": "Paid events: what the price covers, e.g. \"Yemek ve sertifika\"",
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "paymentInfo": {
+                    "description": "Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type",
+                    "nullable": true,
+                    "type": "string",
+                    "maxLength": 500
                   }
                 }
               }
@@ -2163,6 +2249,16 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "priceIncludes": {
+                      "nullable": true,
+                      "description": "What the ticket price covers, in the club's words",
+                      "type": "string"
+                    },
+                    "paymentInfo": {
+                      "nullable": true,
+                      "description": "How to pay the club; Etkin itself takes no money",
+                      "type": "string"
+                    },
                     "status": {
                       "type": "string",
                       "enum": [
@@ -2287,6 +2383,8 @@
                     "checkinOpensAt",
                     "checkinClosesAt",
                     "checkinPoints",
+                    "priceIncludes",
+                    "paymentInfo",
                     "status",
                     "publishedAt",
                     "ticketTypes"
@@ -2445,6 +2543,16 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "priceIncludes": {
+                      "nullable": true,
+                      "description": "What the ticket price covers, in the club's words",
+                      "type": "string"
+                    },
+                    "paymentInfo": {
+                      "nullable": true,
+                      "description": "How to pay the club; Etkin itself takes no money",
+                      "type": "string"
+                    },
                     "status": {
                       "type": "string",
                       "enum": [
@@ -2569,6 +2677,8 @@
                     "checkinOpensAt",
                     "checkinClosesAt",
                     "checkinPoints",
+                    "priceIncludes",
+                    "paymentInfo",
                     "status",
                     "publishedAt",
                     "ticketTypes"
@@ -2689,6 +2799,16 @@
                       "minimum": -9007199254740991,
                       "maximum": 9007199254740991
                     },
+                    "priceIncludes": {
+                      "nullable": true,
+                      "description": "What the ticket price covers, in the club's words",
+                      "type": "string"
+                    },
+                    "paymentInfo": {
+                      "nullable": true,
+                      "description": "How to pay the club; Etkin itself takes no money",
+                      "type": "string"
+                    },
                     "status": {
                       "type": "string",
                       "enum": [
@@ -2813,6 +2933,8 @@
                     "checkinOpensAt",
                     "checkinClosesAt",
                     "checkinPoints",
+                    "priceIncludes",
+                    "paymentInfo",
                     "status",
                     "publishedAt",
                     "ticketTypes"
@@ -2855,7 +2977,7 @@
                     "maximum": 100000
                   },
                   "priceCents": {
-                    "description": "Informational for now; 0 = free",
+                    "description": "Shown to buyers and paid to the club as the event says (paymentInfo), not through Etkin; 0 = free",
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 10000000
@@ -3070,7 +3192,7 @@
                     "maximum": 100000
                   },
                   "priceCents": {
-                    "description": "Informational for now; 0 = free",
+                    "description": "Shown to buyers and paid to the club as the event says (paymentInfo), not through Etkin; 0 = free",
                     "type": "integer",
                     "minimum": 0,
                     "maximum": 10000000

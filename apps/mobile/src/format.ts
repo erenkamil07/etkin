@@ -18,9 +18,15 @@ export const formatTime = (iso: string) => time.format(new Date(iso));
 /** "19:00:42", for the ticket screen's running clock. */
 export const formatClock = (ms: number) => clock.format(new Date(ms));
 
-/** "Ücretsiz" or "₺150,00". */
+/** "Ücretsiz", "₺150" or "₺149,90": kuruş only when there are some. */
 export const formatPrice = (cents: number, currency: string) =>
-  cents === 0 ? 'Ücretsiz' : new Intl.NumberFormat('tr-TR', { style: 'currency', currency }).format(cents / 100);
+  cents === 0
+    ? 'Ücretsiz'
+    : new Intl.NumberFormat('tr-TR', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
+      }).format(cents / 100);
 
 const dayOfMonth = new Intl.DateTimeFormat('tr-TR', { day: 'numeric' });
 const shortMonth = new Intl.DateTimeFormat('tr-TR', { month: 'short' });

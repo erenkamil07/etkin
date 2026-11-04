@@ -51,7 +51,8 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
   <li><strong>Bilet ve katılım bilgileri:</strong> aldığın ve iptal ettiğin biletler, kapıda giriş
   yaptığın zaman ve kapı, bu girişlerden kazandığın kulüp puanları ve rozetler.</li>
   <li><strong>Kulüp ekibi bilgileri:</strong> bir kulübün ekibindeysen rolün, oluşturduğun
-  etkinlikler ve kapıda yaptığın okutmalar (zaman, sonuç, kapı adı).</li>
+  etkinlikler ve kapıda yaptığın okutmalar (zaman, sonuç, kapı adı). Ücretli bir etkinliğe
+  yazdığın ödeme bilgisi (ör. IBAN ve alıcı adı) etkinlik sayfasında herkese açık görünür.</li>
   <li><strong>Cihaz kimliği:</strong> uygulama kurulurken telefonunda rastgele bir kimlik üretir.
   Biletinin QR kodunun yalnızca tek bir telefonda gösterilmesi için kullanılır. Telefonunun
   donanım kimliği, reklam kimliği veya konumu toplanmaz.</li>
@@ -78,7 +79,7 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
   kaldırmak.</li>
 </ul>
 <p>Etkin reklam göstermez, verilerini satmaz ve reklam ya da analitik amaçlı takip araçları
-kullanmaz.</p>
+kullanmaz. Etkin ödeme almaz; kart ya da banka bilgisi toplamaz.</p>
 
 <h2>Kimler görebilir</h2>
 <ul>
@@ -169,6 +170,16 @@ bağlantısını kullan ya da ${mail} adresine yaz. Bildirimi kimin yaptığın�
 en kısa sürede incelenir. Kurallara aykırı bulunan etkinlik kaldırılır ve biletleri iptal edilir.
 Kuralları tekrar tekrar ya da ağır biçimde çiğneyen kulüplerin ve hesapların erişimi
 kapatılabilir.</p>
+
+<h2>Ücretli etkinlikler</h2>
+<ul>
+  <li>Etkin ödeme almaz ve ödemelere aracılık etmez. Ücretli bir etkinlikte bilet yerini ayırır;
+  ücret, kulübün etkinlik sayfasında yazdığı şekilde (kapıda, havale vb.) doğrudan kulübe ödenir.</li>
+  <li>Fiyat, ücrete dahil olanlar, ödeme bilgisi, iade ve iptal koşulları kulübün
+  sorumluluğundadır. Ödemeyle ilgili sorunlar için kulüple iletişime geç.</li>
+  <li>Kulüpler doğru ödeme bilgisi vermekle yükümlüdür. Yanıltıcı ödeme bilgisi ya da
+  dolandırıcılık şüphesi taşıyan etkinlikleri bildir; bu etkinlikler kaldırılır.</li>
+</ul>
 
 <h2>Biletler ve kapı</h2>
 <ul>

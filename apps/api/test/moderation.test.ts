@@ -142,7 +142,12 @@ describe('reviewing reports', () => {
     const owner = await createUser(db);
     const admin = await createUser(db, 'admin');
     const { eventId, ticketTypeIds } = await createPublishedEvent(app, owner, undefined, {
-      event: { title: 'Offensive title', description: 'Offensive text', locationName: 'Somewhere' },
+      event: {
+        title: 'Offensive title',
+        description: 'Offensive text',
+        locationName: 'Somewhere',
+        paymentInfo: 'Send money to this IBAN',
+      },
     });
     const holder = await createTicketHolder(app, db, eventId, ticketTypeIds[0] as string);
     await report((await createUser(db)).token, eventId, { reason: 'inappropriate' });
@@ -155,7 +160,7 @@ describe('reviewing reports', () => {
     expect(res.statusCode).toBe(204);
 
     const event = (await app.inject({ method: 'GET', url: `/events/${eventId}` })).json();
-    expect(event).toMatchObject({ status: 'cancelled', title: REMOVED_TITLE, locationName: null });
+    expect(event).toMatchObject({ status: 'cancelled', title: REMOVED_TITLE, locationName: null, paymentInfo: null });
     expect(event.description).not.toContain('Offensive');
     const ticket = await db
       .selectFrom('tickets')
