@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { dateBadge, formatWeekdayTime } from '@/format';
@@ -5,7 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { ThemedText } from './themed-text';
 import { Pill } from './ui';
 
-// Below this many seats the card calls it out in orange.
+// Below this many seats the feed calls it out in orange.
 const FEW_SEATS = 10;
 
 interface EventSummary {
@@ -13,16 +14,29 @@ interface EventSummary {
   startsAt: string;
   locationName: string | null;
   organization: { name: string };
-  remaining: number;
-  capacity: number;
 }
 
-/** A calendar-page date on the left, the event on the right and how many seats are left. */
-export function EventCard({ event, onPress }: { event: EventSummary; onPress: () => void }) {
+/**
+ * A calendar-page date on the left and the event on the right. The feed puts
+ * the seats left underneath; the ticket list puts the ticket's status there.
+ */
+export function EventCard({
+  event,
+  onPress,
+  footer,
+  highlight = false,
+  dimmed = false,
+}: {
+  event: EventSummary;
+  onPress: () => void;
+  footer?: ReactNode;
+  /** An orange border, for "hurry" moments such as the last few seats. */
+  highlight?: boolean;
+  /** Faded, for things that are over: used or cancelled tickets. */
+  dimmed?: boolean;
+}) {
   const theme = useTheme();
   const { day, month } = dateBadge(event.startsAt);
-  const soldOut = event.remaining <= 0;
-  const fewLeft = !soldOut && event.remaining <= Math.max(FEW_SEATS, event.capacity * 0.1);
 
   return (
     <Pressable
@@ -32,13 +46,14 @@ export function EventCard({ event, onPress }: { event: EventSummary; onPress: ()
         styles.card,
         {
           backgroundColor: pressed ? theme.backgroundSelected : theme.backgroundElement,
-          borderColor: fewLeft ? theme.tintSoft : theme.border,
+          borderColor: highlight ? theme.tintSoft : theme.border,
+          opacity: dimmed ? 0.6 : 1,
         },
       ]}
     >
-      <View style={[styles.date, { backgroundColor: theme.tintSoft }]}>
-        <ThemedText style={[styles.day, { color: theme.tint }]}>{day}</ThemedText>
-        <ThemedText style={[styles.month, { color: theme.tint }]}>{month}</ThemedText>
+      <View style={[styles.date, { backgroundColor: dimmed ? theme.backgroundSelected : theme.tintSoft }]}>
+        <ThemedText style={[styles.day, { color: dimmed ? theme.textSecondary : theme.tint }]}>{day}</ThemedText>
+        <ThemedText style={[styles.month, { color: dimmed ? theme.textSecondary : theme.tint }]}>{month}</ThemedText>
       </View>
       <View style={styles.body}>
         <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
@@ -51,18 +66,24 @@ export function EventCard({ event, onPress }: { event: EventSummary; onPress: ()
           {formatWeekdayTime(event.startsAt)}
           {event.locationName ? ` · ${event.locationName}` : ''}
         </ThemedText>
-        <View style={styles.pills}>
-          {soldOut ? (
-            <Pill tone="danger">Tükendi</Pill>
-          ) : fewLeft ? (
-            <Pill tone="tint">Son {event.remaining} yer</Pill>
-          ) : (
-            <Pill>{event.remaining} yer var</Pill>
-          )}
-        </View>
+        {footer ? <View style={styles.footer}>{footer}</View> : null}
       </View>
     </Pressable>
   );
+}
+
+/** The feed's seat label: plain, "Son N yer" in orange when few are left, red when sold out. */
+export function seatsLeft({ remaining, capacity }: { remaining: number; capacity: number }) {
+  const soldOut = remaining <= 0;
+  const fewLeft = !soldOut && remaining <= Math.max(FEW_SEATS, capacity * 0.1);
+  const pill = soldOut ? (
+    <Pill tone="danger">Tükendi</Pill>
+  ) : fewLeft ? (
+    <Pill tone="tint">Son {remaining} yer</Pill>
+  ) : (
+    <Pill>{remaining} yer var</Pill>
+  );
+  return { pill, fewLeft };
 }
 
 const styles = StyleSheet.create({
@@ -84,5 +105,5 @@ const styles = StyleSheet.create({
   month: { fontFamily: Fonts.bold, fontSize: 12, lineHeight: 16, letterSpacing: 1 },
   body: { flex: 1, gap: 2 },
   title: { fontFamily: Fonts.bold, fontSize: 17, lineHeight: 23 },
-  pills: { flexDirection: 'row', marginTop: Spacing.two },
+  footer: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, marginTop: Spacing.two },
 });

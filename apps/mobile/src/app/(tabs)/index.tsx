@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
-import { EventCard } from '@/components/event-card';
+import { EventCard, seatsLeft } from '@/components/event-card';
 import { ThemedText } from '@/components/themed-text';
 import { ErrorBanner, Loading, Screen } from '@/components/ui';
 import { BottomTabInset, Spacing } from '@/constants/theme';
@@ -45,12 +45,17 @@ export default function Events() {
               </ThemedText>
             </View>
           }
-          renderItem={({ item }) => (
-            <EventCard
-              event={item}
-              onPress={() => router.push({ pathname: '/events/[id]', params: { id: item.id } })}
-            />
-          )}
+          renderItem={({ item }) => {
+            const seats = seatsLeft(item);
+            return (
+              <EventCard
+                event={item}
+                footer={seats.pill}
+                highlight={seats.fewLeft}
+                onPress={() => router.push({ pathname: '/events/[id]', params: { id: item.id } })}
+              />
+            );
+          }}
         />
       )}
     </Screen>

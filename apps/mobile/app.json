@@ -48,6 +48,14 @@
           "cameraPermission": "Etkinlik girişinde bilet QR kodlarını okutmak için kamera kullanılır.",
           "recordAudioAndroid": false
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false,
+          "microphonePermission": false
+        }
       ]
     ],
     "experiments": {

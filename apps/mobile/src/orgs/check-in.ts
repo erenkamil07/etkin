@@ -2,7 +2,7 @@ import { randomUUID } from 'expo-crypto';
 import { api } from '@/api/client';
 import type { paths } from '@/api/schema';
 import { getDeviceId } from '@/auth/device';
-import { formatDateTime } from '@/format';
+import { formatDateTime, formatTime } from '@/format';
 
 export type ScanVerdict =
   paths['/orgs/{orgId}/events/{eventId}/check-ins']['post']['responses'][200]['content']['application/json'];
@@ -51,7 +51,13 @@ export function describeVerdict(verdict: ScanVerdict): {
       };
     case 'duplicate': {
       const first = verdict.checkIn;
-      const when = first ? `İlk giriş ${formatDateTime(first.at)}${first.gate ? `, ${first.gate}` : ''}` : '';
+      // The time alone on the night; the full date if the first scan was on another day.
+      const at = first
+        ? new Date(first.at).toDateString() === new Date().toDateString()
+          ? formatTime(first.at)
+          : formatDateTime(first.at)
+        : '';
+      const when = first ? `İlk okutma: ${at}${first.gate ? `, ${first.gate}` : ''}` : '';
       return { title: 'Bu bilet zaten kullanıldı', tone: 'danger', detail: [who, when].filter(Boolean).join('\n') };
     }
     case 'expired_token':

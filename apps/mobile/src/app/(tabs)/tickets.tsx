@@ -1,19 +1,28 @@
 import { router } from 'expo-router';
-import { FlatList, StyleSheet } from 'react-native';
+import { FlatList, StyleSheet, View } from 'react-native';
 import { useMyTickets } from '@/api/queries';
+import { EventCard } from '@/components/event-card';
 import { ThemedText } from '@/components/themed-text';
-import { Card, ErrorBanner, Loading, Screen } from '@/components/ui';
+import { Button, ErrorBanner, Loading, Pill, Screen } from '@/components/ui';
 import { BottomTabInset, Spacing } from '@/constants/theme';
-import { formatDateTime } from '@/format';
 
-const STATUS = { active: 'Aktif', checked_in: 'Kullanıldı', cancelled: 'İptal' } as const;
+const STATUS = {
+  active: <Pill tone="tint">Geçerli · QR göster</Pill>,
+  checked_in: <Pill tone="success">Kullanıldı</Pill>,
+  cancelled: <Pill tone="danger">İptal</Pill>,
+} as const;
 
 export default function Tickets() {
   const tickets = useMyTickets();
 
   return (
     <Screen scroll={false}>
-      <ThemedText type="subtitle">Biletlerim</ThemedText>
+      <View>
+        <ThemedText type="subtitle">Biletlerim</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          Kapıda bileti açıp QR kodu okut
+        </ThemedText>
+      </View>
       {tickets.isPending ? (
         <Loading />
       ) : tickets.error ? (
@@ -26,20 +35,29 @@ export default function Tickets() {
           onRefresh={() => tickets.refetch()}
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <ThemedText themeColor="textSecondary">
-              Henüz biletin yok. Etkinlikler sekmesinden bir etkinlik seç.
-            </ThemedText>
+            <View style={styles.empty}>
+              <ThemedText style={styles.emptyIcon}>🎫</ThemedText>
+              <ThemedText type="smallBold">Henüz biletin yok</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" style={styles.center}>
+                Bir etkinlik seç, biletini al; QR kodun burada seni bekliyor olacak.
+              </ThemedText>
+              <Button title="Etkinliklere göz at" onPress={() => router.navigate('/')} />
+            </View>
           }
           renderItem={({ item }) => (
-            <Card onPress={() => router.push({ pathname: '/tickets/[id]', params: { id: item.id } })}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                {item.event.organization.name} · {STATUS[item.status]}
-              </ThemedText>
-              <ThemedText type="default">{item.event.title}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {formatDateTime(item.event.startsAt)} · {item.ticketType.name}
-              </ThemedText>
-            </Card>
+            <EventCard
+              event={item.event}
+              dimmed={item.status !== 'active'}
+              footer={
+                <>
+                  {STATUS[item.status]}
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {item.ticketType.name}
+                  </ThemedText>
+                </>
+              }
+              onPress={() => router.push({ pathname: '/tickets/[id]', params: { id: item.id } })}
+            />
           )}
         />
       )}
@@ -49,4 +67,7 @@ export default function Tickets() {
 
 const styles = StyleSheet.create({
   list: { gap: Spacing.three, paddingBottom: BottomTabInset + Spacing.six },
+  empty: { alignItems: 'center', gap: Spacing.two, paddingTop: Spacing.six },
+  emptyIcon: { fontSize: 44, lineHeight: 56 },
+  center: { textAlign: 'center' },
 });
