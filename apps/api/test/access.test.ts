@@ -34,7 +34,7 @@ const SOME_ID = '0190a000-0000-7000-8000-000000000000';
 
 // A valid body for every write below, so requests get past validation and
 // reach the role check (Fastify validates before preHandlers run).
-const BODY: Record<string, unknown> = {
+const BODY: Record<string, Record<string, unknown>> = {
   PATCH_org: { name: 'Hijacked' },
   check_in: { qr: 'not-a-real-code', gate: 'A' },
   manual: { ticketId: SOME_ID, gate: 'A' },
@@ -42,7 +42,7 @@ const BODY: Record<string, unknown> = {
   ticket_type: { name: 'VIP', capacity: 5 },
   member: { email: 'someone@uni.edu.tr', role: 'organizer' },
 };
-const bodyFor = (method: string, url: string) => {
+const bodyFor = (method: string, url: string): Record<string, unknown> | undefined => {
   if (url.endsWith('/check-ins/manual')) return BODY.manual;
   if (url.endsWith('/check-ins')) return BODY.check_in;
   if (url.endsWith('/ticket-types')) return BODY.ticket_type;
