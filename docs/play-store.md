@@ -34,12 +34,13 @@ Kulüp etkinliklerine bilet al, kapıda QR ile gir, puan ve rozet kazan.
 Etkin, üniversite kulüplerinin etkinlik uygulaması. Öğrenciler etkinliklere bilet alır, kapıda canlı QR kodla girer ve katıldıkça kulüp puanı ile rozet kazanır. Kulüpler etkinlik açar, kapıda bileti saniyeler içinde okutur ve kimin geldiğini anlık görür.
 
 ÖĞRENCİLER İÇİN
-• Kampüsündeki kulüplerin yaklaşan etkinliklerini tek listede gör.
+• Önce kendi üniversitendeki kulüplerin yaklaşan etkinliklerini gör; istersen tek dokunuşla tüm Türkiye'ye geç.
 • Tek dokunuşla bilet al; kontenjan dolmadan yerini ayırt.
 • Kapıda biletini aç: QR kodu her 15 saniyede yenilenir, ekran görüntüsüyle kopyalanamaz.
 • İnternet çekmese bile biletin açılır; kod telefonunda üretilir.
 • Her katılımda kulüp puanı kazan, "İlk Adım", "Müdavim", "Kaşif" gibi rozetleri topla.
 • Puanı yüksek üyeler, kontenjanı sınırlı etkinliklere herkesten önce bilet alabilir.
+• Ücretli etkinliklerde fiyatı, ücrete nelerin dahil olduğunu ve ödemenin nasıl yapılacağını önceden gör.
 • Gelemeyeceksen biletini iptal et, yerin başkasına açılsın.
 
 KULÜPLER İÇİN
@@ -50,6 +51,9 @@ KULÜPLER İÇİN
 • Aynı bilet iki kez içeri alınamaz; iki kapıda aynı anda okutulsa bile.
 • İçerideki kişi sayısını, gelmeyenleri ve katılımcı listesini canlı takip et; telefonu kapanan öğrenciyi isimle içeri al.
 • Ekibine organizatör ve kapı görevlisi rolleri ver.
+
+GÜVENLİ TOPLULUK
+• Kurallara aykırı bir etkinlik gördüğünde etkinlik sayfasından bildir; bildirimler incelenir, aykırı etkinlikler kaldırılır.
 
 GİZLİLİK
 • Reklam yok, takip yok, verilerin satılmaz.
