@@ -11,6 +11,7 @@ import {
   OrgEventParams,
   OrgParams,
 } from '../schemas.js';
+import { UniversityRef } from '../universities/routes.js';
 import {
   cancelEvent,
   createEvent,
@@ -48,7 +49,7 @@ const TicketType = z.object({
 
 const EventBase = z.object({
   id: z.uuid(),
-  organization: z.object({ id: z.uuid(), slug: z.string(), name: z.string() }),
+  organization: z.object({ id: z.uuid(), slug: z.string(), name: z.string(), university: UniversityRef.nullable() }),
   title: z.string(),
   description: z.string().nullable(),
   locationName: z.string().nullable(),
@@ -126,6 +127,12 @@ export const eventRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app, 
         summary: 'Upcoming published events, soonest first',
         querystring: z.object({
           orgId: z.uuid().optional(),
+          universityId: z.coerce
+            .number()
+            .int()
+            .positive()
+            .optional()
+            .describe("Only this university's clubs (a student's own campus); omit for the whole country"),
           limit: z.coerce.number().int().min(1).max(50).optional(),
           cursor: z.string().max(200).optional().describe('nextCursor from the previous page'),
         }),

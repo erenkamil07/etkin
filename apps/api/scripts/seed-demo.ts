@@ -16,7 +16,7 @@ const ACCOUNTS = {
     email: 'ayse.demo@uni.edu.tr',
     password: 'correct horse battery',
     fullName: 'Ayşe Yılmaz',
-    university: 'ODTÜ',
+    university: 'Orta Doğu Teknik Üniversitesi',
   },
   // A second student, so one ticket can be admitted while another is already used.
   student2: {
@@ -26,7 +26,8 @@ const ACCOUNTS = {
     university: 'Mersin Üniversitesi',
   },
 };
-const CLUB = { slug: 'ieee-demo', name: 'IEEE Öğrenci Kolu' };
+// Ayşe's university, so her "Üniversitem" feed has the club's events and Mert's (Mersin) does not.
+const CLUB = { slug: 'ieee-demo', name: 'IEEE Öğrenci Kolu', university: 'Orta Doğu Teknik Üniversitesi' };
 const LIVE_TITLE = 'Canlı Demo: Kapı Testi';
 
 const config = loadConfig();
@@ -42,16 +43,26 @@ function dayAt(days: number, hour: number) {
   return date;
 }
 
+/** A university's id by its exact name in the list (db/migrations/*_universities.sql). */
+async function universityId(name: string | undefined) {
+  if (!name) return null;
+  return (await db.selectFrom('universities').select('id').where('name', '=', name).executeTakeFirstOrThrow()).id;
+}
+
 async function ensureUser(account: { email: string; password: string; fullName: string; university?: string }) {
+  const university_id = await universityId(account.university);
   const existing = await db.selectFrom('users').select('id').where('email', '=', account.email).executeTakeFirst();
-  if (existing) return existing.id;
+  if (existing) {
+    await db.updateTable('users').set({ university_id }).where('id', '=', existing.id).execute();
+    return existing.id;
+  }
   const { id } = await db
     .insertInto('users')
     .values({
       email: account.email,
       password_hash: await hashPassword(account.password),
       full_name: account.fullName,
-      university: account.university ?? null,
+      university_id,
     })
     .returning('id')
     .executeTakeFirstOrThrow();
@@ -63,9 +74,15 @@ const scannerId = await ensureUser(ACCOUNTS.scanner);
 await ensureUser(ACCOUNTS.student);
 await ensureUser(ACCOUNTS.student2);
 
-const orgId =
-  (await db.selectFrom('organizations').select('id').where('slug', '=', CLUB.slug).executeTakeFirst())?.id ??
-  (await db.insertInto('organizations').values(CLUB).returning('id').executeTakeFirstOrThrow()).id;
+const club = { slug: CLUB.slug, name: CLUB.name, university_id: await universityId(CLUB.university) };
+const orgId = (
+  await db
+    .insertInto('organizations')
+    .values(club)
+    .onConflict((oc) => oc.column('slug').doUpdateSet({ university_id: club.university_id }))
+    .returning('id')
+    .executeTakeFirstOrThrow()
+).id;
 await db
   .insertInto('organization_members')
   .values([

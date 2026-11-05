@@ -26,6 +26,7 @@ import { moderationRoutes } from './moderation/routes.js';
 import { orgRoutes } from './orgs/routes.js';
 import { healthRoutes, type ReadinessCheck } from './routes/health.js';
 import { ticketRoutes } from './tickets/routes.js';
+import { universityRoutes } from './universities/routes.js';
 
 export interface AppDeps {
   config: Config;
@@ -61,7 +62,12 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   registerErrorHandling(app);
 
   await app.register(helmet);
-  await app.register(cors, { origin: config.CORS_ORIGINS.length > 0 ? config.CORS_ORIGINS : false });
+  // Browsers only (the native app sends no Origin). The plugin's default methods
+  // stop at POST, which would block the web build's edits and account deletion.
+  await app.register(cors, {
+    origin: config.CORS_ORIGINS.length > 0 ? config.CORS_ORIGINS : false,
+    methods: ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE'],
+  });
   // Opt-in per route. In-memory counters are per instance; move to a Redis store
   // once the API runs as more than a couple of tasks.
   await app.register(rateLimit, {
@@ -85,6 +91,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
         { name: 'loyalty', description: 'Your club points and badges' },
         { name: 'analytics', description: 'Attendance numbers for organizers' },
         { name: 'moderation', description: 'Reporting events and reviewing reports' },
+        { name: 'universities', description: 'The list clubs and students pick their university from' },
         { name: 'health', description: 'Liveness and readiness probes' },
       ],
       components: {
@@ -116,6 +123,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   await app.register(loyaltyRoutes, { db });
   await app.register(analyticsRoutes, { db });
   await app.register(moderationRoutes, { db });
+  await app.register(universityRoutes, { db });
 
   return app;
 }

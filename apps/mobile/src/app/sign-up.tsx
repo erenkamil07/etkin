@@ -7,13 +7,14 @@ import { getDeviceId } from '@/auth/device';
 import { startSession } from '@/auth/session';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ErrorBanner, Field, Screen } from '@/components/ui';
+import { type UniversityChoice, UniversityPicker } from '@/components/university-picker';
 import { PRIVACY_URL, TERMS_URL } from '@/config';
 
 interface Form {
   fullName: string;
   email: string;
   password: string;
-  university: string;
+  university: UniversityChoice;
   studentNumber: string;
 }
 
@@ -23,13 +24,23 @@ function validate(form: Form): Partial<Record<keyof Form, string>> {
   if (form.fullName.trim().length < 2) errors.fullName = 'Adını ve soyadını yaz.';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errors.email = 'Geçerli bir e-posta adresi yaz.';
   if (form.password.length < 8) errors.password = 'Şifre en az 8 karakter olmalı.';
+  if (form.university === undefined) errors.university = 'Üniversiteni seç; listede yoksa en alttaki seçeneğe dokun.';
   return errors;
 }
 
 export default function SignUp() {
-  const [form, setForm] = useState<Form>({ fullName: '', email: '', password: '', university: '', studentNumber: '' });
+  const [form, setForm] = useState<Form>({
+    fullName: '',
+    email: '',
+    password: '',
+    university: undefined,
+    studentNumber: '',
+  });
   const [errors, setErrors] = useState<ReturnType<typeof validate>>({});
-  const set = (key: keyof Form) => (value: string) => setForm((current) => ({ ...current, [key]: value }));
+  const set =
+    <K extends keyof Form>(key: K) =>
+    (value: Form[K]) =>
+      setForm((current) => ({ ...current, [key]: value }));
 
   const signUp = useMutation({
     mutationFn: async () => {
@@ -38,7 +49,7 @@ export default function SignUp() {
           fullName: form.fullName.trim(),
           email: form.email.trim(),
           password: form.password,
-          university: form.university.trim() || undefined,
+          universityId: form.university?.id ?? null,
           studentNumber: form.studentNumber.trim() || undefined,
           deviceId: await getDeviceId(),
         },
@@ -82,7 +93,12 @@ export default function SignUp() {
         autoComplete="new-password"
         error={errors.password}
       />
-      <Field label="Üniversite (isteğe bağlı)" value={form.university} onChangeText={set('university')} />
+      <UniversityPicker
+        label="Üniversite"
+        value={form.university}
+        onChange={set('university')}
+        error={errors.university}
+      />
       <Field
         label="Öğrenci numarası (isteğe bağlı)"
         value={form.studentNumber}

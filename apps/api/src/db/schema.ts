@@ -132,6 +132,7 @@ export interface Organizations {
   logo_url: string | null;
   name: string;
   slug: string;
+  university_id: number | null;
   updated_at: Generated<Timestamp>;
 }
 
@@ -235,6 +236,13 @@ export interface TicketTypes {
   updated_at: Generated<Timestamp>;
 }
 
+export interface Universities {
+  city: string;
+  id: Generated<number>;
+  kind: string;
+  name: string;
+}
+
 export interface UserBadges {
   awarded_at: Generated<Timestamp>;
   badge_id: string;
@@ -253,7 +261,7 @@ export interface Users {
   password_hash: string | null;
   platform_role: Generated<PlatformRole>;
   student_number: string | null;
-  university: string | null;
+  university_id: number | null;
   updated_at: Generated<Timestamp>;
 }
 
@@ -273,6 +281,7 @@ export interface DB {
   ticket_applications: TicketApplications;
   ticket_types: TicketTypes;
   tickets: Tickets;
+  universities: Universities;
   user_badges: UserBadges;
   users: Users;
 }

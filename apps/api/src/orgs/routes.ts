@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { assertOrgRole, currentUser } from '../auth/plugin.js';
 import type { Database } from '../db.js';
 import { atLeastOneField, BEARER, DateTimeOutput, OrgParams } from '../schemas.js';
+import { UniversityId, UniversityRef } from '../universities/routes.js';
 import { createOrg, getOrg, listMembers, removeMember, updateOrg, upsertMember } from './service.js';
 
 const OrgRoleSchema = z.enum(['owner', 'organizer', 'scanner']);
@@ -13,6 +14,7 @@ const Org = z.object({
   name: z.string(),
   description: z.string().nullable(),
   logoUrl: z.string().nullable(),
+  university: UniversityRef.nullable(),
   createdAt: DateTimeOutput,
 });
 
@@ -31,6 +33,9 @@ const LogoUrl = z
   .max(500)
   .nullable()
   .optional();
+const OrgUniversity = UniversityId.nullable()
+  .optional()
+  .describe("The club's university, from GET /universities; its events lead that campus's feed");
 
 const CreateOrgBody = z.object({
   slug: z
@@ -41,10 +46,11 @@ const CreateOrgBody = z.object({
   name: Name,
   description: Description,
   logoUrl: LogoUrl,
+  universityId: OrgUniversity,
 });
 
 const UpdateOrgBody = z
-  .object({ name: Name.optional(), description: Description, logoUrl: LogoUrl })
+  .object({ name: Name.optional(), description: Description, logoUrl: LogoUrl, universityId: OrgUniversity })
   .refine(atLeastOneField, 'Provide at least one field to change');
 
 export const orgRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app, { db }) => {

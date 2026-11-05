@@ -3,17 +3,28 @@ import type { OrgRole } from '../db/schema.js';
 import type { Database } from '../db.js';
 import { AppError } from '../errors.js';
 import { iso } from '../schemas.js';
+import { assertUniversity, universityName, universityRef } from '../universities/service.js';
 
 export interface OrgInput {
   slug: string;
   name: string;
   description?: string | null | undefined;
   logoUrl?: string | null | undefined;
+  universityId?: number | null | undefined;
 }
 
 export type OrgPatch = Partial<Omit<OrgInput, 'slug'>>;
 
-const ORG_COLUMNS = ['id', 'slug', 'name', 'description', 'logo_url', 'created_at'] as const;
+const ORG_COLUMNS = [
+  'id',
+  'slug',
+  'name',
+  'description',
+  'logo_url',
+  'university_id',
+  universityName('organizations.university_id'),
+  'created_at',
+] as const;
 
 function toOrg(row: {
   id: string;
@@ -21,6 +32,8 @@ function toOrg(row: {
   name: string;
   description: string | null;
   logo_url: string | null;
+  university_id: number | null;
+  university_name: string | null;
   created_at: Date;
 }) {
   return {
@@ -29,6 +42,7 @@ function toOrg(row: {
     name: row.name,
     description: row.description,
     logoUrl: row.logo_url,
+    university: universityRef(row.university_id, row.university_name),
     createdAt: iso(row.created_at),
   };
 }
@@ -37,6 +51,7 @@ const orgNotFound = () => new AppError(404, 'ORG_NOT_FOUND', 'Club not found');
 
 /** The creator becomes the club's first owner. */
 export async function createOrg(db: Database, ownerId: string, input: OrgInput) {
+  await assertUniversity(db, input.universityId);
   return db.transaction().execute(async (trx) => {
     const org = await trx
       .insertInto('organizations')
@@ -45,6 +60,7 @@ export async function createOrg(db: Database, ownerId: string, input: OrgInput) 
         name: input.name,
         description: input.description ?? null,
         logo_url: input.logoUrl ?? null,
+        university_id: input.universityId ?? null,
       })
       .returning(ORG_COLUMNS)
       .executeTakeFirstOrThrow();
@@ -63,9 +79,15 @@ export async function getOrg(db: Database, orgId: string) {
 }
 
 export async function updateOrg(db: Database, orgId: string, patch: OrgPatch) {
+  await assertUniversity(db, patch.universityId);
   const org = await db
     .updateTable('organizations')
-    .set({ name: patch.name, description: patch.description, logo_url: patch.logoUrl })
+    .set({
+      name: patch.name,
+      description: patch.description,
+      logo_url: patch.logoUrl,
+      university_id: patch.universityId,
+    })
     .where('id', '=', orgId)
     .returning(ORG_COLUMNS)
     .executeTakeFirst();

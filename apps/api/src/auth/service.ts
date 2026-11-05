@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { PlatformRole } from '../db/schema.js';
 import { type Database, isUniqueViolation } from '../db.js';
 import { AppError } from '../errors.js';
+import { assertUniversity, universityName, universityRef } from '../universities/service.js';
 import { hashPassword, verifyPassword } from './passwords.js';
 import { type AccessTokens, hashRefreshToken, newRefreshToken } from './tokens.js';
 
@@ -22,7 +23,7 @@ export interface RegisterInput {
   email: string;
   password: string;
   fullName: string;
-  university?: string | undefined;
+  universityId?: number | null | undefined;
   studentNumber?: string | undefined;
   deviceId?: string | undefined;
 }
@@ -37,7 +38,8 @@ const USER_COLUMNS = [
   'id',
   'email',
   'full_name',
-  'university',
+  'university_id',
+  universityName('users.university_id'),
   'student_number',
   'avatar_url',
   'platform_role',
@@ -48,7 +50,8 @@ interface UserRow {
   id: string;
   email: string;
   full_name: string;
-  university: string | null;
+  university_id: number | null;
+  university_name: string | null;
   student_number: string | null;
   avatar_url: string | null;
   platform_role: PlatformRole;
@@ -60,7 +63,7 @@ function toPublicUser(row: UserRow) {
     id: row.id,
     email: row.email,
     fullName: row.full_name,
-    university: row.university,
+    university: universityRef(row.university_id, row.university_name),
     studentNumber: row.student_number,
     avatarUrl: row.avatar_url,
     platformRole: row.platform_role,
@@ -109,6 +112,7 @@ function revokeFamily(db: Database, familyId: string) {
 }
 
 export async function register(deps: AuthDeps, input: RegisterInput) {
+  await assertUniversity(deps.db, input.universityId);
   // Hash outside the transaction: it is the slow part and needs no lock.
   const passwordHash = await hashPassword(input.password);
 
@@ -119,7 +123,7 @@ export async function register(deps: AuthDeps, input: RegisterInput) {
         email: input.email.trim(),
         password_hash: passwordHash,
         full_name: input.fullName,
-        university: input.university ?? null,
+        university_id: input.universityId ?? null,
         student_number: input.studentNumber ?? null,
       })
       .returning(USER_COLUMNS)
@@ -274,7 +278,7 @@ export async function deleteAccount(db: Database, userId: string, password: stri
         password_hash: null,
         full_name: 'Silinmiş kullanıcı',
         student_number: null,
-        university: null,
+        university_id: null,
         avatar_url: null,
         deleted_at: now,
         updated_at: now,
@@ -282,6 +286,18 @@ export async function deleteAccount(db: Database, userId: string, password: stri
       .where('id', '=', userId)
       .execute();
   });
+}
+
+/** Changes what students may edit about themselves; for now, their university. */
+export async function updateProfile(db: Database, userId: string, patch: { universityId: number | null }) {
+  await assertUniversity(db, patch.universityId);
+  await db
+    .updateTable('users')
+    .set({ university_id: patch.universityId })
+    .where('id', '=', userId)
+    .where('deleted_at', 'is', null)
+    .execute();
+  return getProfile(db, userId);
 }
 
 export async function getProfile(db: Database, userId: string) {

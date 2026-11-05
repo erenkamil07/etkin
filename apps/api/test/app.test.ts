@@ -139,3 +139,26 @@ describe('OpenAPI', () => {
     expect(Object.keys(spec.paths)).toEqual(expect.arrayContaining(['/health/live', '/health/ready']));
   });
 });
+
+describe('CORS', () => {
+  it('lets the web build edit and delete, from allowed origins only', async () => {
+    app = await buildApp({
+      config: { ...config, CORS_ORIGINS: ['http://localhost:8081'] },
+      db,
+      readinessChecks: {},
+    });
+    const preflight = (origin: string) =>
+      app.inject({
+        method: 'OPTIONS',
+        url: '/me',
+        headers: { origin, 'access-control-request-method': 'PATCH' },
+      });
+
+    const allowed = await preflight('http://localhost:8081');
+    expect(allowed.headers['access-control-allow-origin']).toBe('http://localhost:8081');
+    expect(String(allowed.headers['access-control-allow-methods']).split(/,\s*/)).toEqual(
+      expect.arrayContaining(['PATCH', 'DELETE']),
+    );
+    expect((await preflight('https://evil.example')).headers['access-control-allow-origin']).toBeUndefined();
+  });
+});

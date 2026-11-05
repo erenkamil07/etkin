@@ -46,8 +46,9 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
 <h2>Topladığımız veriler</h2>
 <ul>
   <li><strong>Hesap bilgileri:</strong> ad soyad, e-posta adresi ve şifre. Şifren düz metin olarak
-  değil, geri döndürülemez biçimde (argon2id ile) saklanır. İstersen üniversiteni ve öğrenci
-  numaranı da eklersin.</li>
+  değil, geri döndürülemez biçimde (argon2id ile) saklanır. Üniversiteni listeden seçersin (listede
+  yoksa boş kalır); istersen öğrenci numaranı da eklersin. Üniversiten, etkinlik listesinde önce
+  kendi kampüsünün etkinliklerini göstermek için kullanılır.</li>
   <li><strong>Bilet ve katılım bilgileri:</strong> aldığın ve iptal ettiğin biletler, kapıda giriş
   yaptığın zaman ve kapı, bu girişlerden kazandığın kulüp puanları ve rozetler.</li>
   <li><strong>Kulüp ekibi bilgileri:</strong> bir kulübün ekibindeysen rolün, oluşturduğun

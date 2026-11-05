@@ -127,7 +127,8 @@ export interface paths {
                         email: string;
                         password: string;
                         fullName: string;
-                        university?: string;
+                        /** @description From GET /universities; omit if yours is not listed */
+                        universityId?: number | null;
                         studentNumber?: string;
                         /** @description Stable per-install id; tickets bind to it later */
                         deviceId?: string;
@@ -153,7 +154,10 @@ export interface paths {
                                 id: string;
                                 email: string;
                                 fullName: string;
-                                university: string | null;
+                                university: {
+                                    id: number;
+                                    name: string;
+                                } | null;
                                 studentNumber: string | null;
                                 avatarUrl: string | null;
                                 /** @enum {string} */
@@ -219,7 +223,10 @@ export interface paths {
                                 id: string;
                                 email: string;
                                 fullName: string;
-                                university: string | null;
+                                university: {
+                                    id: number;
+                                    name: string;
+                                } | null;
                                 studentNumber: string | null;
                                 avatarUrl: string | null;
                                 /** @enum {string} */
@@ -355,7 +362,10 @@ export interface paths {
                             id: string;
                             email: string;
                             fullName: string;
-                            university: string | null;
+                            university: {
+                                id: number;
+                                name: string;
+                            } | null;
                             studentNumber: string | null;
                             avatarUrl: string | null;
                             /** @enum {string} */
@@ -404,7 +414,57 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        patch?: never;
+        /** Change your university (null if yours is not listed) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description An id from GET /universities */
+                        universityId: number | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            email: string;
+                            fullName: string;
+                            university: {
+                                id: number;
+                                name: string;
+                            } | null;
+                            studentNumber: string | null;
+                            avatarUrl: string | null;
+                            /** @enum {string} */
+                            platformRole: "user" | "admin";
+                            /** Format: date-time */
+                            createdAt: string;
+                            memberships: {
+                                /** Format: uuid */
+                                organizationId: string;
+                                slug: string;
+                                name: string;
+                                /** @enum {string} */
+                                role: "owner" | "organizer" | "scanner";
+                            }[];
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/orgs": {
@@ -432,6 +492,8 @@ export interface paths {
                         description?: string | null;
                         /** Format: uri */
                         logoUrl?: string | null;
+                        /** @description The club's university, from GET /universities; its events lead that campus's feed */
+                        universityId?: number | null;
                     };
                 };
             };
@@ -449,6 +511,10 @@ export interface paths {
                             name: string;
                             description: string | null;
                             logoUrl: string | null;
+                            university: {
+                                id: number;
+                                name: string;
+                            } | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -494,6 +560,10 @@ export interface paths {
                             name: string;
                             description: string | null;
                             logoUrl: string | null;
+                            university: {
+                                id: number;
+                                name: string;
+                            } | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -523,6 +593,8 @@ export interface paths {
                         description?: string | null;
                         /** Format: uri */
                         logoUrl?: string | null;
+                        /** @description The club's university, from GET /universities; its events lead that campus's feed */
+                        universityId?: number | null;
                     };
                 };
             };
@@ -540,6 +612,10 @@ export interface paths {
                             name: string;
                             description: string | null;
                             logoUrl: string | null;
+                            university: {
+                                id: number;
+                                name: string;
+                            } | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -685,6 +761,8 @@ export interface paths {
             parameters: {
                 query?: {
                     orgId?: string;
+                    /** @description Only this university's clubs (a student's own campus); omit for the whole country */
+                    universityId?: number;
                     limit?: number;
                     /** @description nextCursor from the previous page */
                     cursor?: string;
@@ -710,6 +788,10 @@ export interface paths {
                                     id: string;
                                     slug: string;
                                     name: string;
+                                    university: {
+                                        id: number;
+                                        name: string;
+                                    } | null;
                                 };
                                 title: string;
                                 description: string | null;
@@ -784,6 +866,10 @@ export interface paths {
                                 id: string;
                                 slug: string;
                                 name: string;
+                                university: {
+                                    id: number;
+                                    name: string;
+                                } | null;
                             };
                             title: string;
                             description: string | null;
@@ -876,6 +962,10 @@ export interface paths {
                                 id: string;
                                 slug: string;
                                 name: string;
+                                university: {
+                                    id: number;
+                                    name: string;
+                                } | null;
                             };
                             title: string;
                             description: string | null;
@@ -964,6 +1054,10 @@ export interface paths {
                                 id: string;
                                 slug: string;
                                 name: string;
+                                university: {
+                                    id: number;
+                                    name: string;
+                                } | null;
                             };
                             title: string;
                             description: string | null;
@@ -1112,6 +1206,10 @@ export interface paths {
                                 id: string;
                                 slug: string;
                                 name: string;
+                                university: {
+                                    id: number;
+                                    name: string;
+                                } | null;
                             };
                             title: string;
                             description: string | null;
@@ -1201,6 +1299,10 @@ export interface paths {
                                 id: string;
                                 slug: string;
                                 name: string;
+                                university: {
+                                    id: number;
+                                    name: string;
+                                } | null;
                             };
                             title: string;
                             description: string | null;
@@ -1294,6 +1396,10 @@ export interface paths {
                                 id: string;
                                 slug: string;
                                 name: string;
+                                university: {
+                                    id: number;
+                                    name: string;
+                                } | null;
                             };
                             title: string;
                             description: string | null;
@@ -2609,6 +2715,46 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/universities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every university in Turkey, alphabetical; clubs and students pick theirs from here */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            id: number;
+                            name: string;
+                            city: string;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

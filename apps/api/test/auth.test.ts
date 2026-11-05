@@ -43,12 +43,22 @@ const bearer = (token: string) => ({ authorization: `Bearer ${token}` });
 
 describe('register', () => {
   it('creates the account, starts a session and stores an argon2id hash', async () => {
-    const session = await registerUser({ university: 'ODTÜ', studentNumber: '2481234' });
+    const odtu = await db
+      .selectFrom('universities')
+      .select('id')
+      .where('name', '=', 'Orta Doğu Teknik Üniversitesi')
+      .executeTakeFirstOrThrow();
+    const session = await registerUser({ universityId: odtu.id, studentNumber: '2481234' });
 
     expect(session).toMatchObject({
       tokenType: 'Bearer',
       expiresIn: 900,
-      user: { fullName: 'Ayşe Yılmaz', university: 'ODTÜ', studentNumber: '2481234', platformRole: 'user' },
+      user: {
+        fullName: 'Ayşe Yılmaz',
+        university: { id: odtu.id, name: 'Orta Doğu Teknik Üniversitesi' },
+        studentNumber: '2481234',
+        platformRole: 'user',
+      },
     });
     expect(session.user).not.toHaveProperty('passwordHash');
 

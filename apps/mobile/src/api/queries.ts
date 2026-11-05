@@ -14,6 +14,21 @@ export function useMe() {
   });
 }
 
+/** Every university, for the pickers; the list only changes with an app release. */
+export function useUniversities() {
+  return useQuery({
+    queryKey: ['universities'],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/universities');
+      if (error) throw error;
+      return data;
+    },
+    staleTime: Number.POSITIVE_INFINITY,
+  });
+}
+
+export type University = NonNullable<ReturnType<typeof useUniversities>['data']>[number];
+
 export function useMyTickets() {
   return useQuery({
     queryKey: ['me', 'tickets'],

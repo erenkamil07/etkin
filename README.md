@@ -118,6 +118,9 @@ tokens live in localStorage instead of the keystore.
   draft or published straight away, with an optional early-access window for members with enough
   club points. Dates are typed as digits and formatted as you go, so the number pad works on every
   phone. If a step fails, trying again resumes where it stopped instead of leaving a second draft.
+- **Your campus first.** Clubs and students pick their university from one list of every
+  university in Turkey (searchable by name, city or initials such as "ODTÜ"). The feed opens on
+  "Üniversitem" and switches to "Tüm Türkiye", where each card also names the club's university.
 - **Paid events, no payments.** An event is free or paid. A paid one has a price per ticket type,
   what the price covers and how to pay the club (at the door, by bank transfer), with one-tap
   templates for the usual two. The ticket holds the seat and the club collects the money, so the
@@ -184,6 +187,10 @@ as the owner or the scanner, go to Profil → the club → the event → Kapıda
 - **Auth:** `POST /auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout` and `GET /me`. Send
   `Authorization: Bearer <accessToken>`. On `401 TOKEN_EXPIRED`, call `/auth/refresh` once and retry.
   Details are in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#3-authentication).
+- **Universities.** `GET /universities` lists every university (seeded from the Turkish Wikipedia
+  list, which follows YÖK). Users (`universityId` at sign-up, `PATCH /me`) and clubs (`POST` and
+  `PATCH /orgs`) point at one, or at none when theirs isn't listed. `GET /events?universityId=`
+  narrows the feed to one campus, and every event's organization names its university.
 - **Clubs and events.** Anyone signed in can create a club and becomes its owner. The owner adds
   organizers and door scanners by email. Organizers create draft events, add ticket types and
   publish. `GET /events` is the public feed (cursor-paginated). Drafts are visible only to the

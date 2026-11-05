@@ -164,10 +164,13 @@
                     "minLength": 2,
                     "maxLength": 120
                   },
-                  "university": {
-                    "type": "string",
-                    "minLength": 2,
-                    "maxLength": 120
+                  "universityId": {
+                    "description": "From GET /universities; omit if yours is not listed",
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991
                   },
                   "studentNumber": {
                     "type": "string",
@@ -232,7 +235,22 @@
                         },
                         "university": {
                           "nullable": true,
-                          "type": "string"
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "additionalProperties": false
                         },
                         "studentNumber": {
                           "nullable": true,
@@ -364,7 +382,22 @@
                         },
                         "university": {
                           "nullable": true,
-                          "type": "string"
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "additionalProperties": false
                         },
                         "studentNumber": {
                           "nullable": true,
@@ -547,7 +580,166 @@
                     },
                     "university": {
                       "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "studentNumber": {
+                      "nullable": true,
                       "type": "string"
+                    },
+                    "avatarUrl": {
+                      "nullable": true,
+                      "type": "string"
+                    },
+                    "platformRole": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "admin"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "memberships": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "organizationId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "role": {
+                            "type": "string",
+                            "enum": [
+                              "owner",
+                              "organizer",
+                              "scanner"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "organizationId",
+                          "slug",
+                          "name",
+                          "role"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "email",
+                    "fullName",
+                    "university",
+                    "studentNumber",
+                    "avatarUrl",
+                    "platformRole",
+                    "createdAt",
+                    "memberships"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Change your university (null if yours is not listed)",
+        "tags": [
+          "auth"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "universityId": {
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991,
+                    "description": "An id from GET /universities"
+                  }
+                },
+                "required": [
+                  "universityId"
+                ]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    },
+                    "university": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name"
+                      ],
+                      "additionalProperties": false
                     },
                     "studentNumber": {
                       "nullable": true,
@@ -693,6 +885,14 @@
                     "type": "string",
                     "maxLength": 500,
                     "format": "uri"
+                  },
+                  "universityId": {
+                    "description": "The club's university, from GET /universities; its events lead that campus's feed",
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991
                   }
                 },
                 "required": [
@@ -735,6 +935,25 @@
                       "nullable": true,
                       "type": "string"
                     },
+                    "university": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -747,6 +966,7 @@
                     "name",
                     "description",
                     "logoUrl",
+                    "university",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -802,6 +1022,25 @@
                       "nullable": true,
                       "type": "string"
                     },
+                    "university": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -814,6 +1053,7 @@
                     "name",
                     "description",
                     "logoUrl",
+                    "university",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -850,6 +1090,14 @@
                     "type": "string",
                     "maxLength": 500,
                     "format": "uri"
+                  },
+                  "universityId": {
+                    "description": "The club's university, from GET /universities; its events lead that campus's feed",
+                    "nullable": true,
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true,
+                    "maximum": 9007199254740991
                   }
                 }
               }
@@ -900,6 +1148,25 @@
                       "nullable": true,
                       "type": "string"
                     },
+                    "university": {
+                      "nullable": true,
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name"
+                      ],
+                      "additionalProperties": false
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -912,6 +1179,7 @@
                     "name",
                     "description",
                     "logoUrl",
+                    "university",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -1154,6 +1422,18 @@
           {
             "schema": {
               "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "maximum": 9007199254740991
+            },
+            "in": "query",
+            "name": "universityId",
+            "required": false,
+            "description": "Only this university's clubs (a student's own campus); omit for the whole country"
+          },
+          {
+            "schema": {
+              "type": "integer",
               "minimum": 1,
               "maximum": 50
             },
@@ -1203,12 +1483,32 @@
                               },
                               "name": {
                                 "type": "string"
+                              },
+                              "university": {
+                                "nullable": true,
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "id",
+                                  "name"
+                                ],
+                                "additionalProperties": false
                               }
                             },
                             "required": [
                               "id",
                               "slug",
-                              "name"
+                              "name",
+                              "university"
                             ],
                             "additionalProperties": false
                           },
@@ -1378,12 +1678,32 @@
                         },
                         "name": {
                           "type": "string"
+                        },
+                        "university": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
                         "id",
                         "slug",
-                        "name"
+                        "name",
+                        "university"
                       ],
                       "additionalProperties": false
                     },
@@ -1626,12 +1946,32 @@
                           },
                           "name": {
                             "type": "string"
+                          },
+                          "university": {
+                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "name"
+                            ],
+                            "additionalProperties": false
                           }
                         },
                         "required": [
                           "id",
                           "slug",
-                          "name"
+                          "name",
+                          "university"
                         ],
                         "additionalProperties": false
                       },
@@ -1871,12 +2211,32 @@
                         },
                         "name": {
                           "type": "string"
+                        },
+                        "university": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
                         "id",
                         "slug",
-                        "name"
+                        "name",
+                        "university"
                       ],
                       "additionalProperties": false
                     },
@@ -2200,12 +2560,32 @@
                         },
                         "name": {
                           "type": "string"
+                        },
+                        "university": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
                         "id",
                         "slug",
-                        "name"
+                        "name",
+                        "university"
                       ],
                       "additionalProperties": false
                     },
@@ -2494,12 +2874,32 @@
                         },
                         "name": {
                           "type": "string"
+                        },
+                        "university": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
                         "id",
                         "slug",
-                        "name"
+                        "name",
+                        "university"
                       ],
                       "additionalProperties": false
                     },
@@ -2750,12 +3150,32 @@
                         },
                         "name": {
                           "type": "string"
+                        },
+                        "university": {
+                          "nullable": true,
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "name": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name"
+                          ],
+                          "additionalProperties": false
                         }
                       },
                       "required": [
                         "id",
                         "slug",
-                        "name"
+                        "name",
+                        "university"
                       ],
                       "additionalProperties": false
                     },
@@ -5713,6 +6133,48 @@
           }
         }
       }
+    },
+    "/universities": {
+      "get": {
+        "summary": "Every university in Turkey, alphabetical; clubs and students pick theirs from here",
+        "tags": [
+          "universities"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "city"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "tags": [
@@ -5747,6 +6209,10 @@
     {
       "name": "moderation",
       "description": "Reporting events and reviewing reports"
+    },
+    {
+      "name": "universities",
+      "description": "The list clubs and students pick their university from"
     },
     {
       "name": "health",

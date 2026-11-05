@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { api } from '@/api/client';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Choice, ErrorBanner, Field, Screen } from '@/components/ui';
+import { type UniversityChoice, UniversityPicker } from '@/components/university-picker';
 import { TERMS_URL } from '@/config';
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -32,12 +33,18 @@ export default function NewClub() {
   const slug = customSlug ?? slugify(name);
   // Everything a club writes is public, so its owner agrees to the community rules first.
   const [acceptedRules, setAcceptedRules] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; slug?: string; rules?: string }>({});
+  const [university, setUniversity] = useState<UniversityChoice>(undefined);
+  const [errors, setErrors] = useState<{ name?: string; slug?: string; university?: string; rules?: string }>({});
 
   const create = useMutation({
     mutationFn: async () => {
       const { data, error } = await api.POST('/orgs', {
-        body: { name: name.trim(), slug, description: description.trim() || null },
+        body: {
+          name: name.trim(),
+          slug,
+          description: description.trim() || null,
+          universityId: university?.id ?? null,
+        },
       });
       if (error) throw error;
       return data;
@@ -55,6 +62,8 @@ export default function NewClub() {
     if (slug.length < 3 || !SLUG.test(slug)) {
       found.slug = 'En az 3 karakter: küçük harf, rakam ve tire (ör. ieee-odtu).';
     }
+    if (university === undefined)
+      found.university = 'Kulübün hangi üniversitede? Listede yoksa en alttaki seçeneğe dokun.';
     if (!acceptedRules) found.rules = 'Devam etmek için topluluk kurallarını kabul et.';
     setErrors(found);
     if (Object.keys(found).length === 0) create.mutate();
@@ -66,6 +75,7 @@ export default function NewClub() {
         Kulübü kuran kişi sahibi (owner) olur: etkinlik açar, ekibe organizatör ve kapı görevlisi ekler.
       </ThemedText>
       <Field label="Kulüp adı" value={name} onChangeText={setName} error={errors.name} />
+      <UniversityPicker label="Üniversite" value={university} onChange={setUniversity} error={errors.university} />
       <Field
         label="Kısa ad (kalıcı, değiştirilemez)"
         value={slug}

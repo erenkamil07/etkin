@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
@@ -6,6 +6,7 @@ import { useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, ErrorBanner, Loading, Screen } from '@/components/ui';
+import { UniversityPicker } from '@/components/university-picker';
 import { Spacing } from '@/constants/theme';
 import { formatDateTime } from '@/format';
 import { useNow } from '@/hooks/use-now';
@@ -29,6 +30,28 @@ export default function Club() {
   const { orgId } = useLocalSearchParams<{ orgId: string }>();
   const { membership, canManage } = useOrgRole(orgId);
   const now = useNow(60_000);
+  const queryClient = useQueryClient();
+
+  const club = useQuery({
+    queryKey: ['orgs', orgId],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/orgs/{orgId}', { params: { path: { orgId } } });
+      if (error) throw error;
+      return data;
+    },
+  });
+  // The club's campus decides whose "Üniversitem" feed its events lead.
+  const changeUniversity = useMutation({
+    mutationFn: async (universityId: number | null) => {
+      const { data, error } = await api.PATCH('/orgs/{orgId}', { params: { path: { orgId } }, body: { universityId } });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['orgs', orgId], updated);
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+    },
+  });
 
   const events = useQuery({
     queryKey: ['orgs', orgId, 'events'],
@@ -47,6 +70,21 @@ export default function Club() {
           title="+ Yeni etkinlik"
           onPress={() => router.push({ pathname: '/new-event/[orgId]', params: { orgId } })}
         />
+      ) : null}
+      {canManage && club.data ? (
+        <>
+          <UniversityPicker
+            label="Kulübün üniversitesi"
+            value={club.data.university ?? undefined}
+            onChange={(choice) => changeUniversity.mutate(choice?.id ?? null)}
+          />
+          {club.data.university ? null : (
+            <ThemedText type="small" themeColor="warning">
+              Üniversite seçilmezse etkinliklerin öğrencilerin "Üniversitem" listesinde görünmez.
+            </ThemedText>
+          )}
+          <ErrorBanner error={changeUniversity.error} />
+        </>
       ) : null}
       <ThemedText type="smallBold">Etkinlikler</ThemedText>
       {events.isPending ? (

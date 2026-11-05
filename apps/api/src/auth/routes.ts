@@ -1,8 +1,18 @@
 import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { UniversityId, UniversityRef } from '../universities/routes.js';
 import { currentUser } from './plugin.js';
-import { type AuthDeps, deleteAccount, getProfile, login, logout, refresh, register } from './service.js';
+import {
+  type AuthDeps,
+  deleteAccount,
+  getProfile,
+  login,
+  logout,
+  refresh,
+  register,
+  updateProfile,
+} from './service.js';
 
 const Email = z.email().max(254);
 const DeviceId = z.string().min(1).max(128).optional().describe('Stable per-install id; tickets bind to it later');
@@ -11,7 +21,7 @@ const RegisterBody = z.object({
   email: Email,
   password: z.string().min(8).max(128),
   fullName: z.string().trim().min(2).max(120),
-  university: z.string().trim().min(2).max(120).optional(),
+  universityId: UniversityId.nullable().optional().describe('From GET /universities; omit if yours is not listed'),
   studentNumber: z.string().trim().min(1).max(32).optional(),
   deviceId: DeviceId,
 });
@@ -28,7 +38,7 @@ const PublicUser = z.object({
   id: z.uuid(),
   email: z.string(),
   fullName: z.string(),
-  university: z.string().nullable(),
+  university: UniversityRef.nullable(),
   studentNumber: z.string().nullable(),
   avatarUrl: z.string().nullable(),
   platformRole: z.enum(['user', 'admin']),
@@ -126,6 +136,21 @@ export const authRoutes: FastifyPluginAsyncZod<{ auth: AuthDeps }> = async (app,
       },
     },
     async (request) => getProfile(auth.db, currentUser(request).id),
+  );
+
+  app.patch(
+    '/me',
+    {
+      onRequest: app.authenticate,
+      schema: {
+        tags: ['auth'],
+        summary: 'Change your university (null if yours is not listed)',
+        security: [{ bearerAuth: [] }],
+        body: z.object({ universityId: UniversityId.nullable() }),
+        response: { 200: Profile },
+      },
+    },
+    async (request) => updateProfile(auth.db, currentUser(request).id, request.body),
   );
 
   app.delete(

@@ -9,6 +9,7 @@ import type { paths } from '@/api/schema';
 import { currentRefreshToken, endSession } from '@/auth/session';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, ErrorBanner, Loading, ProgressBar, Screen } from '@/components/ui';
+import { UniversityPicker } from '@/components/university-picker';
 import { PRIVACY_URL, TERMS_URL } from '@/config';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { formatDateTime } from '@/format';
@@ -106,6 +107,19 @@ export default function Profile() {
     },
   });
 
+  // The feed shows this university's events first.
+  const changeUniversity = useMutation({
+    mutationFn: async (universityId: number | null) => {
+      const { data, error } = await api.PATCH('/me', { body: { universityId } });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (profile) => {
+      queryClient.setQueryData(['me'], profile);
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+    },
+  });
+
   const signOut = useMutation({
     mutationFn: async () => {
       const refreshToken = currentRefreshToken();
@@ -129,12 +143,18 @@ export default function Profile() {
           <ThemedText type="small" themeColor="textSecondary">
             {me.data.email}
           </ThemedText>
-          {me.data.university ? (
+          {me.data.studentNumber ? (
             <ThemedText type="small" themeColor="textSecondary">
-              {me.data.university}
-              {me.data.studentNumber ? ` · ${me.data.studentNumber}` : ''}
+              Öğrenci no: {me.data.studentNumber}
             </ThemedText>
           ) : null}
+          <UniversityPicker
+            label="Üniversite"
+            // No university reads as "pick one", whether it was never set or isn't listed.
+            value={me.data.university ?? undefined}
+            onChange={(choice) => changeUniversity.mutate(choice?.id ?? null)}
+          />
+          <ErrorBanner error={changeUniversity.error} />
         </Card>
       )}
 

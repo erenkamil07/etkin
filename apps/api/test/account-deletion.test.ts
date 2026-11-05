@@ -24,7 +24,7 @@ async function registerStudent() {
   const res = await app.inject({
     method: 'POST',
     url: '/auth/register',
-    payload: { email, password: PASSWORD, fullName: 'Ayşe Yılmaz', university: 'ODTÜ', studentNumber: '2481234' },
+    payload: { email, password: PASSWORD, fullName: 'Ayşe Yılmaz', universityId: 1, studentNumber: '2481234' },
   });
   expect(res.statusCode).toBe(201);
   const session = res.json();
@@ -61,7 +61,7 @@ describe('DELETE /me', () => {
       full_name: 'Silinmiş kullanıcı',
       password_hash: null,
       student_number: null,
-      university: null,
+      university_id: null,
     });
     expect(row.deleted_at).not.toBeNull();
 

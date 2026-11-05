@@ -13,7 +13,7 @@ interface EventSummary {
   title: string;
   startsAt: string;
   locationName: string | null;
-  organization: { name: string };
+  organization: { name: string; university?: { name: string } | null };
 }
 
 /**
@@ -26,10 +26,13 @@ export function EventCard({
   footer,
   highlight = false,
   dimmed = false,
+  showUniversity = false,
 }: {
   event: EventSummary;
   onPress: () => void;
   footer?: ReactNode;
+  /** Name the club's university too, for feeds that mix campuses. */
+  showUniversity?: boolean;
   /** An orange border, for "hurry" moments such as the last few seats. */
   highlight?: boolean;
   /** Faded, for things that are over: used or cancelled tickets. */
@@ -58,6 +61,7 @@ export function EventCard({
       <View style={styles.body}>
         <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
           {event.organization.name}
+          {showUniversity && event.organization.university ? ` · ${event.organization.university.name}` : ''}
         </ThemedText>
         <ThemedText style={styles.title} numberOfLines={2}>
           {event.title}

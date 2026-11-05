@@ -5,6 +5,7 @@ import type { AllocationMode, EventStatus } from '../db/schema.js';
 import type { Database } from '../db.js';
 import { AppError } from '../errors.js';
 import { iso, isoOrNull } from '../schemas.js';
+import { universityName, universityRef } from '../universities/service.js';
 
 export interface EventInput {
   title: string;
@@ -60,6 +61,8 @@ const EVENT_COLUMNS = [
   'e.organization_id',
   'o.slug as org_slug',
   'o.name as org_name',
+  'o.university_id as org_university_id',
+  universityName('o.university_id'),
   'e.title',
   'e.description',
   'e.location_name',
@@ -80,6 +83,8 @@ interface EventRow {
   organization_id: string;
   org_slug: string;
   org_name: string;
+  org_university_id: number | null;
+  university_name: string | null;
   title: string;
   description: string | null;
   location_name: string | null;
@@ -98,7 +103,12 @@ interface EventRow {
 function toEvent(row: EventRow) {
   return {
     id: row.id,
-    organization: { id: row.organization_id, slug: row.org_slug, name: row.org_name },
+    organization: {
+      id: row.organization_id,
+      slug: row.org_slug,
+      name: row.org_name,
+      university: universityRef(row.org_university_id, row.university_name),
+    },
     title: row.title,
     description: row.description,
     locationName: row.location_name,
@@ -229,9 +239,15 @@ export async function listUpcomingEvents(
   db: Database,
   {
     orgId,
+    universityId,
     limit = 20,
     cursor,
-  }: { orgId?: string | undefined; limit?: number | undefined; cursor?: string | undefined },
+  }: {
+    orgId?: string | undefined;
+    universityId?: number | undefined;
+    limit?: number | undefined;
+    cursor?: string | undefined;
+  },
 ) {
   const pageSize = Math.min(limit, FEED_MAX_LIMIT);
   let query = db
@@ -246,6 +262,7 @@ export async function listUpcomingEvents(
     .limit(pageSize + 1);
 
   if (orgId) query = query.where('e.organization_id', '=', orgId);
+  if (universityId) query = query.where('o.university_id', '=', universityId);
   if (cursor) {
     const [startsAt, id] = decodeCursor(cursor);
     query = query.where((eb) => eb(eb.refTuple('e.starts_at', 'e.id'), '>', eb.tuple(startsAt, id)));
