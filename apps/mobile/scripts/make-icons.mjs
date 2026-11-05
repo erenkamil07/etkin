@@ -1,6 +1,7 @@
 // Draws Etkin's mark (a ticket with an "E" cut into it) and renders every icon
 // the app needs: the app icon, Android's adaptive layers and themed
-// monochrome icon, the splash image, the web favicon and the Play Store icon.
+// monochrome icon, the splash image, the web favicon and home-screen icons,
+// and the Play Store icon.
 // Pure geometry, no font files, so the output is the same on every machine.
 //
 // The renderer is not an app dependency. Install it anywhere and point at it:
@@ -87,10 +88,18 @@ const images = {
     size: 512,
     svg: svg(orangeBackground + mark({ fill: INK, scale: 1.05, id: 'm' })),
   },
+  // The website's home-screen icons (web manifest and iOS). Full-bleed: phones round the corners.
+  '../public/icons/icon-192.png': { size: 192, svg: svg(orangeBackground + mark({ fill: INK, scale: 1.05, id: 'm' })) },
+  '../public/icons/icon-512.png': { size: 512, svg: svg(orangeBackground + mark({ fill: INK, scale: 1.05, id: 'm' })) },
+  '../public/icons/apple-touch-icon.png': {
+    size: 180,
+    svg: svg(orangeBackground + mark({ fill: INK, scale: 1.05, id: 'm' })),
+  },
 };
 
 const assets = new URL('../assets/', import.meta.url);
 mkdirSync(new URL('store/', assets), { recursive: true });
+mkdirSync(new URL('../public/icons/', assets), { recursive: true });
 for (const [path, { size, svg: source }] of Object.entries(images)) {
   const png = new Resvg(source, { fitTo: { mode: 'width', value: size } }).render().asPng();
   writeFileSync(new URL(path, assets), png);

@@ -29,7 +29,11 @@
     },
     "web": {
       "output": "single",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "name": "Etkin",
+      "shortName": "Etkin",
+      "themeColor": "#0F0F12",
+      "backgroundColor": "#0F0F12"
     },
     "plugins": [
       "expo-router",

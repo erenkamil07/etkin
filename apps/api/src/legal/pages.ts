@@ -39,7 +39,7 @@ export const privacyPolicy = page(
 <p class="muted">Son güncelleme: ${UPDATED}</p>
 
 <p>Etkin, üniversite kulüplerinin etkinliklerine bilet almayı, kapıda QR kodla girişi ve
-katılım puanlarını sağlayan bir mobil uygulamadır. Bu sayfa hangi kişisel verileri neden
+katılım puanlarını sağlayan bir mobil uygulama ve web sitesidir. Bu sayfa hangi kişisel verileri neden
 işlediğimizi, kimlerin görebildiğini ve haklarını anlatır. Uygulamayı geliştiren ve verilerden
 sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
 
@@ -109,8 +109,9 @@ Altyapı sağlayıcımız AB veri koruma mevzuatına (GDPR) tabidir.</p>
 
 <h2>Güvenlik</h2>
 <p>Uygulama ile sunucu arasındaki tüm trafik şifrelidir (HTTPS). Oturum anahtarların ve bilet QR
-anahtarların telefonunun güvenli deposunda tutulur. Bilet QR kodları her 15 saniyede değişir ve
-bilet ekranında ekran görüntüsü alınması engellenir.</p>
+anahtarların telefonunun güvenli deposunda tutulur; web sitesini kullanıyorsan tarayıcının bu siteye
+ayrılmış yerel deposunda. Bilet QR kodları her 15 saniyede değişir; Android uygulamasında bilet
+ekranının ekran görüntüsü alınması da engellenir.</p>
 
 <h2>Hakların</h2>
 <p>6698 sayılı Kişisel Verilerin Korunması Kanunu'nun 11. maddesi kapsamında verilerinin işlenip

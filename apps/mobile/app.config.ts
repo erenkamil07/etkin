@@ -15,5 +15,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         'Add it under Environment variables on expo.dev for this environment.',
     );
   }
+  // The website lives under a subpath on GitHub Pages (/etkin); only its build sets this.
+  const webBaseUrl = process.env.EXPO_WEB_BASE_URL;
+  if (webBaseUrl) return { ...config, experiments: { ...config.experiments, baseUrl: webBaseUrl } } as ExpoConfig;
   return config as ExpoConfig;
 };

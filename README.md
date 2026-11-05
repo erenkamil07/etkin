@@ -136,6 +136,18 @@ tokens live in localStorage instead of the keystore.
   sounds are synthesised by [make-door-sounds.mjs](apps/mobile/scripts/make-door-sounds.mjs), so
   there are no third-party assets to license.
 
+### Website (iPhone users)
+
+Until Etkin is in the App Store, iPhone users use the web build at
+**https://erenkamil07.github.io/etkin/** and add it to their home screen from Safari: it opens
+full screen with the Etkin icon. [web.yml](.github/workflows/web.yml) exports it on every push that
+touches the app and publishes it to GitHub Pages; `pnpm --filter @etkin/mobile web:export` builds the
+same thing locally (set `EXPO_WEB_BASE_URL=/etkin`). [finish-web.mjs](apps/mobile/scripts/finish-web.mjs)
+adds the web manifest, the iOS icon and a `404.html` copy so deep links such as `/etkin/events/<id>`
+open in the app. The API has to allow the site's origin: `CORS_ORIGINS=https://erenkamil07.github.io`.
+On the web, tokens and ticket keys live in the browser's storage for the site, and screenshots of
+the ticket can't be blocked; the code still changes every 15 seconds.
+
 ### Android builds (EAS)
 
 The app id is `com.erengoksel.etkin`. [eas.json](apps/mobile/eas.json) has two profiles:

@@ -8,7 +8,8 @@
     "android": "expo start --android",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "api:types": "openapi-typescript ../api/openapi.json -o src/api/schema.ts"
+    "api:types": "openapi-typescript ../api/openapi.json -o src/api/schema.ts",
+    "web:export": "expo export -p web && node scripts/finish-web.mjs"
   },
   "dependencies": {
     "@etkin/shared": "workspace:*",
