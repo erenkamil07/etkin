@@ -67,11 +67,13 @@ GİZLİLİK
 |---|---|
 | App icon, 512 × 512 | `play-store-icon-512.png` |
 | Feature graphic, 1024 × 500 | `play-feature-graphic-1024x500.png` |
-| Phone screenshots, 2 to 8 | taken on the phone (see below) |
+| Phone screenshots, 6 | `screenshots/etkin-1-feed.png` … `etkin-6-new-event.png` (1080 × 1920, opaque PNG) |
 
-Screenshots: the feed, an event page, the tickets list, the profile with points and badges, the
-club's event dashboard and a green door verdict. Android blocks screenshots of the live ticket on
-purpose (the QR is screenshot-proof); take that one from the web build at phone size instead.
+Screenshots: the campus feed, a paid event, the live QR ticket, points and badges, the club page
+and the paid event form, each under a one-line headline. They are the web build at phone size
+(360 × 740, 3×) with the demo data, captured in headless Chrome and framed on a 1080 × 1920 Etkin
+card. Phone screenshots are taller than Play's 2:1 limit, and Android blocks screenshots of the live
+ticket on purpose, so the web build stands in for the phone.
 
 ## App content
 

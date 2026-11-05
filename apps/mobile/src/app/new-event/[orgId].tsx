@@ -180,40 +180,50 @@ export default function NewEvent() {
       />
 
       <ThemedText type="smallBold">Bilet türleri</ThemedText>
-      {draft.ticketTypes.map((type, index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: rows have no id until saved, and only the last one is removed
-        <View key={index} style={styles.row}>
-          <View style={styles.grow}>
-            <Field
-              label="Ad"
-              value={type.name}
-              onChangeText={(name) => setTicketType(index, { name })}
-              error={errors.ticketTypes?.[index]?.name}
-            />
-          </View>
-          <View style={styles.number}>
-            <Field
-              label="Kontenjan"
-              value={type.capacity}
-              onChangeText={(capacity) => setTicketType(index, { capacity })}
-              keyboardType="number-pad"
-              error={errors.ticketTypes?.[index]?.capacity}
-            />
-          </View>
-          {draft.paid ? (
-            <View style={styles.number}>
-              <Field
-                label="Fiyat (₺)"
-                value={type.price}
-                onChangeText={(price) => setTicketType(index, { price })}
-                keyboardType="decimal-pad"
-                placeholder="150"
-                error={errors.ticketTypes?.[index]?.price}
-              />
+      {draft.ticketTypes.map((type, index) => {
+        const capacity = (
+          <Field
+            label="Kontenjan"
+            value={type.capacity}
+            onChangeText={(value) => setTicketType(index, { capacity: value })}
+            keyboardType="number-pad"
+            error={errors.ticketTypes?.[index]?.capacity}
+          />
+        );
+        // Three fields don't fit a phone's width, so a paid ticket type puts
+        // its numbers on a second line and keeps the whole name visible.
+        return (
+          // biome-ignore lint/suspicious/noArrayIndexKey: rows have no id until saved, and only the last one is removed
+          <View key={index} style={styles.ticketType}>
+            <View style={styles.row}>
+              <View style={styles.grow}>
+                <Field
+                  label="Ad"
+                  value={type.name}
+                  onChangeText={(name) => setTicketType(index, { name })}
+                  error={errors.ticketTypes?.[index]?.name}
+                />
+              </View>
+              {draft.paid ? null : <View style={styles.number}>{capacity}</View>}
             </View>
-          ) : null}
-        </View>
-      ))}
+            {draft.paid ? (
+              <View style={styles.row}>
+                <View style={styles.grow}>{capacity}</View>
+                <View style={styles.grow}>
+                  <Field
+                    label="Fiyat (₺)"
+                    value={type.price}
+                    onChangeText={(price) => setTicketType(index, { price })}
+                    keyboardType="decimal-pad"
+                    placeholder="150"
+                    error={errors.ticketTypes?.[index]?.price}
+                  />
+                </View>
+              </View>
+            ) : null}
+          </View>
+        );
+      })}
       <View style={styles.chips}>
         <Chip
           label="+ Bilet türü ekle"
@@ -312,7 +322,8 @@ export default function NewEvent() {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: Spacing.two, alignItems: 'flex-start' },
   grow: { flex: 1 },
-  number: { width: 104 },
+  number: { width: 120 },
+  ticketType: { gap: Spacing.two },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: Spacing.three, paddingVertical: Spacing.one },
   multiline: { minHeight: 88, textAlignVertical: 'top' },
