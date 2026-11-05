@@ -46,6 +46,9 @@ jobs:
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: apps/mobile/dist
+          # The fonts are exported under assets/__node_modules/.pnpm/...; without this the
+          # dot folder is left out and the site falls back to the browser's default font.
+          include-hidden-files: true
 
   deploy:
     name: Publish to GitHub Pages
