@@ -28,6 +28,7 @@ const PUBLIC = new Set([
   'GET /events',
   'GET /events/{eventId}',
   'GET /events/{eventId}/cover',
+  'GET /users/{userId}/avatar',
   'GET /universities',
 ]);
 

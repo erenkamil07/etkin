@@ -129,6 +129,11 @@ tokens live in localStorage instead of the keystore.
   permission). The app shrinks it to 1200 px JPEG (about 200 KB); the API keeps it in PostgreSQL
   without its EXIF, GPS or XMP, and serves it at a versioned URL cached for good. Lists show a
   banner cropped from the top, the event page the whole poster.
+- **Profile.** A photo (cropped square, 400 px, metadata stripped like posters), name and student
+  number under "Profili düzenle"; stats for events attended, points and badges; the last events
+  you were checked in to; badges you can tap for what they mean or what is left to earn them; and
+  settings (university, policies, sign out, delete account). The photo is served only at its
+  current version and shows to the club team at the door, so they can see the ticket is yours.
 - **Paid events, no payments.** An event is free or paid. A paid one has a price per ticket type,
   what the price covers and how to pay the club (at the door, by bank transfer), with one-tap
   templates for the usual two. The ticket holds the seat and the club collects the money, so the

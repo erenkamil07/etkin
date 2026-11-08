@@ -256,6 +256,13 @@ export interface Universities {
   name: string;
 }
 
+export interface UserAvatars {
+  data: Buffer;
+  updated_at: Generated<Timestamp>;
+  user_id: string;
+  version: string;
+}
+
 export interface UserBadges {
   awarded_at: Generated<Timestamp>;
   badge_id: string;
@@ -297,6 +304,7 @@ export interface DB {
   ticket_types: TicketTypes;
   tickets: Tickets;
   universities: Universities;
+  user_avatars: UserAvatars;
   user_badges: UserBadges;
   users: Users;
 }

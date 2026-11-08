@@ -63,6 +63,12 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
   telefonda küçültülüp yüklenir ve etkinlikle birlikte herkese açık görünür. Fotoğrafın içindeki konum
   (GPS), cihaz ve tarih bilgileri sunucuda silinir; saklanmaz. Uygulama yalnızca senin seçtiğin
   görsele erişir, galerinin geri kalanına erişmez.</li>
+  <li><strong>Profil fotoğrafı (isteğe bağlı):</strong> eklersen telefonda kare olarak küçültülüp
+  yüklenir; konum, cihaz ve tarih bilgileri sunucuda silinir. Fotoğrafını herkes göremez: yalnızca
+  sen ve bilet aldığın etkinliklerin kulüp ekipleri (katılımcı listesinde ve kapıda biletin
+  okutulunca, biletin sana ait olduğunu anlamak için) görür. İstediğin an
+  <strong>Profil → Profili düzenle</strong> ile değiştirebilir ya da kaldırabilirsin; hesabını
+  silince o da silinir.</li>
   <li><strong>Bildirimler:</strong> bir etkinliği kurallara aykırı diye bildirirsen seçtiğin sebep,
   yazdığın açıklama ve bildirimin zamanı. Kimin bildirdiğini kulüp göremez; bildirimleri yalnızca
   Etkin'in yöneticisi inceler.</li>

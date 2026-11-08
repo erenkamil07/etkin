@@ -37,7 +37,7 @@ const MESSAGES: Record<string, string> = {
   NOT_A_NO_SHOW: 'Sadece bitmiş bir etkinliğe gelmeyenler mazeretli sayılabilir.',
   INVALID_NO_SHOW_RULE: 'Gelmeme kuralı için hem sayı hem süre seçmelisin.',
   UNSUPPORTED_IMAGE: 'Bu görsel kullanılamadı; başka bir fotoğraf seç.',
-  FST_ERR_CTP_BODY_TOO_LARGE: 'Afiş çok büyük; en fazla 1,5 MB olabilir.',
+  FST_ERR_CTP_BODY_TOO_LARGE: 'Görsel çok büyük; daha küçük bir fotoğraf seç.',
 };
 
 /** Messages that name the date a time-limited refusal ends. */

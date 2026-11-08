@@ -1,19 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { openBrowserAsync } from 'expo-web-browser';
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { publicApi } from '@/api/base';
 import { api } from '@/api/client';
-import { useMe } from '@/api/queries';
-import type { paths } from '@/api/schema';
+import { useMe, useMyTickets } from '@/api/queries';
 import { currentRefreshToken, endSession } from '@/auth/session';
+import { Avatar } from '@/components/avatar';
 import { ThemedText } from '@/components/themed-text';
-import { Button, Card, ErrorBanner, Loading, ProgressBar, Screen } from '@/components/ui';
+import { Button, Card, ErrorBanner, Loading, Screen } from '@/components/ui';
 import { UniversityPicker } from '@/components/university-picker';
 import { PRIVACY_URL, TERMS_URL } from '@/config';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 import { formatDate, formatDateTime } from '@/format';
 import { useTheme } from '@/hooks/use-theme';
+import { type BadgeItem, BadgeSheet, BadgeTile, badgeKey } from '@/profile/badges';
 import { UNIVERSITY_HINT } from '@/universities';
 
 const ROLE = { owner: 'Kurucu', organizer: 'Organizatör', scanner: 'Kapı görevlisi' } as const;
@@ -26,61 +28,57 @@ const REASON = {
   reversal: 'Geri alındı',
 } as const;
 
-/** Platform badges get their own picture; club badges share the medal. */
-const BADGE_EMOJI: Record<string, string> = {
-  first_checkin: '👣',
-  regular_5: '⭐',
-  regular_20: '🏆',
-  explorer_3: '🧭',
-};
-const badgeEmoji = (code: string) => BADGE_EMOJI[code] ?? '🏅';
+/** How many attended events the profile lists; the Biletlerim tab has them all. */
+const RECENT_EVENTS = 5;
 
-type BadgeGoal = paths['/me/badges/progress']['get']['responses'][200]['content']['application/json'][number];
-
-/** What is left to do, e.g. "3 farklı kulübün etkinliğine katıl". Descriptions are written for when it is earned. */
-function goal(badge: BadgeGoal): string {
-  if (badge.rule === 'distinct_clubs') return `${badge.target} farklı kulübün etkinliğine katıl`;
-  if (badge.organization) return `${badge.organization.name} etkinliklerinden ${badge.target} tanesine katıl`;
-  return badge.target === 1 ? 'İlk etkinliğine katıl' : `${badge.target} etkinliğe katıl`;
-}
-
-function BadgeTile({
-  code,
-  name,
-  detail,
-  progress,
-}: {
-  code: string;
-  name: string;
-  detail: string;
-  progress?: { current: number; target: number };
-}) {
+function Stat({ value, label }: { value: number | undefined; label: string }) {
   const theme = useTheme();
-  const locked = progress !== undefined;
   return (
-    <View style={[styles.tile, { backgroundColor: theme.backgroundElement }]}>
-      <ThemedText style={[styles.emoji, locked && styles.locked]}>{badgeEmoji(code)}</ThemedText>
-      <ThemedText type="smallBold" themeColor={locked ? 'textSecondary' : 'text'}>
-        {name}
+    <View style={[styles.stat, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+      <ThemedText type="title" style={styles.statValue}>
+        {value ?? '–'}
       </ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        {detail}
+        {label}
       </ThemedText>
-      {progress ? (
-        <>
-          <ProgressBar value={progress.current / progress.target} />
-          <ThemedText type="small" themeColor="textSecondary">
-            {progress.current} / {progress.target}
-          </ThemedText>
-        </>
-      ) : null}
     </View>
   );
 }
 
+function Chevron() {
+  return (
+    <ThemedText type="subtitle" themeColor="textSecondary">
+      ›
+    </ThemedText>
+  );
+}
+
+function SettingsRow({ label, onPress, last = false }: { label: string; onPress: () => void; last?: boolean }) {
+  const theme = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="link"
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.settingsRow,
+        !last && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: theme.border },
+        pressed && { backgroundColor: theme.backgroundSelected },
+      ]}
+    >
+      <ThemedText type="default" style={styles.grow}>
+        {label}
+      </ThemedText>
+      <Chevron />
+    </Pressable>
+  );
+}
+
 export default function Profile() {
+  const theme = useTheme();
   const queryClient = useQueryClient();
   const me = useMe();
+  const tickets = useMyTickets();
+  const [openBadge, setOpenBadge] = useState<BadgeItem | null>(null);
   const points = useQuery({
     queryKey: ['me', 'points'],
     queryFn: async () => {
@@ -133,6 +131,14 @@ export default function Profile() {
 
   if (me.isPending) return <Loading />;
 
+  // Most recent first: the door scan is when you were really there.
+  const attended = (tickets.data ?? [])
+    .filter((ticket) => ticket.status === 'checked_in')
+    .sort((a, b) => (b.checkedInAt ?? '').localeCompare(a.checkedInAt ?? ''));
+  const badgeItems: BadgeItem[] = badges.data
+    ? [...badges.data.earned.map((earned) => ({ earned })), ...badges.data.progress.map((goal) => ({ goal }))]
+    : [];
+
   return (
     <Screen>
       <ThemedText type="subtitle">Profil</ThemedText>
@@ -140,30 +146,33 @@ export default function Profile() {
         <ErrorBanner error={me.error} />
       ) : (
         <Card>
-          <ThemedText type="default">{me.data.fullName}</ThemedText>
-          <ThemedText type="small" themeColor="textSecondary">
-            {me.data.email}
-          </ThemedText>
-          {me.data.studentNumber ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              Öğrenci no: {me.data.studentNumber}
-            </ThemedText>
-          ) : null}
-          <UniversityPicker
-            label="Üniversite"
-            // No university reads as "pick one", whether it was never set or isn't listed.
-            value={me.data.university ?? undefined}
-            onChange={(choice) => changeUniversity.mutate(choice?.id ?? null)}
-            disabled={me.data.universityLockedUntil !== null}
-            hint={
-              me.data.universityLockedUntil
-                ? `${formatDate(me.data.universityLockedUntil)} tarihinde yeniden değiştirebilirsin. Acil bir durumda bize yaz.`
-                : UNIVERSITY_HINT
-            }
-          />
-          <ErrorBanner error={changeUniversity.error} />
+          <View style={styles.header}>
+            <Avatar url={me.data.avatarUrl} name={me.data.fullName} size={72} />
+            <View style={styles.grow}>
+              <ThemedText type="default" style={styles.name}>
+                {me.data.fullName}
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                {me.data.email}
+              </ThemedText>
+              {me.data.university || me.data.studentNumber ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {[me.data.university?.name, me.data.studentNumber && `No: ${me.data.studentNumber}`]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </ThemedText>
+              ) : null}
+            </View>
+          </View>
+          <Button title="Profili düzenle" variant="secondary" onPress={() => router.push('/edit-profile')} />
         </Card>
       )}
+
+      <View style={styles.stats}>
+        <Stat value={tickets.data ? attended.length : undefined} label="Katıldığın etkinlik" />
+        <Stat value={points.data?.balance} label="Puan" />
+        <Stat value={badges.data?.earned.length} label="Rozet" />
+      </View>
 
       {me.data?.platformRole === 'admin' ? (
         <Card onPress={() => router.push('/moderation')}>
@@ -174,9 +183,7 @@ export default function Profile() {
                 Bildirilen etkinlikleri incele
               </ThemedText>
             </View>
-            <ThemedText type="subtitle" themeColor="textSecondary">
-              ›
-            </ThemedText>
+            <Chevron />
           </View>
         </Card>
       ) : null}
@@ -202,15 +209,43 @@ export default function Profile() {
                     {ROLE[membership.role]} · etkinlikler, katılımcılar, QR okutma
                   </ThemedText>
                 </View>
-                <ThemedText type="subtitle" themeColor="textSecondary">
-                  ›
-                </ThemedText>
+                <Chevron />
               </View>
             </Card>
           ))}
           <Button title="+ Kulüp oluştur" variant="secondary" onPress={() => router.push('/new-club')} />
         </>
       ) : null}
+
+      <ThemedText type="smallBold">Katıldığın etkinlikler</ThemedText>
+      {tickets.isPending ? (
+        <Loading />
+      ) : tickets.error ? (
+        <ErrorBanner error={tickets.error} />
+      ) : attended.length === 0 ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          Biletin kapıda okutulduğu etkinlikler burada birikir.
+        </ThemedText>
+      ) : (
+        attended.slice(0, RECENT_EVENTS).map((ticket) => (
+          <Card
+            key={ticket.id}
+            onPress={() => router.push({ pathname: '/events/[id]', params: { id: ticket.event.id } })}
+          >
+            <View style={styles.row}>
+              <View style={styles.grow}>
+                <ThemedText type="default" numberOfLines={1}>
+                  {ticket.event.title}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                  {ticket.event.organization.name} · {formatDate(ticket.event.startsAt)}
+                </ThemedText>
+              </View>
+              <Chevron />
+            </View>
+          </Card>
+        ))
+      )}
 
       <ThemedText type="smallBold">Puanların</ThemedText>
       {points.isPending ? (
@@ -272,38 +307,47 @@ export default function Profile() {
       ) : badges.error ? (
         <ErrorBanner error={badges.error} />
       ) : (
-        <View style={styles.grid}>
-          {badges.data.earned.map((badge) => (
-            <BadgeTile
-              key={badge.code + (badge.organization?.id ?? '')}
-              code={badge.code}
-              name={badge.name}
-              detail={badge.organization?.name ?? formatDateTime(badge.awardedAt)}
-            />
-          ))}
-          {badges.data.progress.map((badge) => (
-            <BadgeTile
-              key={badge.code + (badge.organization?.id ?? '')}
-              code={badge.code}
-              name={badge.name}
-              detail={goal(badge)}
-              progress={{ current: badge.current, target: badge.target }}
-            />
-          ))}
-        </View>
+        <>
+          <ThemedText type="small" themeColor="textSecondary">
+            Ayrıntısı için rozete dokun.
+          </ThemedText>
+          <View style={styles.grid}>
+            {badgeItems.map((item) => (
+              <BadgeTile key={badgeKey(item)} item={item} onPress={() => setOpenBadge(item)} />
+            ))}
+          </View>
+        </>
       )}
+      <BadgeSheet item={openBadge} onClose={() => setOpenBadge(null)} />
+
+      <ThemedText type="smallBold">Ayarlar</ThemedText>
+      {me.data ? (
+        <Card>
+          <UniversityPicker
+            label="Üniversite"
+            // No university reads as "pick one", whether it was never set or isn't listed.
+            value={me.data.university ?? undefined}
+            onChange={(choice) => changeUniversity.mutate(choice?.id ?? null)}
+            disabled={me.data.universityLockedUntil !== null}
+            hint={
+              me.data.universityLockedUntil
+                ? `${formatDate(me.data.universityLockedUntil)} tarihinde yeniden değiştirebilirsin. Acil bir durumda bize yaz.`
+                : UNIVERSITY_HINT
+            }
+          />
+          <ErrorBanner error={changeUniversity.error} />
+        </Card>
+      ) : null}
+      <View style={[styles.settings, { borderColor: theme.border, backgroundColor: theme.backgroundElement }]}>
+        <SettingsRow label="Gizlilik politikası" onPress={() => openBrowserAsync(PRIVACY_URL)} />
+        <SettingsRow
+          label="Kullanım koşulları ve topluluk kuralları"
+          onPress={() => openBrowserAsync(TERMS_URL)}
+          last
+        />
+      </View>
 
       <Button title="Çıkış yap" variant="secondary" loading={signOut.isPending} onPress={() => signOut.mutate()} />
-      <Pressable accessibilityRole="link" onPress={() => openBrowserAsync(PRIVACY_URL)} hitSlop={8}>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.center}>
-          Gizlilik politikası
-        </ThemedText>
-      </Pressable>
-      <Pressable accessibilityRole="link" onPress={() => openBrowserAsync(TERMS_URL)} hitSlop={8}>
-        <ThemedText type="small" themeColor="textSecondary" style={styles.center}>
-          Kullanım koşulları ve topluluk kuralları
-        </ThemedText>
-      </Pressable>
       <Pressable accessibilityRole="button" onPress={() => router.push('/delete-account')} hitSlop={8}>
         <ThemedText type="small" themeColor="danger" style={styles.center}>
           Hesabımı sil
@@ -316,11 +360,21 @@ export default function Profile() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
+  header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three, marginBottom: Spacing.two },
+  name: { fontSize: 18 },
   grow: { flex: 1 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  tile: { flexBasis: '48%', flexGrow: 1, borderRadius: 16, padding: Spacing.three, gap: Spacing.one },
-  emoji: { fontSize: 32, lineHeight: 40 },
-  locked: { opacity: 0.35 },
+  stats: { flexDirection: 'row', gap: Spacing.two },
+  stat: { flex: 1, borderRadius: Radius.large, borderWidth: 1, padding: Spacing.three, gap: Spacing.half },
+  statValue: { fontSize: 28, lineHeight: 34 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: Spacing.two },
+  settings: { borderRadius: Radius.large, borderWidth: 1, overflow: 'hidden' },
+  settingsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.three,
+  },
   tabBarSpace: { height: BottomTabInset + Spacing.six },
   center: { textAlign: 'center' },
 });

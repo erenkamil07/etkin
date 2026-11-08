@@ -258,6 +258,7 @@
                         },
                         "avatarUrl": {
                           "nullable": true,
+                          "description": "Path on this API (/users/<id>/avatar?v=...), or null",
                           "type": "string"
                         },
                         "platformRole": {
@@ -405,6 +406,7 @@
                         },
                         "avatarUrl": {
                           "nullable": true,
+                          "description": "Path on this API (/users/<id>/avatar?v=...), or null",
                           "type": "string"
                         },
                         "platformRole": {
@@ -603,6 +605,7 @@
                     },
                     "avatarUrl": {
                       "nullable": true,
+                      "description": "Path on this API (/users/<id>/avatar?v=...), or null",
                       "type": "string"
                     },
                     "platformRole": {
@@ -679,7 +682,7 @@
         }
       },
       "patch": {
-        "summary": "Change your university (null if yours is not listed)",
+        "summary": "Change your name, student number or university (null if yours is not listed)",
         "tags": [
           "auth"
         ],
@@ -690,6 +693,17 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "fullName": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120
+                  },
+                  "studentNumber": {
+                    "nullable": true,
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 32
+                  },
                   "universityId": {
                     "nullable": true,
                     "type": "integer",
@@ -698,10 +712,7 @@
                     "maximum": 9007199254740991,
                     "description": "An id from GET /universities"
                   }
-                },
-                "required": [
-                  "universityId"
-                ]
+                }
               }
             }
           }
@@ -755,6 +766,7 @@
                     },
                     "avatarUrl": {
                       "nullable": true,
+                      "description": "Path on this API (/users/<id>/avatar?v=...), or null",
                       "type": "string"
                     },
                     "platformRole": {
@@ -4347,6 +4359,90 @@
             },
             "in": "path",
             "name": "eventId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/me/avatar": {
+      "put": {
+        "summary": "Set your profile photo: a JPEG up to 512 KB, stored without its metadata",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "avatarUrl": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "avatarUrl"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove your profile photo",
+        "tags": [
+          "auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/users/{userId}/avatar": {
+      "get": {
+        "summary": "A profile photo. Only the current ?v= works, and only the club teams that see the person get it",
+        "tags": [
+          "auth"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 40
+            },
+            "in": "query",
+            "name": "v",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "userId",
             "required": true
           }
         ],

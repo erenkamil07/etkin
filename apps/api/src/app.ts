@@ -15,6 +15,7 @@ import { analyticsRoutes } from './analytics/routes.js';
 import { authPlugin } from './auth/plugin.js';
 import { authRoutes } from './auth/routes.js';
 import { createAccessTokens } from './auth/tokens.js';
+import { avatarRoutes } from './avatars/routes.js';
 import { checkInRoutes } from './checkins/routes.js';
 import type { Config } from './config.js';
 import { coverRoutes } from './covers/routes.js';
@@ -120,6 +121,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   await app.register(orgRoutes, { db });
   await app.register(eventRoutes, { db });
   await app.register(coverRoutes, { db });
+  await app.register(avatarRoutes, { db });
   await app.register(ticketRoutes, { db, qrMasterKey: config.QR_MASTER_KEY });
   await app.register(checkInRoutes, { db, qrMasterKey: config.QR_MASTER_KEY });
   await app.register(loyaltyRoutes, { db });

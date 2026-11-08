@@ -1,7 +1,6 @@
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import { launchImageLibraryAsync } from 'expo-image-picker';
-import { accessToken } from '@/auth/session';
-import { API_URL } from '@/config';
+import { putJpeg } from '@/api/upload';
 
 /** A poster ready to upload: at most 1200 px wide, saved as JPEG. */
 export interface Poster {
@@ -28,14 +27,7 @@ export async function pickPoster(): Promise<Poster | null> {
   return { uri: saved.uri, width: saved.width, height: saved.height };
 }
 
-/** Sends the poster as raw JPEG. The generated client can't send binary bodies, so this is plain fetch. */
+/** Uploads the poster; the API drops its metadata. */
 export async function uploadPoster(orgId: string, eventId: string, poster: Poster) {
-  const body = await (await fetch(poster.uri)).blob();
-  const token = await accessToken();
-  const response = await fetch(`${API_URL}/orgs/${orgId}/events/${eventId}/cover`, {
-    method: 'PUT',
-    headers: { 'content-type': 'image/jpeg', ...(token ? { authorization: `Bearer ${token}` } : {}) },
-    body,
-  });
-  if (!response.ok) throw await response.json().catch(() => ({ status: response.status }));
+  await putJpeg(`/orgs/${orgId}/events/${eventId}/cover`, poster.uri);
 }

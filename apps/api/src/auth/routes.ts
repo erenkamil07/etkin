@@ -1,6 +1,7 @@
 import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { atLeastOneField } from '../schemas.js';
 import { UniversityId, UniversityRef } from '../universities/routes.js';
 import { currentUser } from './plugin.js';
 import {
@@ -40,7 +41,7 @@ const PublicUser = z.object({
   fullName: z.string(),
   university: UniversityRef.nullable(),
   studentNumber: z.string().nullable(),
-  avatarUrl: z.string().nullable(),
+  avatarUrl: z.string().nullable().describe('Path on this API (/users/<id>/avatar?v=...), or null'),
   platformRole: z.enum(['user', 'admin']),
   createdAt: z.iso.datetime(),
 });
@@ -148,9 +149,15 @@ export const authRoutes: FastifyPluginAsyncZod<{ auth: AuthDeps }> = async (app,
       onRequest: app.authenticate,
       schema: {
         tags: ['auth'],
-        summary: 'Change your university (null if yours is not listed)',
+        summary: 'Change your name, student number or university (null if yours is not listed)',
         security: [{ bearerAuth: [] }],
-        body: z.object({ universityId: UniversityId.nullable() }),
+        body: z
+          .object({
+            fullName: z.string().trim().min(2).max(120).optional(),
+            studentNumber: z.string().trim().min(1).max(32).nullable().optional(),
+            universityId: UniversityId.nullable().optional(),
+          })
+          .refine(atLeastOneField, 'Provide at least one field to change'),
         response: { 200: Profile },
       },
     },

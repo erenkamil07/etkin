@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Linking, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { problemMessage } from '@/api/errors';
+import { Avatar } from '@/components/avatar';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Loading, Screen } from '@/components/ui';
 import { Colors, Fonts, Radius, Spacing } from '@/constants/theme';
@@ -33,9 +34,12 @@ const LOOK = {
 /** Full-screen verdict. "Stop" verdicts pulse once: a single flash, never continuous blinking. */
 function VerdictScreen({
   verdict,
+  attendee,
   onDismiss,
 }: {
   verdict: { title: string; tone: keyof typeof LOOK; detail: string };
+  /** The holder, with their photo when they added one: the door can see it is really them. */
+  attendee: { name: string; avatarUrl: string | null } | null;
   onDismiss: () => void;
 }) {
   const insets = useSafeAreaInsets();
@@ -61,6 +65,11 @@ function VerdictScreen({
         <View style={[styles.symbolRing, { borderColor: look.ink }]}>
           <ThemedText style={[styles.symbol, { color: look.ink }]}>{look.symbol}</ThemedText>
         </View>
+        {attendee?.avatarUrl ? (
+          <View style={[styles.photoRing, { borderColor: look.ink }]}>
+            <Avatar url={attendee.avatarUrl} name={attendee.name} size={136} />
+          </View>
+        ) : null}
         <ThemedText style={[styles.verdictTitle, { color: look.ink }]}>{verdict.title}</ThemedText>
         {verdict.detail ? (
           <ThemedText style={[styles.verdictDetail, { color: look.ink }]}>{verdict.detail}</ThemedText>
@@ -192,7 +201,13 @@ export default function Scan() {
         </ThemedText>
       </View>
 
-      {verdict ? <VerdictScreen verdict={verdict} onDismiss={() => setShown(null)} /> : null}
+      {verdict ? (
+        <VerdictScreen
+          verdict={verdict}
+          attendee={shown && 'verdict' in shown ? shown.verdict.attendee : null}
+          onDismiss={() => setShown(null)}
+        />
+      ) : null}
     </View>
   );
 }
@@ -237,6 +252,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   symbol: { fontFamily: Fonts.extrabold, fontSize: 72, lineHeight: 84 },
+  photoRing: { borderRadius: 80, borderWidth: 4, padding: 4 },
   verdictTitle: { fontFamily: Fonts.extrabold, fontSize: 32, lineHeight: 38, textAlign: 'center' },
   verdictDetail: { fontFamily: Fonts.semibold, fontSize: 20, lineHeight: 28, textAlign: 'center' },
   dismiss: { marginTop: Spacing.four, opacity: 0.75 },

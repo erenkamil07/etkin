@@ -280,6 +280,7 @@ export async function deleteAccount(db: Database, userId: string, password: stri
       .where('user_id', '=', userId)
       .where('revoked_at', 'is', null)
       .execute();
+    await trx.deleteFrom('user_avatars').where('user_id', '=', userId).execute();
     await trx
       .updateTable('users')
       .set({
@@ -299,9 +300,17 @@ export async function deleteAccount(db: Database, userId: string, password: stri
   });
 }
 
-/** Changes what students may edit about themselves; for now, their university. */
-/** Changes what students may edit about themselves; for now, their university (see universityLockedUntil). */
-export async function updateProfile(db: Database, userId: string, patch: { universityId: number | null }) {
+export interface ProfilePatch {
+  universityId?: number | null | undefined;
+  fullName?: string | undefined;
+  studentNumber?: string | null | undefined;
+}
+
+/**
+ * What students may change about themselves: their name, student number and
+ * university (the last only now and then; see universityLockedUntil).
+ */
+export async function updateProfile(db: Database, userId: string, patch: ProfilePatch) {
   await assertUniversity(db, patch.universityId);
   await db.transaction().execute(async (trx) => {
     const current = await trx
@@ -311,24 +320,31 @@ export async function updateProfile(db: Database, userId: string, patch: { unive
       .where('deleted_at', 'is', null)
       .forUpdate()
       .executeTakeFirst();
-    if (!current || current.university_id === patch.universityId) return;
-    const lockedUntil = universityLockedUntil(current.university_chosen_at);
-    if (lockedUntil) {
-      throw new AppError(409, 'UNIVERSITY_LOCKED', 'Your university can be changed once a year', {
-        until: lockedUntil.toISOString(),
-      });
-    }
-    await trx
-      .updateTable('users')
-      .set({
+    if (!current) return;
+
+    let university = {};
+    if (patch.universityId !== undefined && patch.universityId !== current.university_id) {
+      const lockedUntil = universityLockedUntil(current.university_chosen_at);
+      if (lockedUntil) {
+        throw new AppError(409, 'UNIVERSITY_LOCKED', 'Your university can be changed once a year', {
+          until: lockedUntil.toISOString(),
+        });
+      }
+      university = {
         university_id: patch.universityId,
         university_chosen_at:
           patch.universityId === null && current.university_chosen_at === null
             ? null
             : nextUniversityChosenAt(current.university_chosen_at),
-      })
-      .where('id', '=', userId)
-      .execute();
+      };
+    }
+    const changes = {
+      ...university,
+      ...(patch.fullName !== undefined && { full_name: patch.fullName }),
+      ...(patch.studentNumber !== undefined && { student_number: patch.studentNumber }),
+    };
+    if (Object.keys(changes).length === 0) return;
+    await trx.updateTable('users').set(changes).where('id', '=', userId).execute();
   });
   return getProfile(db, userId);
 }

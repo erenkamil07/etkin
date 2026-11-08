@@ -82,6 +82,7 @@ export default function RootLayout() {
             <Stack.Screen name="new-event/[orgId]" options={{ ...pushed, title: 'Yeni etkinlik' }} />
             <Stack.Screen name="new-club" options={{ ...pushed, title: 'Kulüp oluştur' }} />
             <Stack.Screen name="delete-account" options={{ ...pushed, title: 'Hesabı sil' }} />
+            <Stack.Screen name="edit-profile" options={{ ...pushed, title: 'Profili düzenle' }} />
             <Stack.Screen name="report/[eventId]" options={{ ...pushed, title: 'Etkinliği bildir' }} />
             <Stack.Screen name="moderation" options={{ ...pushed, title: 'Moderasyon' }} />
           </Stack.Protected>

@@ -235,3 +235,29 @@ export async function grantPoints(db: Database, userId: string, orgId: string, p
     .values({ user_id: userId, organization_id: orgId, delta: points, reason: 'bonus' })
     .execute();
 }
+
+const jpegSegment = (marker: number, payload: Buffer) => {
+  const length = Buffer.alloc(2);
+  length.writeUInt16BE(payload.length + 2);
+  return Buffer.concat([Buffer.from([0xff, marker]), length, payload]);
+};
+
+/** A JPEG's segment structure (the parser never decodes pixels), optionally with GPS in its EXIF. */
+export function fakeJpeg({ width = 1200, height = 1697, gps = false, padding = 0 } = {}) {
+  const frame = Buffer.alloc(15);
+  frame[0] = 8;
+  frame.writeUInt16BE(height, 1);
+  frame.writeUInt16BE(width, 3);
+  frame[5] = 3;
+  return Buffer.concat([
+    Buffer.from([0xff, 0xd8]),
+    jpegSegment(0xe0, Buffer.from('JFIF\0\x01\x01\0\0\x01\0\x01\0\0', 'latin1')),
+    gps ? jpegSegment(0xe1, Buffer.from('Exif\0\0GPSLatitude=36.78;GPSLongitude=34.53', 'latin1')) : Buffer.alloc(0),
+    jpegSegment(0xfe, Buffer.from('taken on a phone')),
+    jpegSegment(0xc0, frame),
+    Buffer.from([0xff, 0xda, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3f, 0x00]),
+    Buffer.from('compressed-image-data'),
+    Buffer.alloc(padding),
+    Buffer.from([0xff, 0xd9]),
+  ]);
+}

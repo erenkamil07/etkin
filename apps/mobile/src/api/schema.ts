@@ -159,6 +159,7 @@ export interface paths {
                                     name: string;
                                 } | null;
                                 studentNumber: string | null;
+                                /** @description Path on this API (/users/<id>/avatar?v=...), or null */
                                 avatarUrl: string | null;
                                 /** @enum {string} */
                                 platformRole: "user" | "admin";
@@ -228,6 +229,7 @@ export interface paths {
                                     name: string;
                                 } | null;
                                 studentNumber: string | null;
+                                /** @description Path on this API (/users/<id>/avatar?v=...), or null */
                                 avatarUrl: string | null;
                                 /** @enum {string} */
                                 platformRole: "user" | "admin";
@@ -367,6 +369,7 @@ export interface paths {
                                 name: string;
                             } | null;
                             studentNumber: string | null;
+                            /** @description Path on this API (/users/<id>/avatar?v=...), or null */
                             avatarUrl: string | null;
                             /** @enum {string} */
                             platformRole: "user" | "admin";
@@ -419,7 +422,7 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Change your university (null if yours is not listed) */
+        /** Change your name, student number or university (null if yours is not listed) */
         patch: {
             parameters: {
                 query?: never;
@@ -430,8 +433,10 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        fullName?: string;
+                        studentNumber?: string | null;
                         /** @description An id from GET /universities */
-                        universityId: number | null;
+                        universityId?: number | null;
                     };
                 };
             };
@@ -452,6 +457,7 @@ export interface paths {
                                 name: string;
                             } | null;
                             studentNumber: string | null;
+                            /** @description Path on this API (/users/<id>/avatar?v=...), or null */
                             avatarUrl: string | null;
                             /** @enum {string} */
                             platformRole: "user" | "admin";
@@ -1844,6 +1850,100 @@ export interface paths {
                 header?: never;
                 path: {
                     eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set your profile photo: a JPEG up to 512 KB, stored without its metadata */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            avatarUrl: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Remove your profile photo */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{userId}/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A profile photo. Only the current ?v= works, and only the club teams that see the person get it */
+        get: {
+            parameters: {
+                query: {
+                    v: string;
+                };
+                header?: never;
+                path: {
+                    userId: string;
                 };
                 cookie?: never;
             };
