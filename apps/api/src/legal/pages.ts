@@ -59,6 +59,10 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
   donanım kimliği, reklam kimliği veya konumu toplanmaz.</li>
   <li><strong>Kamera:</strong> yalnızca kulüp ekibi kapıda bilet okuturken kullanılır. Görüntü
   kaydedilmez ve sunucuya gönderilmez; sadece okunan QR kodunun içeriği gönderilir.</li>
+  <li><strong>Etkinlik afişleri:</strong> kulüp ekibi bir etkinliğe afiş eklerse, seçtiği görsel
+  telefonda küçültülüp yüklenir ve etkinlikle birlikte herkese açık görünür. Fotoğrafın içindeki konum
+  (GPS), cihaz ve tarih bilgileri sunucuda silinir; saklanmaz. Uygulama yalnızca senin seçtiğin
+  görsele erişir, galerinin geri kalanına erişmez.</li>
   <li><strong>Bildirimler:</strong> bir etkinliği kurallara aykırı diye bildirirsen seçtiğin sebep,
   yazdığın açıklama ve bildirimin zamanı. Kimin bildirdiğini kulüp göremez; bildirimleri yalnızca
   Etkin'in yöneticisi inceler.</li>
@@ -154,7 +158,7 @@ düzenler; bir etkinliğin içeriğinden ve gerçekleşmesinden onu açan kulüp
 </ul>
 
 <h2>Topluluk kuralları</h2>
-<p>Kulüp adları, açıklamaları, etkinlik başlıkları, açıklamaları ve bilet türleri herkese açıktır.
+<p>Kulüp adları, açıklamaları, etkinlik başlıkları, açıklamaları, afişleri ve bilet türleri herkese açıktır.
 Bunlarda şunlar yasaktır:</p>
 <ul>
   <li>Nefret söylemi; ırk, etnik köken, din, cinsiyet, cinsel yönelim, engellilik ya da benzeri

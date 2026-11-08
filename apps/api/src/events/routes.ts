@@ -1,6 +1,7 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { currentUser } from '../auth/plugin.js';
+import { Cover } from '../covers/routes.js';
 import type { Database } from '../db.js';
 import {
   atLeastOneField,
@@ -64,6 +65,7 @@ const EventBase = z.object({
   universityOnly: z.boolean().describe("Only students of the club's university can get tickets"),
   status: z.enum(['draft', 'published', 'cancelled', 'completed']),
   publishedAt: DateTimeOutput.nullable(),
+  cover: Cover.nullable(),
 });
 const EventSummary = EventBase.extend({
   capacity: z.number().int(),

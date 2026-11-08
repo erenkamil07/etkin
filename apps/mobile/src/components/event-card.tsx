@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { dateBadge, formatWeekdayTime } from '@/format';
 import { useTheme } from '@/hooks/use-theme';
+import { type Cover, EventCover } from './event-cover';
 import { ThemedText } from './themed-text';
 import { Pill } from './ui';
 
@@ -14,11 +15,13 @@ interface EventSummary {
   startsAt: string;
   locationName: string | null;
   organization: { name: string; university?: { name: string } | null };
+  cover?: Cover | null;
 }
 
 /**
- * A calendar-page date on the left and the event on the right. The feed puts
- * the seats left underneath; the ticket list puts the ticket's status there.
+ * The poster on top when there is one, then a calendar-page date on the left and
+ * the event on the right. The feed puts the seats left underneath; the ticket
+ * list puts the ticket's status there.
  */
 export function EventCard({
   event,
@@ -54,23 +57,26 @@ export function EventCard({
         },
       ]}
     >
-      <View style={[styles.date, { backgroundColor: dimmed ? theme.backgroundSelected : theme.tintSoft }]}>
-        <ThemedText style={[styles.day, { color: dimmed ? theme.textSecondary : theme.tint }]}>{day}</ThemedText>
-        <ThemedText style={[styles.month, { color: dimmed ? theme.textSecondary : theme.tint }]}>{month}</ThemedText>
-      </View>
-      <View style={styles.body}>
-        <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-          {event.organization.name}
-          {showUniversity && event.organization.university ? ` · ${event.organization.university.name}` : ''}
-        </ThemedText>
-        <ThemedText style={styles.title} numberOfLines={2}>
-          {event.title}
-        </ThemedText>
-        <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-          {formatWeekdayTime(event.startsAt)}
-          {event.locationName ? ` · ${event.locationName}` : ''}
-        </ThemedText>
-        {footer ? <View style={styles.footer}>{footer}</View> : null}
+      {event.cover ? <EventCover cover={event.cover} variant="banner" /> : null}
+      <View style={styles.row}>
+        <View style={[styles.date, { backgroundColor: dimmed ? theme.backgroundSelected : theme.tintSoft }]}>
+          <ThemedText style={[styles.day, { color: dimmed ? theme.textSecondary : theme.tint }]}>{day}</ThemedText>
+          <ThemedText style={[styles.month, { color: dimmed ? theme.textSecondary : theme.tint }]}>{month}</ThemedText>
+        </View>
+        <View style={styles.body}>
+          <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+            {event.organization.name}
+            {showUniversity && event.organization.university ? ` · ${event.organization.university.name}` : ''}
+          </ThemedText>
+          <ThemedText style={styles.title} numberOfLines={2}>
+            {event.title}
+          </ThemedText>
+          <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+            {formatWeekdayTime(event.startsAt)}
+            {event.locationName ? ` · ${event.locationName}` : ''}
+          </ThemedText>
+          {footer ? <View style={styles.footer}>{footer}</View> : null}
+        </View>
       </View>
     </Pressable>
   );
@@ -92,12 +98,12 @@ export function seatsLeft({ remaining, capacity }: { remaining: number; capacity
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
     gap: Spacing.three,
     borderWidth: 1,
     borderRadius: Radius.large,
     padding: Spacing.three,
   },
+  row: { flexDirection: 'row', gap: Spacing.three },
   date: {
     width: 58,
     height: 64,

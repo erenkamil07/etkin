@@ -4,12 +4,14 @@ import { useDeferredValue, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
 import { useOrgRole } from '@/api/queries';
+import { EventCover } from '@/components/event-cover';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, confirmAction, ErrorBanner, Field, Loading, Notice, ProgressBar, Screen } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { formatDateTime, formatTime } from '@/format';
 import { useNow } from '@/hooks/use-now';
 import { checkIn, describeVerdict } from '@/orgs/check-in';
+import { pickPoster, uploadPoster } from '@/orgs/poster';
 
 // The door is busy while it is open: keep the numbers live without anyone pulling to refresh.
 const LIVE_REFRESH_MS = 10_000;
@@ -81,6 +83,22 @@ export default function EventDashboard() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orgs', orgId, 'events', eventId, 'attendees'] }),
   });
 
+  // The poster: picked and shrunk on the phone, then uploaded straight away.
+  const changePoster = useMutation({
+    mutationFn: async (action: 'pick' | 'remove') => {
+      if (action === 'remove') {
+        const ok = await confirmAction('Afişi kaldır', 'Afiş etkinlik sayfasından ve akıştan kalkar.', 'Kaldır');
+        if (!ok) return;
+        const { error } = await api.DELETE('/orgs/{orgId}/events/{eventId}/cover', { params: { path } });
+        if (error) throw error;
+        return;
+      }
+      const poster = await pickPoster();
+      if (poster) await uploadPoster(orgId, eventId, poster);
+    },
+    onSuccess: () => refreshEvent(),
+  });
+
   const refreshEvent = () => {
     queryClient.invalidateQueries({ queryKey: ['events'] });
     queryClient.invalidateQueries({ queryKey: ['orgs', orgId, 'events'] });
@@ -135,6 +153,30 @@ export default function EventDashboard() {
           {formatTime(event.data.checkinClosesAt)}
         </ThemedText>
       </View>
+
+      {canManage && (event.data.status === 'draft' || event.data.status === 'published') ? (
+        <>
+          <EventCover cover={event.data.cover} variant="poster" />
+          <View style={styles.row}>
+            <View style={styles.grow}>
+              <Button
+                title={event.data.cover ? 'Afişi değiştir' : '+ Afiş ekle'}
+                variant="secondary"
+                loading={changePoster.isPending && changePoster.variables === 'pick'}
+                onPress={() => changePoster.mutate('pick')}
+              />
+            </View>
+            {event.data.cover ? (
+              <Pressable accessibilityRole="button" hitSlop={8} onPress={() => changePoster.mutate('remove')}>
+                <ThemedText type="small" themeColor="danger">
+                  Afişi kaldır
+                </ThemedText>
+              </Pressable>
+            ) : null}
+          </View>
+          <ErrorBanner error={changePoster.error} />
+        </>
+      ) : null}
 
       {event.data.status === 'draft' ? (
         <Notice tone="warning">Taslak: öğrenciler bu etkinliği henüz göremez.</Notice>

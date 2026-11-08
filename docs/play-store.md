@@ -139,8 +139,12 @@ Data types collected (none is used for advertising or sold):
 | App activity → Other user-generated content (clubs and events you create, reports you file) | Optional | App functionality |
 | Financial info → User payment info (an IBAN a club owner writes in a paid event's payment note) | Optional | App functionality |
 | Device or other IDs (a random per-install id, not a hardware id) | Required | App functionality, Fraud prevention, security and compliance |
+| Photos and videos → Photos (an event poster a club uploads; EXIF/GPS removed) | Optional | App functionality |
 
-Not collected: location, photos or videos (the camera only reads QR codes on the device),
+Posters also change the content rating answers: users share images, not just text. Nudity and
+real violence stay "No": the community rules forbid them and reported posters are removed.
+
+Not collected: location, videos (the camera only reads QR codes on the device),
 contacts, messages, card details or purchase history, health, audio, files, calendar, web history.
 Other users seeing a payment note is not "sharing" in Play's sense: the club owner publishes it
 on purpose.

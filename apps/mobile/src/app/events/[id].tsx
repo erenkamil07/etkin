@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
 import { useMe, useMyTickets, useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
+import { EventCover } from '@/components/event-cover';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, ErrorBanner, Loading, Notice, Screen } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
@@ -86,6 +87,7 @@ export default function EventDetail() {
         <ErrorBanner error={event.error} />
       ) : (
         <>
+          <EventCover cover={event.data.cover} variant="poster" />
           <View style={styles.heading}>
             <ThemedText type="smallBold" themeColor="textSecondary">
               {event.data.organization.name}

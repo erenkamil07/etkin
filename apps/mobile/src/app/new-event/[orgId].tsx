@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Switch, View } from 'react-native';
 import { api } from '@/api/client';
 import { useClub } from '@/api/queries';
+import { EventCover } from '@/components/event-cover';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ErrorBanner, Field, Notice, Screen, Segmented } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
@@ -19,6 +20,7 @@ import {
   typeDate,
   typeTime,
 } from '@/orgs/event-form';
+import { type Poster, pickPoster, uploadPoster } from '@/orgs/poster';
 
 type EventPlan = Exclude<ReturnType<typeof buildEvent>, { errors: DraftErrors }>;
 
@@ -64,7 +66,14 @@ export default function NewEvent() {
 
   // What a failed attempt already created, so trying again finishes the job
   // instead of leaving a second draft behind.
-  const progress = useRef<{ eventId?: string; ticketTypes: number }>({ ticketTypes: 0 });
+  const progress = useRef<{ eventId?: string; ticketTypes: number; poster?: string }>({ ticketTypes: 0 });
+  const [poster, setPoster] = useState<Poster | null>(null);
+  const choosePoster = useMutation({
+    mutationFn: pickPoster,
+    onSuccess: (picked) => {
+      if (picked) setPoster(picked);
+    },
+  });
   const [draftSaved, setDraftSaved] = useState(false);
 
   const save = useMutation({
@@ -87,6 +96,10 @@ export default function NewEvent() {
         const { error } = await api.POST('/orgs/{orgId}/events/{eventId}/ticket-types', { params: { path }, body });
         if (error) throw error;
         progress.current.ticketTypes = i + 1;
+      }
+      if (poster && progress.current.poster !== poster.uri) {
+        await uploadPoster(orgId, eventId, poster);
+        progress.current.poster = poster.uri;
       }
       if (publish) {
         const { error } = await api.POST('/orgs/{orgId}/events/{eventId}/publish', { params: { path } });
@@ -123,6 +136,20 @@ export default function NewEvent() {
         style={styles.multiline}
       />
       <Field label="Yer (isteğe bağlı)" value={draft.location} onChangeText={set('location')} />
+
+      <ThemedText type="smallBold">Afiş (isteğe bağlı)</ThemedText>
+      {poster ? (
+        <EventCover uri={poster.uri} cover={{ url: '', width: poster.width, height: poster.height }} variant="poster" />
+      ) : (
+        <ThemedText type="small" themeColor="textSecondary">
+          Etkinliğin afişi ya da bir görseli; akışta ve etkinlik sayfasında görünür. Uygunsuz görseller kaldırılır.
+        </ThemedText>
+      )}
+      <View style={styles.chips}>
+        <Chip label={poster ? 'Afişi değiştir' : '+ Afiş ekle'} onPress={() => choosePoster.mutate()} />
+        {poster ? <Chip label="Kaldır" onPress={() => setPoster(null)} /> : null}
+      </View>
+      <ErrorBanner error={choosePoster.error} />
 
       <View style={styles.row}>
         <View style={styles.grow}>

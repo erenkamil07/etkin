@@ -157,7 +157,7 @@ describe('CORS', () => {
     const allowed = await preflight('http://localhost:8081');
     expect(allowed.headers['access-control-allow-origin']).toBe('http://localhost:8081');
     expect(String(allowed.headers['access-control-allow-methods']).split(/,\s*/)).toEqual(
-      expect.arrayContaining(['PATCH', 'DELETE']),
+      expect.arrayContaining(['PUT', 'PATCH', 'DELETE']),
     );
     expect((await preflight('https://evil.example')).headers['access-control-allow-origin']).toBeUndefined();
   });

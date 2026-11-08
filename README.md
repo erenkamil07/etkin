@@ -125,6 +125,10 @@ tokens live in localStorage instead of the keystore.
 - **Your campus first.** Clubs and students pick their university from one list of every
   university in Turkey (searchable by name, city or initials such as "ODTÜ"). The feed opens on
   "Üniversitem" and switches to "Tüm Türkiye", where each card also names the club's university.
+- **Event posters.** Organizers add a poster from the phone's own photo picker (no storage
+  permission). The app shrinks it to 1200 px JPEG (about 200 KB); the API keeps it in PostgreSQL
+  without its EXIF, GPS or XMP, and serves it at a versioned URL cached for good. Lists show a
+  banner cropped from the top, the event page the whole poster.
 - **Paid events, no payments.** An event is free or paid. A paid one has a price per ticket type,
   what the price covers and how to pay the club (at the door, by bank transfer), with one-tap
   templates for the usual two. The ticket holds the seat and the club collects the money, so the

@@ -36,6 +36,8 @@ const MESSAGES: Record<string, string> = {
   CLUB_HAS_NO_UNIVERSITY: 'Etkinliği üniversitenize özel yapmak için önce kulübün üniversitesini seç.',
   NOT_A_NO_SHOW: 'Sadece bitmiş bir etkinliğe gelmeyenler mazeretli sayılabilir.',
   INVALID_NO_SHOW_RULE: 'Gelmeme kuralı için hem sayı hem süre seçmelisin.',
+  UNSUPPORTED_IMAGE: 'Bu görsel kullanılamadı; başka bir fotoğraf seç.',
+  FST_ERR_CTP_BODY_TOO_LARGE: 'Afiş çok büyük; en fazla 1,5 MB olabilir.',
 };
 
 /** Messages that name the date a time-limited refusal ends. */

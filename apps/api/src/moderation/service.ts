@@ -119,6 +119,7 @@ export async function removeEvent(db: Database, eventId: string, adminId: string
       })
       .where('id', '=', eventId)
       .execute();
+    await trx.deleteFrom('event_covers').where('event_id', '=', eventId).execute();
     await resolveOpenReports(trx, eventId, 'removed', adminId);
     return { originalTitle: event.title };
   });

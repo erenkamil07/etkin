@@ -1,6 +1,7 @@
 import { sql } from 'kysely';
 import { findOrgRole } from '../auth/plugin.js';
 import type { AuthUser } from '../auth/tokens.js';
+import { coverColumn, coverRef } from '../covers/service.js';
 import type { AllocationMode, EventStatus } from '../db/schema.js';
 import type { Database } from '../db.js';
 import { AppError } from '../errors.js';
@@ -78,6 +79,7 @@ const EVENT_COLUMNS = [
   'e.university_only',
   'e.status',
   'e.published_at',
+  coverColumn,
 ] as const;
 
 interface EventRow {
@@ -101,6 +103,7 @@ interface EventRow {
   university_only: boolean;
   status: EventStatus;
   published_at: Date | null;
+  cover: { version: string; width: number; height: number } | null;
 }
 
 function toEvent(row: EventRow) {
@@ -126,6 +129,7 @@ function toEvent(row: EventRow) {
     universityOnly: row.university_only,
     status: row.status,
     publishedAt: isoOrNull(row.published_at),
+    cover: coverRef(row.id, row.cover),
   };
 }
 

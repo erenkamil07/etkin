@@ -848,6 +848,13 @@ export interface paths {
                                 status: "draft" | "published" | "cancelled" | "completed";
                                 /** Format: date-time */
                                 publishedAt: string | null;
+                                /** @description The event's poster, if it has one */
+                                cover: {
+                                    /** @description Path on this API, e.g. /events/<id>/cover?v=<version>; it changes with the poster */
+                                    url: string;
+                                    width: number;
+                                    height: number;
+                                } | null;
                                 capacity: number;
                                 remaining: number;
                                 /** @description Cheapest ticket type; 0 when any ticket is free */
@@ -928,6 +935,13 @@ export interface paths {
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
                             publishedAt: string | null;
+                            /** @description The event's poster, if it has one */
+                            cover: {
+                                /** @description Path on this API, e.g. /events/<id>/cover?v=<version>; it changes with the poster */
+                                url: string;
+                                width: number;
+                                height: number;
+                            } | null;
                             ticketTypes: {
                                 /** Format: uuid */
                                 id: string;
@@ -1026,6 +1040,13 @@ export interface paths {
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
                             publishedAt: string | null;
+                            /** @description The event's poster, if it has one */
+                            cover: {
+                                /** @description Path on this API, e.g. /events/<id>/cover?v=<version>; it changes with the poster */
+                                url: string;
+                                width: number;
+                                height: number;
+                            } | null;
                             capacity: number;
                             remaining: number;
                             /** @description Cheapest ticket type; 0 when any ticket is free */
@@ -1122,6 +1143,13 @@ export interface paths {
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
                             publishedAt: string | null;
+                            /** @description The event's poster, if it has one */
+                            cover: {
+                                /** @description Path on this API, e.g. /events/<id>/cover?v=<version>; it changes with the poster */
+                                url: string;
+                                width: number;
+                                height: number;
+                            } | null;
                             ticketTypes: {
                                 /** Format: uuid */
                                 id: string;
@@ -1278,6 +1306,13 @@ export interface paths {
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
                             publishedAt: string | null;
+                            /** @description The event's poster, if it has one */
+                            cover: {
+                                /** @description Path on this API, e.g. /events/<id>/cover?v=<version>; it changes with the poster */
+                                url: string;
+                                width: number;
+                                height: number;
+                            } | null;
                             ticketTypes: {
                                 /** Format: uuid */
                                 id: string;
@@ -1373,6 +1408,13 @@ export interface paths {
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
                             publishedAt: string | null;
+                            /** @description The event's poster, if it has one */
+                            cover: {
+                                /** @description Path on this API, e.g. /events/<id>/cover?v=<version>; it changes with the poster */
+                                url: string;
+                                width: number;
+                                height: number;
+                            } | null;
                             ticketTypes: {
                                 /** Format: uuid */
                                 id: string;
@@ -1472,6 +1514,13 @@ export interface paths {
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
                             publishedAt: string | null;
+                            /** @description The event's poster, if it has one */
+                            cover: {
+                                /** @description Path on this API, e.g. /events/<id>/cover?v=<version>; it changes with the poster */
+                                url: string;
+                                width: number;
+                                height: number;
+                            } | null;
                             ticketTypes: {
                                 /** Format: uuid */
                                 id: string;
@@ -1712,6 +1761,109 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/orgs/{orgId}/events/{eventId}/cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Upload or replace the event poster: a JPEG up to 1.5 MB, stored without its metadata (organizer+) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The event's poster, if it has one */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @description Path on this API, e.g. /events/<id>/cover?v=<version>; it changes with the poster */
+                            url: string;
+                            width: number;
+                            height: number;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Remove the event poster (organizer+) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/events/{eventId}/cover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The event's poster as JPEG; with the current ?v= it is cached for good */
+        get: {
+            parameters: {
+                query?: {
+                    v?: string;
+                };
+                header?: never;
+                path: {
+                    eventId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/events/{eventId}/tickets": {

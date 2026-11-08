@@ -17,6 +17,7 @@ import { authRoutes } from './auth/routes.js';
 import { createAccessTokens } from './auth/tokens.js';
 import { checkInRoutes } from './checkins/routes.js';
 import type { Config } from './config.js';
+import { coverRoutes } from './covers/routes.js';
 import type { Database } from './db.js';
 import { AppError, registerErrorHandling } from './errors.js';
 import { eventRoutes } from './events/routes.js';
@@ -63,10 +64,10 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
 
   await app.register(helmet);
   // Browsers only (the native app sends no Origin). The plugin's default methods
-  // stop at POST, which would block the web build's edits and account deletion.
+  // stop at POST, which would block the web build's edits, poster uploads and account deletion.
   await app.register(cors, {
     origin: config.CORS_ORIGINS.length > 0 ? config.CORS_ORIGINS : false,
-    methods: ['GET', 'HEAD', 'POST', 'PATCH', 'DELETE'],
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE'],
   });
   // Opt-in per route. In-memory counters are per instance; move to a Redis store
   // once the API runs as more than a couple of tasks.
@@ -118,6 +119,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   });
   await app.register(orgRoutes, { db });
   await app.register(eventRoutes, { db });
+  await app.register(coverRoutes, { db });
   await app.register(ticketRoutes, { db, qrMasterKey: config.QR_MASTER_KEY });
   await app.register(checkInRoutes, { db, qrMasterKey: config.QR_MASTER_KEY });
   await app.register(loyaltyRoutes, { db });

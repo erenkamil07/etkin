@@ -17,7 +17,10 @@
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.SYSTEM_ALERT_WINDOW",
-        "android.permission.WRITE_SETTINGS"
+        "android.permission.WRITE_SETTINGS",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.RECORD_AUDIO"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#FF5A1F",
@@ -57,6 +60,13 @@
         {
           "recordAudioAndroid": false,
           "enableBackgroundPlayback": false,
+          "microphonePermission": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Etkinlik afişini seçmek için fotoğraflarına erişim gerekiyor.",
           "microphonePermission": false
         }
       ]

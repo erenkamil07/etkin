@@ -85,6 +85,15 @@ export interface CheckIns {
   user_id: string;
 }
 
+export interface EventCovers {
+  data: Buffer;
+  event_id: string;
+  height: number;
+  updated_at: Generated<Timestamp>;
+  version: string;
+  width: number;
+}
+
 export interface EventReports {
   created_at: Generated<Timestamp>;
   details: string | null;
@@ -274,6 +283,7 @@ export interface DB {
   allocation_runs: AllocationRuns;
   badges: Badges;
   check_ins: CheckIns;
+  event_covers: EventCovers;
   event_reports: EventReports;
   events: Events;
   organization_members: OrganizationMembers;
