@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Button, ErrorBanner, Field, Screen } from '@/components/ui';
 import { type UniversityChoice, UniversityPicker } from '@/components/university-picker';
 import { PRIVACY_URL, TERMS_URL } from '@/config';
+import { UNIVERSITY_HINT } from '@/universities';
 
 interface Form {
   fullName: string;
@@ -98,6 +99,7 @@ export default function SignUp() {
         value={form.university}
         onChange={set('university')}
         error={errors.university}
+        hint={UNIVERSITY_HINT}
       />
       <Field
         label="Öğrenci numarası (isteğe bağlı)"

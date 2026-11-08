@@ -1,17 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Switch, View } from 'react-native';
 import { api } from '@/api/client';
-import { useOrgRole } from '@/api/queries';
+import { useClub, useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
 import { ThemedText } from '@/components/themed-text';
-import { Button, Card, ErrorBanner, Loading, Screen } from '@/components/ui';
+import { Button, Card, ErrorBanner, Loading, Screen, Segmented } from '@/components/ui';
 import { UniversityPicker } from '@/components/university-picker';
 import { Spacing } from '@/constants/theme';
 import { formatDateTime } from '@/format';
 import { useNow } from '@/hooks/use-now';
 
 type ClubEvent = paths['/orgs/{orgId}/events']['get']['responses'][200]['content']['application/json'][number];
+type NoShowRule = NonNullable<
+  paths['/orgs/{orgId}']['patch']['requestBody']['content']['application/json']['noShowRule']
+>;
+
+const LIMITS = ['2', '3', '4', '5'] as const;
+const BAN_DAYS = ['7', '14', '30'] as const;
 
 const STATUS = { draft: 'Taslak', published: 'Yayında', cancelled: 'İptal', completed: 'Bitti' } as const;
 
@@ -32,15 +38,20 @@ export default function Club() {
   const now = useNow(60_000);
   const queryClient = useQueryClient();
 
-  const club = useQuery({
-    queryKey: ['orgs', orgId],
-    queryFn: async () => {
-      const { data, error } = await api.GET('/orgs/{orgId}', { params: { path: { orgId } } });
+  const club = useClub(orgId);
+  // The club's campus decides whose "Üniversitem" feed its events lead.
+  // The club's no-show rule: off, or N no-shows in 90 days → no tickets for D days.
+  const rule = club.data?.noShowRule
+    ? { limit: club.data.noShowRule.limit, banDays: club.data.noShowRule.banDays as NoShowRule['banDays'] }
+    : null;
+  const changeRule = useMutation({
+    mutationFn: async (noShowRule: NoShowRule | null) => {
+      const { data, error } = await api.PATCH('/orgs/{orgId}', { params: { path: { orgId } }, body: { noShowRule } });
       if (error) throw error;
       return data;
     },
+    onSuccess: (updated) => queryClient.setQueryData(['orgs', orgId], updated),
   });
-  // The club's campus decides whose "Üniversitem" feed its events lead.
   const changeUniversity = useMutation({
     mutationFn: async (universityId: number | null) => {
       const { data, error } = await api.PATCH('/orgs/{orgId}', { params: { path: { orgId } }, body: { universityId } });
@@ -86,6 +97,46 @@ export default function Club() {
           <ErrorBanner error={changeUniversity.error} />
         </>
       ) : null}
+      {canManage && club.data ? (
+        <Card>
+          <View style={styles.row}>
+            <View style={styles.grow}>
+              <ThemedText type="smallBold">Gelmeme kuralı</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {rule
+                  ? `Son 90 günde ${rule.limit} etkinliğinize bilet alıp gelmeyen, ${rule.banDays} gün boyunca kulübünüzden bilet alamaz.`
+                  : 'Kapalı. Açarsan bilet alıp sürekli gelmeyenler bir süre kulübünden bilet alamaz.'}
+              </ThemedText>
+            </View>
+            <Switch
+              value={rule !== null}
+              onValueChange={(on) => changeRule.mutate(on ? { limit: 2, banDays: 14 } : null)}
+            />
+          </View>
+          {rule ? (
+            <>
+              <ThemedText type="small">Kaç kez gelmeyince?</ThemedText>
+              <Segmented
+                options={LIMITS.map((value) => ({ value, label: `${value} kez` }))}
+                value={String(rule.limit) as (typeof LIMITS)[number]}
+                onChange={(value) => changeRule.mutate({ ...rule, limit: Number(value) })}
+              />
+              <ThemedText type="small">Kaç gün bilet alamasın?</ThemedText>
+              <Segmented
+                options={BAN_DAYS.map((value) => ({ value, label: `${value} gün` }))}
+                value={String(rule.banDays) as (typeof BAN_DAYS)[number]}
+                onChange={(value) => changeRule.mutate({ ...rule, banDays: Number(value) as NoShowRule['banDays'] })}
+              />
+              <ThemedText type="small" themeColor="textSecondary">
+                Etkinlik başlamadan biletini iptal edenler ve katılımcı listesinde "Mazeretli" saydıkların gelmedi
+                sayılmaz.
+              </ThemedText>
+            </>
+          ) : null}
+          <ErrorBanner error={changeRule.error} />
+        </Card>
+      ) : null}
+
       <ThemedText type="smallBold">Etkinlikler</ThemedText>
       {events.isPending ? (
         <Loading />

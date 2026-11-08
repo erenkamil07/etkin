@@ -2,7 +2,13 @@ import { randomUUID } from 'node:crypto';
 import type { PlatformRole } from '../db/schema.js';
 import { type Database, isUniqueViolation } from '../db.js';
 import { AppError } from '../errors.js';
-import { assertUniversity, universityName, universityRef } from '../universities/service.js';
+import {
+  assertUniversity,
+  nextUniversityChosenAt,
+  universityLockedUntil,
+  universityName,
+  universityRef,
+} from '../universities/service.js';
 import { hashPassword, verifyPassword } from './passwords.js';
 import { type AccessTokens, hashRefreshToken, newRefreshToken } from './tokens.js';
 
@@ -40,6 +46,7 @@ const USER_COLUMNS = [
   'full_name',
   'university_id',
   universityName('users.university_id'),
+  'university_chosen_at',
   'student_number',
   'avatar_url',
   'platform_role',
@@ -52,6 +59,7 @@ interface UserRow {
   full_name: string;
   university_id: number | null;
   university_name: string | null;
+  university_chosen_at: Date | null;
   student_number: string | null;
   avatar_url: string | null;
   platform_role: PlatformRole;
@@ -124,6 +132,8 @@ export async function register(deps: AuthDeps, input: RegisterInput) {
         password_hash: passwordHash,
         full_name: input.fullName,
         university_id: input.universityId ?? null,
+        // Picking one at sign-up starts its free week; "not listed" leaves the first pick free.
+        university_chosen_at: input.universityId ? new Date() : null,
         student_number: input.studentNumber ?? null,
       })
       .returning(USER_COLUMNS)
@@ -279,6 +289,7 @@ export async function deleteAccount(db: Database, userId: string, password: stri
         full_name: 'Silinmiş kullanıcı',
         student_number: null,
         university_id: null,
+        university_chosen_at: null,
         avatar_url: null,
         deleted_at: now,
         updated_at: now,
@@ -289,14 +300,36 @@ export async function deleteAccount(db: Database, userId: string, password: stri
 }
 
 /** Changes what students may edit about themselves; for now, their university. */
+/** Changes what students may edit about themselves; for now, their university (see universityLockedUntil). */
 export async function updateProfile(db: Database, userId: string, patch: { universityId: number | null }) {
   await assertUniversity(db, patch.universityId);
-  await db
-    .updateTable('users')
-    .set({ university_id: patch.universityId })
-    .where('id', '=', userId)
-    .where('deleted_at', 'is', null)
-    .execute();
+  await db.transaction().execute(async (trx) => {
+    const current = await trx
+      .selectFrom('users')
+      .select(['university_id', 'university_chosen_at'])
+      .where('id', '=', userId)
+      .where('deleted_at', 'is', null)
+      .forUpdate()
+      .executeTakeFirst();
+    if (!current || current.university_id === patch.universityId) return;
+    const lockedUntil = universityLockedUntil(current.university_chosen_at);
+    if (lockedUntil) {
+      throw new AppError(409, 'UNIVERSITY_LOCKED', 'Your university can be changed once a year', {
+        until: lockedUntil.toISOString(),
+      });
+    }
+    await trx
+      .updateTable('users')
+      .set({
+        university_id: patch.universityId,
+        university_chosen_at:
+          patch.universityId === null && current.university_chosen_at === null
+            ? null
+            : nextUniversityChosenAt(current.university_chosen_at),
+      })
+      .where('id', '=', userId)
+      .execute();
+  });
   return getProfile(db, userId);
 }
 
@@ -319,6 +352,7 @@ export async function getProfile(db: Database, userId: string) {
 
   return {
     ...toPublicUser(user),
+    universityLockedUntil: universityLockedUntil(user.university_chosen_at)?.toISOString() ?? null,
     memberships: memberships.map((m) => ({ organizationId: m.id, slug: m.slug, name: m.name, role: m.role })),
   };
 }

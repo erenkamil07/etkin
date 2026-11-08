@@ -115,6 +115,7 @@ export interface Events {
   starts_at: Timestamp;
   status: Generated<EventStatus>;
   title: string;
+  university_only: Generated<boolean>;
   updated_at: Generated<Timestamp>;
 }
 
@@ -131,6 +132,8 @@ export interface Organizations {
   id: Generated<string>;
   logo_url: string | null;
   name: string;
+  no_show_ban_days: number | null;
+  no_show_limit: number | null;
   slug: string;
   university_id: number | null;
   updated_at: Generated<Timestamp>;
@@ -209,6 +212,7 @@ export interface Tickets {
   checked_in_at: Timestamp | null;
   created_at: Generated<Timestamp>;
   event_id: string;
+  excused_at: Timestamp | null;
   id: Generated<string>;
   qr_key_version: Generated<number>;
   status: Generated<TicketStatus>;
@@ -261,6 +265,7 @@ export interface Users {
   password_hash: string | null;
   platform_role: Generated<PlatformRole>;
   student_number: string | null;
+  university_chosen_at: Timestamp | null;
   university_id: number | null;
   updated_at: Generated<Timestamp>;
 }

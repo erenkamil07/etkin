@@ -12,8 +12,9 @@ import { Button, Card, ErrorBanner, Loading, ProgressBar, Screen } from '@/compo
 import { UniversityPicker } from '@/components/university-picker';
 import { PRIVACY_URL, TERMS_URL } from '@/config';
 import { BottomTabInset, Spacing } from '@/constants/theme';
-import { formatDateTime } from '@/format';
+import { formatDate, formatDateTime } from '@/format';
 import { useTheme } from '@/hooks/use-theme';
+import { UNIVERSITY_HINT } from '@/universities';
 
 const ROLE = { owner: 'Kurucu', organizer: 'Organizatör', scanner: 'Kapı görevlisi' } as const;
 
@@ -153,6 +154,12 @@ export default function Profile() {
             // No university reads as "pick one", whether it was never set or isn't listed.
             value={me.data.university ?? undefined}
             onChange={(choice) => changeUniversity.mutate(choice?.id ?? null)}
+            disabled={me.data.universityLockedUntil !== null}
+            hint={
+              me.data.universityLockedUntil
+                ? `${formatDate(me.data.universityLockedUntil)} tarihinde yeniden değiştirebilirsin. Acil bir durumda bize yaz.`
+                : UNIVERSITY_HINT
+            }
           />
           <ErrorBanner error={changeUniversity.error} />
         </Card>

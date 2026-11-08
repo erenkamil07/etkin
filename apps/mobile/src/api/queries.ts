@@ -14,6 +14,18 @@ export function useMe() {
   });
 }
 
+/** A club's public profile: its university and no-show rule, among others. */
+export function useClub(orgId: string) {
+  return useQuery({
+    queryKey: ['orgs', orgId],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/orgs/{orgId}', { params: { path: { orgId } } });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 /** Every university, for the pickers; the list only changes with an app release. */
 export function useUniversities() {
   return useQuery({

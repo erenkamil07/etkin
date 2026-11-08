@@ -3,6 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Switch, View } from 'react-native';
 import { api } from '@/api/client';
+import { useClub } from '@/api/queries';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ErrorBanner, Field, Notice, Screen, Segmented } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
@@ -44,6 +45,12 @@ export default function NewEvent() {
   const { orgId } = useLocalSearchParams<{ orgId: string }>();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<EventDraft>(emptyDraft);
+  // Who can get tickets. A club with a university keeps events to its students
+  // unless it says otherwise; without one, everyone can come.
+  const club = useClub(orgId);
+  const university = club.data?.university ?? null;
+  const [audience, setAudience] = useState<'university' | 'everyone'>('university');
+  const universityOnly = university !== null && audience === 'university';
   const [errors, setErrors] = useState<DraftErrors>({});
   const set =
     <K extends keyof EventDraft>(key: K) =>
@@ -101,7 +108,7 @@ export default function NewEvent() {
       return;
     }
     setErrors({});
-    save.mutate({ publish, plan });
+    save.mutate({ publish, plan: { ...plan, event: { ...plan.event, universityOnly } } });
   };
 
   return (
@@ -168,6 +175,25 @@ export default function NewEvent() {
       <ThemedText type="small" themeColor="textSecondary">
         Kapı, etkinlikten 1 saat önce açılır ve etkinlik bitince kapanır.
       </ThemedText>
+
+      {university ? (
+        <>
+          <ThemedText type="smallBold">Kimler bilet alabilir?</ThemedText>
+          <Segmented
+            options={[
+              { value: 'university', label: 'Üniversitemiz' },
+              { value: 'everyone', label: 'Herkes' },
+            ]}
+            value={audience}
+            onChange={setAudience}
+          />
+          <ThemedText type="small" themeColor="textSecondary">
+            {universityOnly
+              ? `Sadece ${university.name} öğrencileri bilet alabilir.`
+              : 'Her üniversiteden öğrenci bilet alabilir; örneğin üniversiteler arası etkinlikler için.'}
+          </ThemedText>
+        </>
+      ) : null}
 
       <ThemedText type="smallBold">Ücret</ThemedText>
       <Segmented

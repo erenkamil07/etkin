@@ -2,7 +2,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import type { Database } from '../db.js';
 import { BEARER, DateTimeOutput, OrgEventParams } from '../schemas.js';
-import { getEventStats, searchAttendees } from './service.js';
+import { getEventStats, searchAttendees, setNoShowExcused } from './service.js';
 
 const count = z.number().int();
 
@@ -36,6 +36,7 @@ const Attendee = z.object({
   ticketId: z.uuid(),
   status: z.enum(['active', 'checked_in', 'cancelled']),
   checkedInAt: DateTimeOutput.nullable(),
+  excused: z.boolean().describe("A no-show the club excused; it doesn't count towards its no-show rule"),
   ticketType: z.string(),
   name: z.string(),
   studentNumber: z.string().nullable(),
@@ -77,5 +78,24 @@ export const analyticsRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (a
       },
     },
     async (request) => searchAttendees(db, request.params.orgId, request.params.eventId, request.query),
+  );
+
+  app.post(
+    '/orgs/:orgId/events/:eventId/tickets/:ticketId/excuse',
+    {
+      ...organizer,
+      schema: {
+        tags: ['analytics'],
+        summary: "Excuse a no-show (or take it back) so it doesn't count towards the club's no-show rule (organizer+)",
+        security: BEARER,
+        params: OrgEventParams.extend({ ticketId: z.uuid() }),
+        body: z.object({ excused: z.boolean() }),
+      },
+    },
+    async (request, reply) => {
+      const { orgId, eventId, ticketId } = request.params;
+      await setNoShowExcused(db, orgId, eventId, ticketId, request.body.excused);
+      return reply.status(204).send();
+    },
   );
 };

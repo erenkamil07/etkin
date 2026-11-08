@@ -61,6 +61,7 @@ const EventBase = z.object({
   checkinPoints: z.number().int(),
   priceIncludes: z.string().nullable().describe("What the ticket price covers, in the club's words"),
   paymentInfo: z.string().nullable().describe('How to pay the club; Etkin itself takes no money'),
+  universityOnly: z.boolean().describe("Only students of the club's university can get tickets"),
   status: z.enum(['draft', 'published', 'cancelled', 'completed']),
   publishedAt: DateTimeOutput.nullable(),
 });
@@ -89,6 +90,10 @@ const EventBody = z.object({
   checkinClosesAt: DateTimeInput.optional().describe('Defaults to endsAt'),
   checkinPoints: z.number().int().min(0).max(100).optional().describe('Points awarded at the door; default 1'),
   priceIncludes: text(500).describe('Paid events: what the price covers, e.g. "Yemek ve sertifika"'),
+  universityOnly: z
+    .boolean()
+    .optional()
+    .describe("Only students of the club's university can get tickets; the club needs a university. Default false"),
   paymentInfo: text(500).describe(
     'Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type',
   ),

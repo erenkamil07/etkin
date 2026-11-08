@@ -26,11 +26,17 @@ export function UniversityPicker({
   value,
   onChange,
   error,
+  hint,
+  disabled = false,
 }: {
   label: string;
   value: UniversityChoice;
   onChange: (choice: University | null) => void;
   error?: string | undefined;
+  /** A line under the field, e.g. when the choice can next be changed. */
+  hint?: string | undefined;
+  /** Shown but not changeable, e.g. while a student's university is locked. */
+  disabled?: boolean;
 }) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
@@ -42,20 +48,30 @@ export function UniversityPicker({
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${label}: ${shown}`}
+        accessibilityState={{ disabled }}
+        disabled={disabled}
         onPress={() => setOpen(true)}
         style={[
           styles.trigger,
-          { backgroundColor: theme.backgroundElement, borderColor: error ? theme.danger : theme.border },
+          {
+            backgroundColor: theme.backgroundElement,
+            borderColor: error ? theme.danger : theme.border,
+            opacity: disabled ? 0.6 : 1,
+          },
         ]}
       >
         <ThemedText style={styles.grow} themeColor={value === undefined ? 'textSecondary' : 'text'} numberOfLines={1}>
           {shown}
         </ThemedText>
-        <ThemedText themeColor="textSecondary">›</ThemedText>
+        {disabled ? null : <ThemedText themeColor="textSecondary">›</ThemedText>}
       </Pressable>
       {error ? (
         <ThemedText type="small" themeColor="danger">
           {error}
+        </ThemedText>
+      ) : hint ? (
+        <ThemedText type="small" themeColor="textSecondary">
+          {hint}
         </ThemedText>
       ) : null}
       <Modal visible={open} animationType="slide" onRequestClose={() => setOpen(false)}>

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
-import { useMyTickets, useOrgRole } from '@/api/queries';
+import { useMe, useMyTickets, useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, ErrorBanner, Loading, Notice, Screen } from '@/components/ui';
@@ -57,6 +57,10 @@ export default function EventDetail() {
   const held = tickets.data?.find((ticket) => ticket.event.id === id && ticket.status !== 'cancelled');
   const orgId = event.data?.organization.id ?? '';
   const { membership, canManage } = useOrgRole(orgId);
+  const me = useMe();
+  // Mirrors the API's rule only to explain it up front; the API decides on claim.
+  const campus = event.data?.universityOnly ? event.data.organization.university : null;
+  const notOurStudent = campus !== null && me.data !== undefined && me.data.university?.id !== campus.id;
 
   const claim = useMutation({
     mutationFn: async (ticketTypeId: string) => {
@@ -94,6 +98,13 @@ export default function EventDetail() {
           </View>
 
           {event.data.status === 'cancelled' ? <Notice tone="danger">Bu etkinlik iptal edildi.</Notice> : null}
+          {campus ? (
+            <Notice tone="warning">
+              {notOurStudent
+                ? `Bu etkinlik sadece ${campus.name} öğrencilerine açık; bilet alamazsın.`
+                : `Bu etkinlik sadece ${campus.name} öğrencilerine açık.`}
+            </Notice>
+          ) : null}
 
           {membership ? (
             // The club's own team lands here from the feed too: give them the door straight away.
@@ -183,7 +194,7 @@ export default function EventDetail() {
                         {state.note}
                       </ThemedText>
                     ) : null}
-                    {event.data.status === 'published' && state.open ? (
+                    {event.data.status === 'published' && state.open && !notOurStudent ? (
                       <Button
                         title="Bileti al"
                         loading={claim.isPending && claim.variables === type.id}

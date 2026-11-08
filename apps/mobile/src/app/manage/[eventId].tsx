@@ -69,6 +69,18 @@ export default function EventDashboard() {
   });
   const admitted = admit.data ? describeVerdict(admit.data) : null;
 
+  // After the event, a ticket nobody used is a no-show; excusing it keeps it out of the club's no-show rule.
+  const excuse = useMutation({
+    mutationFn: async ({ ticketId, excused }: { ticketId: string; excused: boolean }) => {
+      const { error } = await api.POST('/orgs/{orgId}/events/{eventId}/tickets/{ticketId}/excuse', {
+        params: { path: { ...path, ticketId } },
+        body: { excused },
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['orgs', orgId, 'events', eventId, 'attendees'] }),
+  });
+
   const refreshEvent = () => {
     queryClient.invalidateQueries({ queryKey: ['events'] });
     queryClient.invalidateQueries({ queryKey: ['orgs', orgId, 'events'] });
@@ -108,6 +120,7 @@ export default function EventDashboard() {
     now >= Date.parse(event.data.checkinOpensAt) &&
     now < Date.parse(event.data.checkinClosesAt);
   const tickets = stats.data?.tickets;
+  const ended = now >= Date.parse(event.data.endsAt);
 
   return (
     <Screen belowHeader>
@@ -182,7 +195,7 @@ export default function EventDashboard() {
               {admitted.detail ? `: ${admitted.detail.replaceAll('\n', ' · ')}` : ''}
             </Notice>
           ) : null}
-          <ErrorBanner error={admit.error ?? attendees.error} />
+          <ErrorBanner error={admit.error ?? excuse.error ?? attendees.error} />
           {attendees.isPending ? (
             <Loading />
           ) : attendees.data?.length === 0 ? (
@@ -207,6 +220,20 @@ export default function EventDashboard() {
                     <ThemedText type="small" themeColor="textSecondary">
                       İptal
                     </ThemedText>
+                  ) : ended ? (
+                    <View style={styles.noShow}>
+                      <ThemedText type="small" themeColor={attendee.excused ? 'textSecondary' : 'warning'}>
+                        {attendee.excused ? 'Gelmedi · Mazeretli' : 'Gelmedi'}
+                      </ThemedText>
+                      <Pressable
+                        accessibilityRole="button"
+                        disabled={excuse.isPending}
+                        onPress={() => excuse.mutate({ ticketId: attendee.ticketId, excused: !attendee.excused })}
+                        hitSlop={8}
+                      >
+                        <ThemedText type="linkPrimary">{attendee.excused ? 'Geri al' : 'Mazeretli say'}</ThemedText>
+                      </Pressable>
+                    </View>
                   ) : doorOpen ? (
                     <Pressable
                       accessibilityRole="button"
@@ -244,4 +271,5 @@ const styles = StyleSheet.create({
   heading: { gap: Spacing.one },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   grow: { flex: 1 },
+  noShow: { alignItems: 'flex-end', gap: 2 },
 });

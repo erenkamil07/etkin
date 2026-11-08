@@ -76,6 +76,8 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
   <li>Kulüplere etkinliklerinin katılım sayılarını göstermek.</li>
   <li>Hizmetin güvenliğini sağlamak ve kötüye kullanımı (ör. art arda yanlış şifre denemeleri)
   engellemek.</li>
+  <li>Kulübün açtığı bilet kurallarını (üniversiteye özel etkinlikler, gelmeme kuralı) uygulamak;
+  bunun için o kulübün geçmiş etkinliklerine katılıp katılmadığına bakılır.</li>
   <li>Bildirilen etkinlikleri incelemek ve <a href="/terms">topluluk kurallarına</a> aykırı olanları
   kaldırmak.</li>
 </ul>
@@ -181,6 +183,17 @@ kapatılabilir.</p>
   sorumluluğundadır. Ödemeyle ilgili sorunlar için kulüple iletişime geç.</li>
   <li>Kulüpler doğru ödeme bilgisi vermekle yükümlüdür. Yanıltıcı ödeme bilgisi ya da
   dolandırıcılık şüphesi taşıyan etkinlikleri bildir; bu etkinlikler kaldırılır.</li>
+</ul>
+
+<h2>Kulüplerin bilet kuralları</h2>
+<ul>
+  <li>Kulüpler bir etkinliği sadece kendi üniversitelerinin öğrencilerine açabilir. Bu yüzden
+  üniversiteni seçtikten sonra 7 gün içinde düzeltebilir, sonra yılda bir değiştirebilirsin. Zorunlu
+  bir durumda (ör. yatay geçiş) ${mail} adresine yaz.</li>
+  <li>Kulüpler bir gelmeme kuralı açabilir: son 90 günde kulübün belirlediği sayıda etkinliğine bilet
+  alıp gelmeyen (ve biletini iptal etmeyen) kişi, kulübün belirlediği süre boyunca o kulüpten bilet
+  alamaz. Kulüp, mazeretli saydığı gelmemeleri hesaba katmaz. Gelemeyeceksen biletini etkinlik
+  başlamadan iptal et.</li>
 </ul>
 
 <h2>Biletler ve kapı</h2>

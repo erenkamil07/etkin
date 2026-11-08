@@ -119,6 +119,7 @@ export async function searchAttendees(
       't.id',
       't.status',
       't.checked_in_at',
+      't.excused_at',
       'tt.name as ticket_type',
       'u.full_name',
       'u.student_number',
@@ -138,9 +139,44 @@ export async function searchAttendees(
     ticketId: row.id,
     status: row.status,
     checkedInAt: isoOrNull(row.checked_in_at),
+    excused: row.excused_at !== null,
     ticketType: row.ticket_type,
     name: row.full_name,
     studentNumber: row.student_number,
     avatarUrl: row.avatar_url,
   }));
+}
+
+/**
+ * Marks a no-show as excused ("Mazeretli"), or takes that back, so it does or
+ * doesn't count towards the club's no-show rule. Only a ticket that was still
+ * live when its event ended is a no-show.
+ */
+export async function setNoShowExcused(
+  db: Database,
+  orgId: string,
+  eventId: string,
+  ticketId: string,
+  excused: boolean,
+) {
+  const event = await eventInOrg(db, orgId, eventId);
+  const ticket = await db
+    .selectFrom('tickets')
+    .select('status')
+    .where('id', '=', ticketId)
+    .where('event_id', '=', eventId)
+    .executeTakeFirst();
+  if (!ticket) throw new AppError(404, 'TICKET_NOT_FOUND', 'Ticket not found');
+  if (ticket.status !== 'active' || event.ends_at > new Date()) {
+    throw new AppError(
+      409,
+      'NOT_A_NO_SHOW',
+      'Only a ticket that was never used at an event that has ended can be excused',
+    );
+  }
+  await db
+    .updateTable('tickets')
+    .set({ excused_at: excused ? new Date() : null })
+    .where('id', '=', ticketId)
+    .execute();
 }

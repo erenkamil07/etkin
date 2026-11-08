@@ -19,6 +19,7 @@ export interface EventInput {
   checkinPoints?: number | undefined;
   priceIncludes?: string | null | undefined;
   paymentInfo?: string | null | undefined;
+  universityOnly?: boolean | undefined;
 }
 
 export type EventPatch = Partial<EventInput>;
@@ -74,6 +75,7 @@ const EVENT_COLUMNS = [
   'e.checkin_points',
   'e.price_includes',
   'e.payment_info',
+  'e.university_only',
   'e.status',
   'e.published_at',
 ] as const;
@@ -96,6 +98,7 @@ interface EventRow {
   checkin_points: number;
   price_includes: string | null;
   payment_info: string | null;
+  university_only: boolean;
   status: EventStatus;
   published_at: Date | null;
 }
@@ -120,6 +123,7 @@ function toEvent(row: EventRow) {
     checkinPoints: row.checkin_points,
     priceIncludes: row.price_includes,
     paymentInfo: row.payment_info,
+    universityOnly: row.university_only,
     status: row.status,
     publishedAt: isoOrNull(row.published_at),
   };
@@ -325,6 +329,15 @@ async function assertPaymentInfo(trx: Database, eventId: string) {
   }
 }
 
+/** A university-only event needs a club with a university to compare students against. */
+async function assertClubHasUniversity(db: Database, orgId: string, universityOnly: boolean | undefined) {
+  if (!universityOnly) return;
+  const club = await db.selectFrom('organizations').select('university_id').where('id', '=', orgId).executeTakeFirst();
+  if (!club?.university_id) {
+    throw new AppError(409, 'CLUB_HAS_NO_UNIVERSITY', "Choose the club's university before limiting an event to it");
+  }
+}
+
 function assertEditable(status: EventStatus) {
   if (status === 'cancelled' || status === 'completed') {
     throw new AppError(409, 'EVENT_NOT_EDITABLE', `A ${status} event can no longer be changed`);
@@ -333,6 +346,7 @@ function assertEditable(status: EventStatus) {
 
 export async function createEvent(db: Database, orgId: string, createdBy: string, input: EventInput) {
   const window = defaultCheckinWindow(input.startsAt, input.endsAt);
+  await assertClubHasUniversity(db, orgId, input.universityOnly);
   const { id } = await db
     .insertInto('events')
     .values({
@@ -349,6 +363,7 @@ export async function createEvent(db: Database, orgId: string, createdBy: string
       checkin_points: input.checkinPoints,
       price_includes: input.priceIncludes ?? null,
       payment_info: input.paymentInfo ?? null,
+      university_only: input.universityOnly,
     })
     .returning('id')
     .executeTakeFirstOrThrow();
@@ -357,6 +372,7 @@ export async function createEvent(db: Database, orgId: string, createdBy: string
 
 /** Moving the event resets the check-in window to the default unless a new one is sent too. */
 export async function updateEvent(db: Database, orgId: string, eventId: string, patch: EventPatch) {
+  await assertClubHasUniversity(db, orgId, patch.universityOnly);
   await db.transaction().execute(async (trx) => {
     const current = await lockEvent(trx, orgId, eventId);
     assertEditable(current.status);
@@ -382,6 +398,7 @@ export async function updateEvent(db: Database, orgId: string, eventId: string, 
         checkin_points: patch.checkinPoints,
         price_includes: patch.priceIncludes,
         payment_info: patch.paymentInfo,
+        university_only: patch.universityOnly,
         ...resetWindow,
       })
       .where('id', '=', eventId)

@@ -15,6 +15,8 @@ export interface ProblemDetails {
   instance: string;
   traceId: string;
   errors?: { path: string; message: string }[];
+  /** When a time-limited refusal ends (ISO 8601), e.g. a no-show ban. */
+  until?: string;
 }
 
 /** An expected failure whose message is safe to show to the client. */
@@ -23,6 +25,8 @@ export class AppError extends Error {
     readonly status: number,
     readonly code: string,
     message: string,
+    /** Extra problem members for the client, such as `until`. */
+    readonly extensions: Pick<ProblemDetails, 'until'> = {},
   ) {
     super(message);
     this.name = 'AppError';
@@ -50,6 +54,11 @@ type Problem = Pick<ProblemDetails, 'status' | 'code' | 'detail'>;
 // of truth for create and update); these turn their violations into client errors.
 const CONSTRAINT_PROBLEMS: Record<string, Problem> = {
   organizations_slug_key: { status: 409, code: 'SLUG_TAKEN', detail: 'Another club already uses this slug' },
+  organizations_no_show_rule: {
+    status: 400,
+    code: 'INVALID_NO_SHOW_RULE',
+    detail: 'A no-show rule needs both a limit (2-5) and a ban length (7, 14 or 30 days)',
+  },
   events_time_order: { status: 400, code: 'INVALID_EVENT_TIMES', detail: 'endsAt must be after startsAt' },
   events_checkin_order: {
     status: 400,
@@ -87,7 +96,7 @@ function constraintProblem(error: unknown): Problem | undefined {
 function sendProblem(
   request: FastifyRequest,
   reply: FastifyReply,
-  problem: Pick<ProblemDetails, 'status' | 'code' | 'detail' | 'errors'>,
+  problem: Pick<ProblemDetails, 'status' | 'code' | 'detail' | 'errors' | 'until'>,
 ) {
   const body: ProblemDetails = {
     type: 'about:blank',
@@ -122,7 +131,12 @@ export function registerErrorHandling(app: FastifyInstance) {
     }
 
     if (error instanceof AppError) {
-      return sendProblem(request, reply, { status: error.status, code: error.code, detail: error.message });
+      return sendProblem(request, reply, {
+        status: error.status,
+        code: error.code,
+        detail: error.message,
+        ...error.extensions,
+      });
     }
 
     const fromConstraint = constraintProblem(error);

@@ -13,7 +13,13 @@ export interface OrgInput {
   universityId?: number | null | undefined;
 }
 
-export type OrgPatch = Partial<Omit<OrgInput, 'slug'>>;
+/** After `limit` unexcused no-shows in 90 days, no tickets from the club for `banDays`. */
+export interface NoShowRule {
+  limit: number;
+  banDays: number;
+}
+
+export type OrgPatch = Partial<Omit<OrgInput, 'slug'>> & { noShowRule?: NoShowRule | null | undefined };
 
 const ORG_COLUMNS = [
   'id',
@@ -23,6 +29,8 @@ const ORG_COLUMNS = [
   'logo_url',
   'university_id',
   universityName('organizations.university_id'),
+  'no_show_limit',
+  'no_show_ban_days',
   'created_at',
 ] as const;
 
@@ -34,6 +42,8 @@ function toOrg(row: {
   logo_url: string | null;
   university_id: number | null;
   university_name: string | null;
+  no_show_limit: number | null;
+  no_show_ban_days: number | null;
   created_at: Date;
 }) {
   return {
@@ -43,6 +53,10 @@ function toOrg(row: {
     description: row.description,
     logoUrl: row.logo_url,
     university: universityRef(row.university_id, row.university_name),
+    noShowRule:
+      row.no_show_limit !== null && row.no_show_ban_days !== null
+        ? { limit: row.no_show_limit, banDays: row.no_show_ban_days }
+        : null,
     createdAt: iso(row.created_at),
   };
 }
@@ -87,6 +101,10 @@ export async function updateOrg(db: Database, orgId: string, patch: OrgPatch) {
       description: patch.description,
       logo_url: patch.logoUrl,
       university_id: patch.universityId,
+      ...(patch.noShowRule !== undefined && {
+        no_show_limit: patch.noShowRule?.limit ?? null,
+        no_show_ban_days: patch.noShowRule?.banDays ?? null,
+      }),
     })
     .where('id', '=', orgId)
     .returning(ORG_COLUMNS)

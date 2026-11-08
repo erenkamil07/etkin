@@ -8,6 +8,13 @@ import { createOrg, getOrg, listMembers, removeMember, updateOrg, upsertMember }
 
 const OrgRoleSchema = z.enum(['owner', 'organizer', 'scanner']);
 
+const NoShowRule = z
+  .object({
+    limit: z.number().int().min(2).max(5).describe('Unexcused no-shows in the last 90 days'),
+    banDays: z.union([z.literal(7), z.literal(14), z.literal(30)]).describe("How long they can't get tickets"),
+  })
+  .describe('After `limit` no-shows in 90 days, no tickets from the club for `banDays`');
+
 const Org = z.object({
   id: z.uuid(),
   slug: z.string(),
@@ -15,6 +22,10 @@ const Org = z.object({
   description: z.string().nullable(),
   logoUrl: z.string().nullable(),
   university: UniversityRef.nullable(),
+  noShowRule: z
+    .object({ limit: z.number().int(), banDays: z.number().int() })
+    .nullable()
+    .describe('After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null'),
   createdAt: DateTimeOutput,
 });
 
@@ -50,7 +61,13 @@ const CreateOrgBody = z.object({
 });
 
 const UpdateOrgBody = z
-  .object({ name: Name.optional(), description: Description, logoUrl: LogoUrl, universityId: OrgUniversity })
+  .object({
+    name: Name.optional(),
+    description: Description,
+    logoUrl: LogoUrl,
+    universityId: OrgUniversity,
+    noShowRule: NoShowRule.nullable().optional().describe('null turns the rule off'),
+  })
   .refine(atLeastOneField, 'Provide at least one field to change');
 
 export const orgRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app, { db }) => {

@@ -118,6 +118,10 @@ tokens live in localStorage instead of the keystore.
   draft or published straight away, with an optional early-access window for members with enough
   club points. Dates are typed as digits and formatted as you go, so the number pad works on every
   phone. If a step fails, trying again resumes where it stopped instead of leaving a second draft.
+- **Seats for people who come.** A club can keep an event to its own university's students, and
+  students can change their university only once a year after a free first week, so that rule
+  can't be dodged. A club can also turn on a no-show rule (N unexcused no-shows in 90 days, no
+  tickets for 7, 14 or 30 days); organizers can mark a no-show "Mazeretli" so it doesn't count.
 - **Your campus first.** Clubs and students pick their university from one list of every
   university in Turkey (searchable by name, city or initials such as "ODTÜ"). The feed opens on
   "Üniversitem" and switches to "Tüm Türkiye", where each card also names the club's university.
@@ -210,6 +214,13 @@ as the owner or the scanner, go to Profil → the club → the event → Kapıda
   Etkin, so a published event with a paid ticket type must carry `paymentInfo` (how to pay) and may
   say what the price covers (`priceIncludes`); otherwise the change is refused with
   `PAYMENT_INFO_REQUIRED`.
+- **Club ticket rules.** An event with `universityOnly` takes only students of the club's university
+  (`UNIVERSITY_ONLY`); a club needs a university to set it. `PATCH /me` changes a university freely for
+  7 days after choosing, then once a year (`UNIVERSITY_LOCKED` with `until`; `GET /me` gives
+  `universityLockedUntil`). A club's `noShowRule` (`PATCH /orgs/:orgId`) refuses claims with
+  `NO_SHOW_LIMIT` and `until` after `limit` no-shows in 90 days, counted from the latest one;
+  `POST /orgs/:orgId/events/:eventId/tickets/:ticketId/excuse` excuses one. To let a student who had to
+  change university early (a transfer) change it again, clear their `users.university_chosen_at`.
 - **Tickets.** `POST /events/:eventId/tickets` claims a seat. Repeating the call returns the ticket
   you already hold, so retries and double taps are safe. Eligibility follows the ticket type:
   sales window, minimum club points, and an early window for loyal members. `GET /me/tickets` lists

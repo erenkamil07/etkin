@@ -372,6 +372,11 @@ export interface paths {
                             platformRole: "user" | "admin";
                             /** Format: date-time */
                             createdAt: string;
+                            /**
+                             * Format: date-time
+                             * @description When the university can next be changed; null if it can be changed now
+                             */
+                            universityLockedUntil: string | null;
                             memberships: {
                                 /** Format: uuid */
                                 organizationId: string;
@@ -452,6 +457,11 @@ export interface paths {
                             platformRole: "user" | "admin";
                             /** Format: date-time */
                             createdAt: string;
+                            /**
+                             * Format: date-time
+                             * @description When the university can next be changed; null if it can be changed now
+                             */
+                            universityLockedUntil: string | null;
                             memberships: {
                                 /** Format: uuid */
                                 organizationId: string;
@@ -515,6 +525,11 @@ export interface paths {
                                 id: number;
                                 name: string;
                             } | null;
+                            /** @description After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null */
+                            noShowRule: {
+                                limit: number;
+                                banDays: number;
+                            } | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -564,6 +579,11 @@ export interface paths {
                                 id: number;
                                 name: string;
                             } | null;
+                            /** @description After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null */
+                            noShowRule: {
+                                limit: number;
+                                banDays: number;
+                            } | null;
                             /** Format: date-time */
                             createdAt: string;
                         };
@@ -595,6 +615,13 @@ export interface paths {
                         logoUrl?: string | null;
                         /** @description The club's university, from GET /universities; its events lead that campus's feed */
                         universityId?: number | null;
+                        /** @description null turns the rule off */
+                        noShowRule?: {
+                            /** @description Unexcused no-shows in the last 90 days */
+                            limit: number;
+                            /** @description How long they can't get tickets */
+                            banDays: 7 | 14 | 30;
+                        } | null;
                     };
                 };
             };
@@ -615,6 +642,11 @@ export interface paths {
                             university: {
                                 id: number;
                                 name: string;
+                            } | null;
+                            /** @description After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null */
+                            noShowRule: {
+                                limit: number;
+                                banDays: number;
                             } | null;
                             /** Format: date-time */
                             createdAt: string;
@@ -810,6 +842,8 @@ export interface paths {
                                 priceIncludes: string | null;
                                 /** @description How to pay the club; Etkin itself takes no money */
                                 paymentInfo: string | null;
+                                /** @description Only students of the club's university can get tickets */
+                                universityOnly: boolean;
                                 /** @enum {string} */
                                 status: "draft" | "published" | "cancelled" | "completed";
                                 /** Format: date-time */
@@ -888,6 +922,8 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
+                            /** @description Only students of the club's university can get tickets */
+                            universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
@@ -984,6 +1020,8 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
+                            /** @description Only students of the club's university can get tickets */
+                            universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
@@ -1034,6 +1072,8 @@ export interface paths {
                         checkinPoints?: number;
                         /** @description Paid events: what the price covers, e.g. "Yemek ve sertifika" */
                         priceIncludes?: string | null;
+                        /** @description Only students of the club's university can get tickets; the club needs a university. Default false */
+                        universityOnly?: boolean;
                         /** @description Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type */
                         paymentInfo?: string | null;
                     };
@@ -1076,6 +1116,8 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
+                            /** @description Only students of the club's university can get tickets */
+                            universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
@@ -1186,6 +1228,8 @@ export interface paths {
                         checkinPoints?: number;
                         /** @description Paid events: what the price covers, e.g. "Yemek ve sertifika" */
                         priceIncludes?: string | null;
+                        /** @description Only students of the club's university can get tickets; the club needs a university. Default false */
+                        universityOnly?: boolean;
                         /** @description Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type */
                         paymentInfo?: string | null;
                     };
@@ -1228,6 +1272,8 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
+                            /** @description Only students of the club's university can get tickets */
+                            universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
@@ -1321,6 +1367,8 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
+                            /** @description Only students of the club's university can get tickets */
+                            universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
@@ -1418,6 +1466,8 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
+                            /** @description Only students of the club's university can get tickets */
+                            universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
                             /** Format: date-time */
@@ -2522,6 +2572,8 @@ export interface paths {
                             status: "active" | "checked_in" | "cancelled";
                             /** Format: date-time */
                             checkedInAt: string | null;
+                            /** @description A no-show the club excused; it doesn't count towards its no-show rule */
+                            excused: boolean;
                             ticketType: string;
                             name: string;
                             studentNumber: string | null;
@@ -2533,6 +2585,50 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orgs/{orgId}/events/{eventId}/tickets/{ticketId}/excuse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Excuse a no-show (or take it back) so it doesn't count towards the club's no-show rule (organizer+) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    eventId: string;
+                    ticketId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        excused: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

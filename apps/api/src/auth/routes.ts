@@ -55,6 +55,10 @@ const Tokens = z.object({
 const Session = Tokens.extend({ user: PublicUser });
 
 const Profile = PublicUser.extend({
+  universityLockedUntil: z.iso
+    .datetime()
+    .nullable()
+    .describe('When the university can next be changed; null if it can be changed now'),
   memberships: z.array(
     z.object({
       organizationId: z.uuid(),

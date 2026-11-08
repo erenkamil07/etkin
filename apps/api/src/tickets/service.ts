@@ -3,6 +3,7 @@ import type { AllocationMode, EventStatus, TicketStatus } from '../db/schema.js'
 import { type Database, isUniqueViolation } from '../db.js';
 import { AppError } from '../errors.js';
 import { iso, isoOrNull } from '../schemas.js';
+import { assertCampusRules } from './campus-rules.js';
 
 const TICKET_COLUMNS = [
   't.id',
@@ -205,6 +206,7 @@ export async function claimTicket(db: Database, userId: string, eventId: string,
       const held = await heldTicket(trx);
       if (held) return held;
 
+      await assertCampusRules(trx, userId, eventId);
       assertCanClaim(rules, await lifetimePoints(trx, userId, event.organization_id), new Date());
 
       const soldOut = () => new AppError(409, 'SOLD_OUT', 'No tickets of this type are left');

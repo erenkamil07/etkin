@@ -1,3 +1,5 @@
+import { formatDate } from '@/format';
+
 /** Turkish copy for the API's problem codes; anything else falls back to the API's own detail. */
 const MESSAGES: Record<string, string> = {
   INVALID_CREDENTIALS: 'E-posta ya da şifre hatalı.',
@@ -30,6 +32,18 @@ const MESSAGES: Record<string, string> = {
   NO_TICKET_TYPES: 'Yayınlamak için en az bir bilet türü ekle.',
   PAYMENT_INFO_REQUIRED: 'Ücretli etkinlikte ödemenin nasıl yapılacağını yazmalısın.',
   INVALID_STATUS_TRANSITION: 'Etkinlik bu durumdayken bu işlem yapılamaz.',
+  UNIVERSITY_ONLY: 'Bu etkinlik sadece kulübün üniversitesindeki öğrencilere açık.',
+  CLUB_HAS_NO_UNIVERSITY: 'Etkinliği üniversitenize özel yapmak için önce kulübün üniversitesini seç.',
+  NOT_A_NO_SHOW: 'Sadece bitmiş bir etkinliğe gelmeyenler mazeretli sayılabilir.',
+  INVALID_NO_SHOW_RULE: 'Gelmeme kuralı için hem sayı hem süre seçmelisin.',
+};
+
+/** Messages that name the date a time-limited refusal ends. */
+const UNTIL_MESSAGES: Record<string, (date: string) => string> = {
+  NO_SHOW_LIMIT: (date) =>
+    `Bu kulübün son etkinliklerine bilet alıp gelmediğin için ${date} tarihine kadar bu kulüpten bilet alamazsın.`,
+  UNIVERSITY_LOCKED: (date) =>
+    `Üniversiteni ${date} tarihinde yeniden değiştirebilirsin. Acil bir durum varsa erenkamilgoksel96@gmail.com adresine yaz.`,
 };
 
 const FALLBACK = 'Bir şeyler ters gitti. Bağlantını kontrol edip tekrar dene.';
@@ -37,6 +51,8 @@ const FALLBACK = 'Bir şeyler ters gitti. Bağlantını kontrol edip tekrar dene
 export function problemMessage(error: unknown): string {
   if (typeof error !== 'object' || error === null) return FALLBACK;
   const code = 'code' in error ? String(error.code) : '';
+  const withDate = UNTIL_MESSAGES[code];
+  if (withDate && 'until' in error && typeof error.until === 'string') return withDate(formatDate(error.until));
   const known = MESSAGES[code];
   if (known) return known;
   return 'detail' in error && typeof error.detail === 'string' ? error.detail : FALLBACK;

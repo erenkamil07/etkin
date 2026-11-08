@@ -9,6 +9,11 @@ const dateTime = new Intl.DateTimeFormat('tr-TR', {
 const clock = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 const time = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit' });
 
+const longDate = new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+/** "16 Kasım 2026". */
+export const formatDate = (iso: string) => longDate.format(new Date(iso));
+
 /** "Paz 16 Kasım 19:00" in the device's time zone. */
 export const formatDateTime = (iso: string) => dateTime.format(new Date(iso));
 

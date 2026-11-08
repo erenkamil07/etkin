@@ -617,6 +617,13 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "universityLockedUntil": {
+                      "nullable": true,
+                      "description": "When the university can next be changed; null if it can be changed now",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "memberships": {
                       "type": "array",
                       "items": {
@@ -661,6 +668,7 @@
                     "avatarUrl",
                     "platformRole",
                     "createdAt",
+                    "universityLockedUntil",
                     "memberships"
                   ],
                   "additionalProperties": false
@@ -761,6 +769,13 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "universityLockedUntil": {
+                      "nullable": true,
+                      "description": "When the university can next be changed; null if it can be changed now",
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
                     "memberships": {
                       "type": "array",
                       "items": {
@@ -805,6 +820,7 @@
                     "avatarUrl",
                     "platformRole",
                     "createdAt",
+                    "universityLockedUntil",
                     "memberships"
                   ],
                   "additionalProperties": false
@@ -954,6 +970,28 @@
                       ],
                       "additionalProperties": false
                     },
+                    "noShowRule": {
+                      "nullable": true,
+                      "description": "After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null",
+                      "type": "object",
+                      "properties": {
+                        "limit": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "banDays": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "limit",
+                        "banDays"
+                      ],
+                      "additionalProperties": false
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -967,6 +1005,7 @@
                     "description",
                     "logoUrl",
                     "university",
+                    "noShowRule",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -1041,6 +1080,28 @@
                       ],
                       "additionalProperties": false
                     },
+                    "noShowRule": {
+                      "nullable": true,
+                      "description": "After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null",
+                      "type": "object",
+                      "properties": {
+                        "limit": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "banDays": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "limit",
+                        "banDays"
+                      ],
+                      "additionalProperties": false
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -1054,6 +1115,7 @@
                     "description",
                     "logoUrl",
                     "university",
+                    "noShowRule",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -1098,6 +1160,46 @@
                     "minimum": 0,
                     "exclusiveMinimum": true,
                     "maximum": 9007199254740991
+                  },
+                  "noShowRule": {
+                    "description": "null turns the rule off",
+                    "nullable": true,
+                    "type": "object",
+                    "properties": {
+                      "limit": {
+                        "type": "integer",
+                        "minimum": 2,
+                        "maximum": 5,
+                        "description": "Unexcused no-shows in the last 90 days"
+                      },
+                      "banDays": {
+                        "anyOf": [
+                          {
+                            "type": "number",
+                            "enum": [
+                              7
+                            ]
+                          },
+                          {
+                            "type": "number",
+                            "enum": [
+                              14
+                            ]
+                          },
+                          {
+                            "type": "number",
+                            "enum": [
+                              30
+                            ]
+                          }
+                        ],
+                        "description": "How long they can't get tickets"
+                      }
+                    },
+                    "required": [
+                      "limit",
+                      "banDays"
+                    ]
                   }
                 }
               }
@@ -1167,6 +1269,28 @@
                       ],
                       "additionalProperties": false
                     },
+                    "noShowRule": {
+                      "nullable": true,
+                      "description": "After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null",
+                      "type": "object",
+                      "properties": {
+                        "limit": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "banDays": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "limit",
+                        "banDays"
+                      ],
+                      "additionalProperties": false
+                    },
                     "createdAt": {
                       "type": "string",
                       "format": "date-time",
@@ -1180,6 +1304,7 @@
                     "description",
                     "logoUrl",
                     "university",
+                    "noShowRule",
                     "createdAt"
                   ],
                   "additionalProperties": false
@@ -1562,6 +1687,10 @@
                             "description": "How to pay the club; Etkin itself takes no money",
                             "type": "string"
                           },
+                          "universityOnly": {
+                            "type": "boolean",
+                            "description": "Only students of the club's university can get tickets"
+                          },
                           "status": {
                             "type": "string",
                             "enum": [
@@ -1608,6 +1737,7 @@
                           "checkinPoints",
                           "priceIncludes",
                           "paymentInfo",
+                          "universityOnly",
                           "status",
                           "publishedAt",
                           "capacity",
@@ -1757,6 +1887,10 @@
                       "description": "How to pay the club; Etkin itself takes no money",
                       "type": "string"
                     },
+                    "universityOnly": {
+                      "type": "boolean",
+                      "description": "Only students of the club's university can get tickets"
+                    },
                     "status": {
                       "type": "string",
                       "enum": [
@@ -1883,6 +2017,7 @@
                     "checkinPoints",
                     "priceIncludes",
                     "paymentInfo",
+                    "universityOnly",
                     "status",
                     "publishedAt",
                     "ticketTypes"
@@ -2025,6 +2160,10 @@
                         "description": "How to pay the club; Etkin itself takes no money",
                         "type": "string"
                       },
+                      "universityOnly": {
+                        "type": "boolean",
+                        "description": "Only students of the club's university can get tickets"
+                      },
                       "status": {
                         "type": "string",
                         "enum": [
@@ -2071,6 +2210,7 @@
                       "checkinPoints",
                       "priceIncludes",
                       "paymentInfo",
+                      "universityOnly",
                       "status",
                       "publishedAt",
                       "capacity",
@@ -2151,6 +2291,10 @@
                     "nullable": true,
                     "type": "string",
                     "maxLength": 500
+                  },
+                  "universityOnly": {
+                    "description": "Only students of the club's university can get tickets; the club needs a university. Default false",
+                    "type": "boolean"
                   },
                   "paymentInfo": {
                     "description": "Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type",
@@ -2290,6 +2434,10 @@
                       "description": "How to pay the club; Etkin itself takes no money",
                       "type": "string"
                     },
+                    "universityOnly": {
+                      "type": "boolean",
+                      "description": "Only students of the club's university can get tickets"
+                    },
                     "status": {
                       "type": "string",
                       "enum": [
@@ -2416,6 +2564,7 @@
                     "checkinPoints",
                     "priceIncludes",
                     "paymentInfo",
+                    "universityOnly",
                     "status",
                     "publishedAt",
                     "ticketTypes"
@@ -2495,6 +2644,10 @@
                     "nullable": true,
                     "type": "string",
                     "maxLength": 500
+                  },
+                  "universityOnly": {
+                    "description": "Only students of the club's university can get tickets; the club needs a university. Default false",
+                    "type": "boolean"
                   },
                   "paymentInfo": {
                     "description": "Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type",
@@ -2639,6 +2792,10 @@
                       "description": "How to pay the club; Etkin itself takes no money",
                       "type": "string"
                     },
+                    "universityOnly": {
+                      "type": "boolean",
+                      "description": "Only students of the club's university can get tickets"
+                    },
                     "status": {
                       "type": "string",
                       "enum": [
@@ -2765,6 +2922,7 @@
                     "checkinPoints",
                     "priceIncludes",
                     "paymentInfo",
+                    "universityOnly",
                     "status",
                     "publishedAt",
                     "ticketTypes"
@@ -2953,6 +3111,10 @@
                       "description": "How to pay the club; Etkin itself takes no money",
                       "type": "string"
                     },
+                    "universityOnly": {
+                      "type": "boolean",
+                      "description": "Only students of the club's university can get tickets"
+                    },
                     "status": {
                       "type": "string",
                       "enum": [
@@ -3079,6 +3241,7 @@
                     "checkinPoints",
                     "priceIncludes",
                     "paymentInfo",
+                    "universityOnly",
                     "status",
                     "publishedAt",
                     "ticketTypes"
@@ -3229,6 +3392,10 @@
                       "description": "How to pay the club; Etkin itself takes no money",
                       "type": "string"
                     },
+                    "universityOnly": {
+                      "type": "boolean",
+                      "description": "Only students of the club's university can get tickets"
+                    },
                     "status": {
                       "type": "string",
                       "enum": [
@@ -3355,6 +3522,7 @@
                     "checkinPoints",
                     "priceIncludes",
                     "paymentInfo",
+                    "universityOnly",
                     "status",
                     "publishedAt",
                     "ticketTypes"
@@ -5854,6 +6022,10 @@
                         "format": "date-time",
                         "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                       },
+                      "excused": {
+                        "type": "boolean",
+                        "description": "A no-show the club excused; it doesn't count towards its no-show rule"
+                      },
                       "ticketType": {
                         "type": "string"
                       },
@@ -5873,6 +6045,7 @@
                       "ticketId",
                       "status",
                       "checkedInAt",
+                      "excused",
                       "ticketType",
                       "name",
                       "studentNumber",
@@ -5883,6 +6056,74 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/orgs/{orgId}/events/{eventId}/tickets/{ticketId}/excuse": {
+      "post": {
+        "summary": "Excuse a no-show (or take it back) so it doesn't count towards the club's no-show rule (organizer+)",
+        "tags": [
+          "analytics"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "excused": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "excused"
+                ]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "eventId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "ticketId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
           }
         }
       }
