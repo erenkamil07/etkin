@@ -91,15 +91,16 @@ shows the organizer tools for the demo club this account owns."
 content, profanity, drugs, gambling or purchases, and none in the downloaded app itself (icons,
 door sounds and fonts only). The app does not share the user's location.
 
-User-generated content: clubs publish event text that every user sees, so the answers are:
+User-generated content: clubs publish event text and posters that every user sees, and profile
+photos show to the club's door team, so the answers are:
 
 | Question | Answer |
 |---|---|
-| Users interact or exchange content (voice, text, images)? | Yes: event titles and descriptions; no chat or messaging |
+| Users interact or exchange content (voice, text, images)? | Yes: event titles, descriptions and posters, and profile photos; no chat or messaging |
 | Is shared, user-generated content the main source of the app's content? | No: the app is tickets, door check-in and points |
-| Allows nudity to be shared? / Real, uncensored violence? | No / No (text only, no image uploads) |
+| Allows nudity to be shared? / Real, uncensored violence? | No / No: the community rules forbid both, and reported events and posters are removed |
 | Can users block users or user-generated content? | No |
-| Can users report users or user-generated content? | Yes: "Etkinliği bildir" on every event page (from the release that ships it) |
+| Can users report users or user-generated content? | Yes: "Etkinliği bildir" on every event page |
 | Is chat moderated? | No (there is no chat) |
 | Interactions limited to invited friends? | No |
 
@@ -156,7 +157,7 @@ on purpose.
 Reports land in the review queue and are logged at warn level ("event reported") on Railway.
 To review them in the app, make your own account a platform admin once: Railway → Postgres →
 Database → Data → `users` → set `platform_role` to `admin` on your row, then sign out of the app
-and back in. Profil → Moderasyon then lists reported events: **Etkinliği kaldır** cancels the event
+and back in. Profil → Moderasyon then lists club applications (Onayla / Reddet) and reported events: **Etkinliği kaldır** cancels the event
 and its tickets and replaces its text; **Sorun yok, kapat** closes the reports.
 
 ## Releasing to closed testing
@@ -171,3 +172,14 @@ in for 14 days before they can apply for production access.
 3. Create a release, upload the `.aab` from the EAS build page, write the release notes, send the
    release for review.
 4. Share the opt-in link with the testers; each one opens it, joins, and installs from Play.
+
+### Updating the closed test
+
+1. Raise `version` in `apps/mobile/app.json` (what testers see, e.g. 0.2.0) and build as above;
+   the version code goes up by itself.
+2. Testing → Closed testing → the track → Create new release, upload the new `.aab`, paste the
+   release notes, Next → Save → Send for review. Testers get it as an ordinary Play update once
+   Google approves it; the 14-day clock keeps running.
+3. If the release adds a kind of data or content, change App content in the same go (Policy and
+   programs → App content): Data safety and the content rating answers above. Google reviews them
+   with the release.
