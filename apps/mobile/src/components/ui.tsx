@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { problemMessage } from '@/api/errors';
 import { Fonts, MaxContentWidth, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { PressableScale } from './pressable-scale';
 import { ThemedText } from './themed-text';
 
 /**
@@ -122,7 +123,7 @@ export function Button({
     danger: { background: DANGER_BUTTON, pressed: theme.danger, color: '#FFFFFF', border: DANGER_BUTTON },
   }[variant];
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       disabled={loading}
       onPress={onPress}
@@ -140,7 +141,7 @@ export function Button({
       ) : (
         <ThemedText style={[styles.buttonLabel, { color: look.color }]}>{title}</ThemedText>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -181,12 +182,13 @@ export function Card({ children, onPress }: { children: ReactNode; onPress?: () 
   const theme = useTheme();
   const style = [styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }];
   return onPress ? (
-    <Pressable
+    <PressableScale
       onPress={onPress}
+      scaleTo={0.98}
       style={({ pressed }) => [...style, pressed && { backgroundColor: theme.backgroundSelected }]}
     >
       {children}
-    </Pressable>
+    </PressableScale>
   ) : (
     <View style={style}>{children}</View>
   );
@@ -244,7 +246,7 @@ export function Choice({
 }) {
   const theme = useTheme();
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole={kind}
       accessibilityState={{ checked: selected }}
       onPress={onPress}
@@ -281,7 +283,7 @@ export function Choice({
           </ThemedText>
         ) : null}
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

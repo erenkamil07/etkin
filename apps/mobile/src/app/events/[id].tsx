@@ -4,9 +4,11 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
 import { useMe, useMyTickets, useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
+import { ClubAvatar } from '@/components/club-avatar';
 import { EventCover } from '@/components/event-cover';
+import { PageSkeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
-import { Button, Card, ErrorBanner, Loading, Notice, Screen } from '@/components/ui';
+import { Button, Card, ErrorBanner, Notice, Screen } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { formatDateTime, formatPrice } from '@/format';
 import { useNow } from '@/hooks/use-now';
@@ -75,11 +77,11 @@ export default function EventDetail() {
     onSuccess: (ticket) => {
       queryClient.invalidateQueries({ queryKey: ['events'] });
       queryClient.invalidateQueries({ queryKey: ['me', 'tickets'] });
-      router.push({ pathname: '/tickets/[id]', params: { id: ticket.id } });
+      router.push({ pathname: '/tickets/[id]', params: { id: ticket.id, fresh: '1' } });
     },
   });
 
-  if (event.isPending) return <Loading />;
+  if (event.isPending) return <PageSkeleton />;
 
   return (
     <Screen belowHeader>
@@ -87,11 +89,18 @@ export default function EventDetail() {
         <ErrorBanner error={event.error} />
       ) : (
         <>
-          <EventCover cover={event.data.cover} variant="poster" />
+          <EventCover
+            cover={event.data.cover}
+            variant="poster"
+            fallback={{ eventId: event.data.id, orgId: event.data.organization.id, title: event.data.title }}
+          />
           <View style={styles.heading}>
-            <ThemedText type="smallBold" themeColor="textSecondary">
-              {event.data.organization.name}
-            </ThemedText>
+            <View style={styles.row}>
+              <ClubAvatar orgId={event.data.organization.id} name={event.data.organization.name} size={28} />
+              <ThemedText type="smallBold" themeColor="textSecondary" numberOfLines={1} style={styles.grow}>
+                {event.data.organization.name}
+              </ThemedText>
+            </View>
             <ThemedText type="subtitle">{event.data.title}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
               {formatDateTime(event.data.startsAt)}

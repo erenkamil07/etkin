@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
 import { useOrgRole } from '@/api/queries';
 import { EventCover } from '@/components/event-cover';
+import { PageSkeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, confirmAction, ErrorBanner, Field, Loading, Notice, ProgressBar, Screen } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
@@ -124,7 +125,7 @@ export default function EventDashboard() {
     onSuccess: refreshEvent,
   });
 
-  if (event.isPending) return <Loading />;
+  if (event.isPending) return <PageSkeleton cover={false} />;
   if (event.error) {
     return (
       <Screen belowHeader>

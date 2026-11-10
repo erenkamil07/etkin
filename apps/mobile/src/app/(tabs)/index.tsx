@@ -5,8 +5,10 @@ import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
 import { useMe } from '@/api/queries';
 import { EventCard, seatsLeft } from '@/components/event-card';
+import { FadeInItem } from '@/components/fade-in-item';
+import { EventCardSkeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
-import { Button, ErrorBanner, Loading, Pill, Screen, Segmented } from '@/components/ui';
+import { Button, ErrorBanner, Pill, Screen, Segmented } from '@/components/ui';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 import { formatPrice } from '@/format';
 
@@ -56,7 +58,7 @@ export default function Events() {
         </Pressable>
       ) : null}
       {me.isPending || events.isPending ? (
-        <Loading />
+        <EventCardSkeleton />
       ) : events.error ? (
         <ErrorBanner error={events.error} />
       ) : (
@@ -80,23 +82,25 @@ export default function Events() {
               ) : null}
             </View>
           }
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const seats = seatsLeft(item);
             return (
-              <EventCard
-                event={item}
-                showUniversity={scope === 'all'}
-                footer={
-                  <View style={styles.pills}>
-                    {seats.pill}
-                    {item.priceFromCents > 0 ? (
-                      <Pill tone="tint">{formatPrice(item.priceFromCents, 'TRY')}</Pill>
-                    ) : null}
-                  </View>
-                }
-                highlight={seats.fewLeft}
-                onPress={() => router.push({ pathname: '/events/[id]', params: { id: item.id } })}
-              />
+              <FadeInItem index={index}>
+                <EventCard
+                  event={item}
+                  showUniversity={scope === 'all'}
+                  footer={
+                    <View style={styles.pills}>
+                      {seats.pill}
+                      {item.priceFromCents > 0 ? (
+                        <Pill tone="tint">{formatPrice(item.priceFromCents, 'TRY')}</Pill>
+                      ) : null}
+                    </View>
+                  }
+                  highlight={seats.fewLeft}
+                  onPress={() => router.push({ pathname: '/events/[id]', params: { id: item.id } })}
+                />
+              </FadeInItem>
             );
           }}
         />

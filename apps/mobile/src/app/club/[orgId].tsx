@@ -4,8 +4,10 @@ import { StyleSheet, Switch, View } from 'react-native';
 import { api } from '@/api/client';
 import { useClub, useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
+import { ClubAvatar } from '@/components/club-avatar';
+import { CardSkeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
-import { Button, Card, ErrorBanner, Loading, Screen, Segmented } from '@/components/ui';
+import { Button, Card, ErrorBanner, Screen, Segmented } from '@/components/ui';
 import { UniversityPicker } from '@/components/university-picker';
 import { Spacing } from '@/constants/theme';
 import { formatDateTime } from '@/format';
@@ -77,6 +79,21 @@ export default function Club() {
   return (
     <Screen belowHeader>
       <Stack.Screen options={{ title: membership?.name ?? 'Kulüp' }} />
+      {membership ? (
+        <View style={styles.header}>
+          <ClubAvatar orgId={orgId} name={membership.name} size={56} />
+          <View style={styles.grow}>
+            <ThemedText type="subtitle" numberOfLines={2}>
+              {membership.name}
+            </ThemedText>
+            {club.data?.university ? (
+              <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
+                {club.data.university.name}
+              </ThemedText>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
       <ClubStatusNotice orgId={orgId} />
       {canManage ? (
         <Button
@@ -141,7 +158,7 @@ export default function Club() {
 
       <ThemedText type="smallBold">Etkinlikler</ThemedText>
       {events.isPending ? (
-        <Loading />
+        <CardSkeleton />
       ) : events.error ? (
         <ErrorBanner error={events.error} />
       ) : events.data.length === 0 ? (
@@ -179,6 +196,7 @@ export default function Club() {
 }
 
 const styles = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   grow: { flex: 1 },
 });

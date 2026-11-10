@@ -1,5 +1,7 @@
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 import type { paths } from '@/api/schema';
+import { PressableScale } from '@/components/pressable-scale';
 import { ThemedText } from '@/components/themed-text';
 import { Button, ProgressBar } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
@@ -25,7 +27,7 @@ const BADGE_EMOJI: Record<string, string> = {
   regular_20: '🏆',
   explorer_3: '🧭',
 };
-const badgeEmoji = (code: string) => BADGE_EMOJI[code] ?? '🏅';
+export const badgeEmoji = (code: string) => BADGE_EMOJI[code] ?? '🏅';
 
 /** What is left to do, e.g. "3 farklı kulübün etkinliğine katıl". Descriptions are written for when it is earned. */
 function goalText(badge: BadgeGoal): string {
@@ -46,7 +48,7 @@ export function BadgeTile({ item, onPress }: { item: BadgeItem; onPress: () => v
   const badge = badgeOf(item);
   const goal = 'goal' in item ? item.goal : null;
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`${badge.name}${goal ? `, ${goal.current} / ${goal.target}` : ', kazanıldı'}`}
       onPress={onPress}
@@ -71,7 +73,7 @@ export function BadgeTile({ item, onPress }: { item: BadgeItem; onPress: () => v
           {badge.organization?.name ?? 'Etkin rozeti'}
         </ThemedText>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -88,7 +90,11 @@ export function BadgeSheet({ item, onClose }: { item: BadgeItem | null; onClose:
             onPress={() => undefined}
             style={[styles.sheet, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}
           >
-            <ThemedText style={[styles.bigEmoji, 'goal' in item && styles.locked]}>{badgeEmoji(badge.code)}</ThemedText>
+            <Animated.View entering={ZoomIn.springify().damping(11)}>
+              <ThemedText style={[styles.bigEmoji, 'goal' in item && styles.locked]}>
+                {badgeEmoji(badge.code)}
+              </ThemedText>
+            </Animated.View>
             <ThemedText type="subtitle" style={styles.center}>
               {badge.name}
             </ThemedText>

@@ -8,14 +8,17 @@ import { api } from '@/api/client';
 import { useClubApplications, useMe, useMyTickets } from '@/api/queries';
 import { currentRefreshToken, endSession } from '@/auth/session';
 import { Avatar } from '@/components/avatar';
+import { ClubAvatar } from '@/components/club-avatar';
+import { BadgeGridSkeleton, CardSkeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
-import { Button, Card, ErrorBanner, Loading, Pill, Screen } from '@/components/ui';
+import { Button, Card, ErrorBanner, Pill, Screen } from '@/components/ui';
 import { UniversityPicker } from '@/components/university-picker';
 import { PRIVACY_URL, TERMS_URL } from '@/config';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
 import { formatDate, formatDateTime } from '@/format';
 import { useTheme } from '@/hooks/use-theme';
 import { type BadgeItem, BadgeSheet, BadgeTile, badgeKey } from '@/profile/badges';
+import { NewBadges } from '@/profile/new-badges';
 import { UNIVERSITY_HINT } from '@/universities';
 
 const ROLE = { owner: 'Kurucu', organizer: 'Organizatör', scanner: 'Kapı görevlisi' } as const;
@@ -138,7 +141,14 @@ export default function Profile() {
     },
   });
 
-  if (me.isPending) return <Loading />;
+  if (me.isPending) {
+    return (
+      <Screen>
+        <CardSkeleton count={1} avatar />
+        <CardSkeleton count={3} />
+      </Screen>
+    );
+  }
 
   // Most recent first: the door scan is when you were really there.
   const attended = (tickets.data ?? [])
@@ -183,6 +193,8 @@ export default function Profile() {
         <Stat value={badges.data?.earned.length} label="Rozet" />
       </View>
 
+      <NewBadges userId={me.data?.id} earned={badges.data?.earned} onOpen={(earned) => setOpenBadge({ earned })} />
+
       {me.data?.platformRole === 'admin' ? (
         <Card onPress={() => router.push('/moderation')}>
           <View style={styles.row}>
@@ -213,6 +225,7 @@ export default function Profile() {
               onPress={() => router.push({ pathname: '/club/[orgId]', params: { orgId: membership.organizationId } })}
             >
               <View style={styles.row}>
+                <ClubAvatar orgId={membership.organizationId} name={membership.name} />
                 <View style={styles.grow}>
                   <ThemedText type="default">{membership.name}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
@@ -230,7 +243,7 @@ export default function Profile() {
 
       <ThemedText type="smallBold">Katıldığın etkinlikler</ThemedText>
       {tickets.isPending ? (
-        <Loading />
+        <CardSkeleton />
       ) : tickets.error ? (
         <ErrorBanner error={tickets.error} />
       ) : attended.length === 0 ? (
@@ -260,7 +273,7 @@ export default function Profile() {
 
       <ThemedText type="smallBold">Puanların</ThemedText>
       {points.isPending ? (
-        <Loading />
+        <CardSkeleton count={1} />
       ) : points.error ? (
         <ErrorBanner error={points.error} />
       ) : (
@@ -280,6 +293,7 @@ export default function Profile() {
             ) : (
               points.data.clubs.map((club) => (
                 <View key={club.organization.id} style={styles.row}>
+                  <ClubAvatar orgId={club.organization.id} name={club.organization.name} size={24} />
                   <ThemedText type="small" style={styles.grow}>
                     {club.organization.name}
                   </ThemedText>
@@ -314,7 +328,7 @@ export default function Profile() {
 
       <ThemedText type="smallBold">Rozetler</ThemedText>
       {badges.isPending ? (
-        <Loading />
+        <BadgeGridSkeleton />
       ) : badges.error ? (
         <ErrorBanner error={badges.error} />
       ) : (

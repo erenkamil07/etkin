@@ -2,8 +2,10 @@ import { router } from 'expo-router';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { useMyTickets } from '@/api/queries';
 import { EventCard } from '@/components/event-card';
+import { FadeInItem } from '@/components/fade-in-item';
+import { EventCardSkeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
-import { Button, ErrorBanner, Loading, Pill, Screen } from '@/components/ui';
+import { Button, ErrorBanner, Pill, Screen } from '@/components/ui';
 import { BottomTabInset, Spacing } from '@/constants/theme';
 
 const STATUS = {
@@ -24,7 +26,7 @@ export default function Tickets() {
         </ThemedText>
       </View>
       {tickets.isPending ? (
-        <Loading />
+        <EventCardSkeleton />
       ) : tickets.error ? (
         <ErrorBanner error={tickets.error} />
       ) : (
@@ -44,20 +46,22 @@ export default function Tickets() {
               <Button title="Etkinliklere göz at" onPress={() => router.navigate('/')} />
             </View>
           }
-          renderItem={({ item }) => (
-            <EventCard
-              event={item.event}
-              dimmed={item.status !== 'active'}
-              footer={
-                <>
-                  {STATUS[item.status]}
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {item.ticketType.name}
-                  </ThemedText>
-                </>
-              }
-              onPress={() => router.push({ pathname: '/tickets/[id]', params: { id: item.id } })}
-            />
+          renderItem={({ item, index }) => (
+            <FadeInItem index={index}>
+              <EventCard
+                event={item.event}
+                dimmed={item.status !== 'active'}
+                footer={
+                  <>
+                    {STATUS[item.status]}
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {item.ticketType.name}
+                    </ThemedText>
+                  </>
+                }
+                onPress={() => router.push({ pathname: '/tickets/[id]', params: { id: item.id } })}
+              />
+            </FadeInItem>
           )}
         />
       )}

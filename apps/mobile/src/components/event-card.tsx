@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { dateBadge, formatWeekdayTime } from '@/format';
 import { useTheme } from '@/hooks/use-theme';
 import { type Cover, EventCover } from './event-cover';
+import { PressableScale } from './pressable-scale';
 import { ThemedText } from './themed-text';
 import { Pill } from './ui';
 
@@ -11,10 +12,11 @@ import { Pill } from './ui';
 const FEW_SEATS = 10;
 
 interface EventSummary {
+  id: string;
   title: string;
   startsAt: string;
   locationName: string | null;
-  organization: { name: string; university?: { name: string } | null };
+  organization: { id: string; name: string; university?: { name: string } | null };
   cover?: Cover | null;
 }
 
@@ -45,9 +47,10 @@ export function EventCard({
   const { day, month } = dateBadge(event.startsAt);
 
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       onPress={onPress}
+      scaleTo={0.98}
       style={({ pressed }) => [
         styles.card,
         {
@@ -57,7 +60,11 @@ export function EventCard({
         },
       ]}
     >
-      {event.cover ? <EventCover cover={event.cover} variant="banner" /> : null}
+      <EventCover
+        cover={event.cover}
+        variant="banner"
+        fallback={{ eventId: event.id, orgId: event.organization.id, title: event.title }}
+      />
       <View style={styles.row}>
         <View style={[styles.date, { backgroundColor: dimmed ? theme.backgroundSelected : theme.tintSoft }]}>
           <ThemedText style={[styles.day, { color: dimmed ? theme.textSecondary : theme.tint }]}>{day}</ThemedText>
@@ -78,7 +85,7 @@ export function EventCard({
           {footer ? <View style={styles.footer}>{footer}</View> : null}
         </View>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 

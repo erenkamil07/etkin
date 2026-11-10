@@ -1,19 +1,23 @@
 import { createQrPayload, decodeTicketKey, msUntilNextQr, QR_STEP_SECONDS, qrStep } from '@etkin/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
-import { useLocalSearchParams } from 'expo-router';
-import { type ReactNode, useEffect, useMemo, useRef } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
+import Reanimated, { ZoomIn } from 'react-native-reanimated';
 import { api } from '@/api/client';
 import { type MyTicket, useMe } from '@/api/queries';
+import { Confetti } from '@/components/confetti';
+import { Skeleton, TicketSkeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
-import { Button, confirmAction, ErrorBanner, Loading, Notice, Pill, ProgressBar, Screen } from '@/components/ui';
+import { Button, confirmAction, ErrorBanner, Notice, Pill, ProgressBar, Screen } from '@/components/ui';
 import { Fonts, MaxContentWidth, Radius, Spacing, withAlpha } from '@/constants/theme';
 import { formatClock, formatDateTime } from '@/format';
 import { useNow } from '@/hooks/use-now';
 import { useTheme } from '@/hooks/use-theme';
 import { useTicketDisplay } from '@/hooks/use-ticket-display';
+import { PrintIn, QrGlow } from '@/tickets/effects';
 import { forgetQrKey, loadQrKey, type QrKey } from '@/tickets/qr-key';
 
 const STEP_MS = QR_STEP_SECONDS * 1000;
@@ -37,10 +41,12 @@ function LiveQr({ ticketId, qrKey }: { ticketId: string; qrKey: QrKey }) {
 
   return (
     <View style={styles.qrBlock}>
-      {/* Black on white: scanners need the contrast. */}
-      <View style={styles.paper}>
-        <QRCode value={payload} size={size} ecl="M" color="#000000" backgroundColor="#FFFFFF" />
-      </View>
+      <QrGlow step={step}>
+        {/* Black on white: scanners need the contrast. */}
+        <View style={styles.paper}>
+          <QRCode value={payload} size={size} ecl="M" color="#000000" backgroundColor="#FFFFFF" />
+        </View>
+      </QrGlow>
       <ProgressBar value={left / STEP_MS} width={size} />
       <ThemedText type="small" themeColor="textSecondary">
         Kod {Math.ceil(left / 1000)} sn sonra yenilenir
@@ -98,10 +104,13 @@ function Detail({ label, children }: { label: string; children: ReactNode }) {
 
 export default function Ticket() {
   const theme = useTheme();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // `fresh`: just bought, so the ticket prints out once.
+  const { id, fresh } = useLocalSearchParams<{ id: string; fresh?: string }>();
   const queryClient = useQueryClient();
   const me = useMe();
   const now = useNow(30_000);
+  // Goes up each time the door scan lands while this screen is open.
+  const [celebration, setCelebration] = useState(0);
 
   const ticket = useQuery({
     queryKey: ['tickets', id],
@@ -136,6 +145,7 @@ export default function Ticket() {
       if (Platform.OS !== 'web') {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
       }
+      setCelebration((count) => count + 1);
       // Tickets, points and badges all moved (badges a moment later, once the worker runs).
       queryClient.invalidateQueries({ queryKey: ['me'] });
     }
@@ -159,7 +169,13 @@ export default function Ticket() {
     },
   });
 
-  if (!ticket.data && ticket.isPending) return <Loading />;
+  if (!ticket.data && ticket.isPending) {
+    return (
+      <Screen belowHeader>
+        <TicketSkeleton />
+      </Screen>
+    );
+  }
 
   const event = ticket.data?.event;
   return (
@@ -167,64 +183,73 @@ export default function Ticket() {
       {!event ? <ErrorBanner error={ticket.error} /> : null}
       {event?.status === 'cancelled' ? <Notice tone="danger">Bu etkinlik iptal edildi.</Notice> : null}
 
-      <View style={[styles.ticket, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-        {event ? (
-          <View style={[styles.stub, { backgroundColor: theme.tintSoft }]}>
-            <View style={styles.stubTop}>
-              <ThemedText type="smallBold" themeColor="tint" numberOfLines={1} style={styles.grow}>
-                {event.organization.name}
-              </ThemedText>
+      <View>
+        <PrintIn play={fresh === '1'} onDone={() => router.setParams({ fresh: undefined })}>
+          <View style={[styles.ticket, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+            {event ? (
+              <View style={[styles.stub, { backgroundColor: theme.tintSoft }]}>
+                <View style={styles.stubTop}>
+                  <ThemedText type="smallBold" themeColor="tint" numberOfLines={1} style={styles.grow}>
+                    {event.organization.name}
+                  </ThemedText>
+                  {status === 'checked_in' ? (
+                    <Pill tone="success">Kullanıldı</Pill>
+                  ) : status === 'cancelled' ? (
+                    <Pill tone="danger">İptal</Pill>
+                  ) : (
+                    <Pill tone="tint">Geçerli</Pill>
+                  )}
+                </View>
+                <ThemedText type="subtitle">{event.title}</ThemedText>
+                <View style={styles.details}>
+                  <Detail label="Tarih">{formatDateTime(event.startsAt)}</Detail>
+                  {event.locationName ? <Detail label="Yer">{event.locationName}</Detail> : null}
+                </View>
+                <View style={styles.details}>
+                  <Detail label="Bilet sahibi">{me.data?.fullName ?? '–'}</Detail>
+                  <Detail label="Bilet türü">{ticket.data?.ticketType.name ?? '–'}</Detail>
+                </View>
+              </View>
+            ) : null}
+
+            <Perforation />
+
+            <View style={styles.body}>
               {status === 'checked_in' ? (
-                <Pill tone="success">Kullanıldı</Pill>
+                <View style={styles.state}>
+                  <Reanimated.View
+                    // Pops in when the scan happens live; an already used ticket just shows it.
+                    entering={celebration > 0 ? ZoomIn.springify().damping(12) : undefined}
+                    style={[styles.stateRing, { backgroundColor: withAlpha(theme.success, 0.15) }]}
+                  >
+                    <ThemedText style={[styles.stateSymbol, { color: theme.success }]}>✓</ThemedText>
+                  </Reanimated.View>
+                  <ThemedText type="default" style={styles.center}>
+                    Giriş yapıldı, iyi eğlenceler!
+                  </ThemedText>
+                  {ticket.data?.checkedInAt ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {formatDateTime(ticket.data.checkedInAt)}
+                    </ThemedText>
+                  ) : null}
+                </View>
               ) : status === 'cancelled' ? (
-                <Pill tone="danger">İptal</Pill>
+                <View style={styles.state}>
+                  <ThemedText type="default" themeColor="textSecondary" style={styles.center}>
+                    Bu bilet iptal edildi.
+                  </ThemedText>
+                </View>
+              ) : qrKey.isPending ? (
+                <Skeleton width={240} height={240} radius={Radius.medium} style={styles.qrPlaceholder} />
+              ) : qrKey.error ? (
+                <ErrorBanner error={qrKey.error} />
               ) : (
-                <Pill tone="tint">Geçerli</Pill>
+                <LiveQr ticketId={id} qrKey={qrKey.data} />
               )}
             </View>
-            <ThemedText type="subtitle">{event.title}</ThemedText>
-            <View style={styles.details}>
-              <Detail label="Tarih">{formatDateTime(event.startsAt)}</Detail>
-              {event.locationName ? <Detail label="Yer">{event.locationName}</Detail> : null}
-            </View>
-            <View style={styles.details}>
-              <Detail label="Bilet sahibi">{me.data?.fullName ?? '–'}</Detail>
-              <Detail label="Bilet türü">{ticket.data?.ticketType.name ?? '–'}</Detail>
-            </View>
           </View>
-        ) : null}
-
-        <Perforation />
-
-        <View style={styles.body}>
-          {status === 'checked_in' ? (
-            <View style={styles.state}>
-              <View style={[styles.stateRing, { backgroundColor: withAlpha(theme.success, 0.15) }]}>
-                <ThemedText style={[styles.stateSymbol, { color: theme.success }]}>✓</ThemedText>
-              </View>
-              <ThemedText type="default" style={styles.center}>
-                Giriş yapıldı, iyi eğlenceler!
-              </ThemedText>
-              {ticket.data?.checkedInAt ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {formatDateTime(ticket.data.checkedInAt)}
-                </ThemedText>
-              ) : null}
-            </View>
-          ) : status === 'cancelled' ? (
-            <View style={styles.state}>
-              <ThemedText type="default" themeColor="textSecondary" style={styles.center}>
-                Bu bilet iptal edildi.
-              </ThemedText>
-            </View>
-          ) : qrKey.isPending ? (
-            <Loading />
-          ) : qrKey.error ? (
-            <ErrorBanner error={qrKey.error} />
-          ) : (
-            <LiveQr ticketId={id} qrKey={qrKey.data} />
-          )}
-        </View>
+        </PrintIn>
+        {celebration > 0 ? <Confetti key={celebration} origin={{ x: 0.5, y: 0.7 }} /> : null}
       </View>
 
       {showingCode && qrKey.data?.offline ? (
@@ -265,6 +290,7 @@ const styles = StyleSheet.create({
   notchRight: { marginRight: -NOTCH / 2 },
   tearLine: { flex: 1, borderTopWidth: 2, borderStyle: 'dashed', marginHorizontal: Spacing.one },
   body: { padding: Spacing.three, paddingTop: Spacing.one },
+  qrPlaceholder: { alignSelf: 'center', marginVertical: Spacing.three },
   qrBlock: { alignItems: 'center', gap: Spacing.two },
   paper: { backgroundColor: '#FFFFFF', padding: Spacing.three, borderRadius: Radius.medium },
   clockRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
