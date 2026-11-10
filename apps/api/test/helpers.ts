@@ -52,15 +52,21 @@ export async function createUser(db: Database, platformRole: PlatformRole = 'use
 
 export const bearer = (token: string) => ({ authorization: `Bearer ${token}` });
 
+/** What every club application has to say, for tests that need a club but aren't about applying. */
+export const CLUB_APPLICATION = { applicantRole: 'president', verificationLink: '@testclub' } as const;
+
+/** The same person, as a platform admin: a club an admin creates is approved straight away. */
+export const adminTokenFor = (userId: string) => accessTokens.sign({ id: userId, platformRole: 'admin' });
+
 let clubCounter = 0;
 
 /**
- * A new club owned by `owner` with one published event a week from now,
- * built through the API. Returns the ids tests need.
+ * A new, approved club owned by `owner` with one published event a week from
+ * now, built through the API. Returns the ids tests need.
  */
 export async function createPublishedEvent(
   app: App,
-  owner: { token: string },
+  owner: { id: string; token: string },
   ticketTypes: Record<string, unknown>[] = [{ name: 'Standart', capacity: 50 }],
   /** startsInMs: 30 minutes puts the event inside its check-in window (doors open an hour early). */
   { startsInMs = 7 * 24 * 3_600_000, event = {} }: { startsInMs?: number; event?: Record<string, unknown> } = {},
@@ -75,8 +81,8 @@ export async function createPublishedEvent(
     await app.inject({
       method: 'POST',
       url: '/orgs',
-      headers,
-      payload: { slug: `club-${++clubCounter}-${Date.now()}`, name: 'Test Club' },
+      headers: bearer(await adminTokenFor(owner.id)),
+      payload: { slug: `club-${++clubCounter}-${Date.now()}`, name: 'Test Club', ...CLUB_APPLICATION },
     }),
     201,
   );
@@ -145,7 +151,7 @@ export async function seedClub(db: Database) {
   return (
     await db
       .insertInto('organizations')
-      .values({ slug: `seeded-club-${n}`, name: `Seeded Club ${n}` })
+      .values({ slug: `seeded-club-${n}`, name: `Seeded Club ${n}`, status: 'approved' })
       .returning('id')
       .executeTakeFirstOrThrow()
   ).id;

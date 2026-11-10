@@ -12,6 +12,7 @@ import {
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import { analyticsRoutes } from './analytics/routes.js';
+import { applicationRoutes } from './applications/routes.js';
 import { authPlugin } from './auth/plugin.js';
 import { authRoutes } from './auth/routes.js';
 import { createAccessTokens } from './auth/tokens.js';
@@ -119,6 +120,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
     auth: { db, accessTokens, refreshTokenTtlDays: config.REFRESH_TOKEN_TTL_DAYS },
   });
   await app.register(orgRoutes, { db });
+  await app.register(applicationRoutes, { db });
   await app.register(eventRoutes, { db });
   await app.register(coverRoutes, { db });
   await app.register(avatarRoutes, { db });

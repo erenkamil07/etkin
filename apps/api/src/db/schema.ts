@@ -7,6 +7,8 @@ import type { ColumnType } from "kysely";
 
 export type AllocationMode = "fcfs" | "lottery" | "priority";
 
+export type ApplicantRole = "advisor" | "board_member" | "other" | "president";
+
 export type ApplicationStatus = "pending" | "waitlisted" | "withdrawn" | "won";
 
 export type CheckinMethod = "manual" | "qr";
@@ -34,6 +36,8 @@ export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 export type LedgerReason = "adjustment" | "bonus" | "checkin" | "redemption" | "reversal";
 
 export type Numeric = ColumnType<string, number | string, number | string>;
+
+export type OrganizationStatus = "approved" | "pending" | "rejected";
 
 export type OrgRole = "organizer" | "owner" | "scanner";
 
@@ -136,6 +140,8 @@ export interface OrganizationMembers {
 }
 
 export interface Organizations {
+  applicant_role: ApplicantRole | null;
+  application_note: string | null;
   created_at: Generated<Timestamp>;
   description: string | null;
   id: Generated<string>;
@@ -143,9 +149,15 @@ export interface Organizations {
   name: string;
   no_show_ban_days: number | null;
   no_show_limit: number | null;
+  rejection_reason: string | null;
+  reviewed_at: Timestamp | null;
+  reviewed_by: string | null;
   slug: string;
+  status: Generated<OrganizationStatus>;
+  submitted_at: Timestamp | null;
   university_id: number | null;
   updated_at: Generated<Timestamp>;
+  verification_url: string | null;
 }
 
 export interface Outbox {

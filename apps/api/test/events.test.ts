@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type App, buildApp } from '../src/app.js';
 import type { Database } from '../src/db.js';
-import { bearer, createTestDatabase, createUser, testConfig } from './helpers.js';
+import { adminTokenFor, bearer, CLUB_APPLICATION, createTestDatabase, createUser, testConfig } from './helpers.js';
 
 let db: Database;
 let app: App;
@@ -17,12 +17,13 @@ const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 const at = (offsetMs: number) => new Date(Date.now() + offsetMs).toISOString();
 
+/** An approved club of `owner` (created with their admin token; applying is tested in applications.test). */
 async function newClub(slug: string) {
   const res = await app.inject({
     method: 'POST',
     url: '/orgs',
-    headers: bearer(owner.token),
-    payload: { slug, name: `Club ${slug}` },
+    headers: bearer(await adminTokenFor(owner.id)),
+    payload: { slug, name: `Club ${slug}`, ...CLUB_APPLICATION },
   });
   return res.json().id as string;
 }

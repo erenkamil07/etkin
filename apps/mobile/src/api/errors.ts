@@ -37,6 +37,10 @@ const MESSAGES: Record<string, string> = {
   NOT_A_NO_SHOW: 'Sadece bitmiş bir etkinliğe gelmeyenler mazeretli sayılabilir.',
   INVALID_NO_SHOW_RULE: 'Gelmeme kuralı için hem sayı hem süre seçmelisin.',
   UNSUPPORTED_IMAGE: 'Bu görsel kullanılamadı; başka bir fotoğraf seç.',
+  APPLICATION_PENDING: 'Sonuçlanmayı bekleyen bir kulüp başvurun var. O sonuçlanınca yenisini yapabilirsin.',
+  CLUB_NOT_APPROVED: 'Kulübün onaylanınca etkinlik yayınlayabilirsin. Başvurular genellikle 2 gün içinde sonuçlanır.',
+  APPLICATION_NOT_PENDING: 'Bu başvuru zaten sonuçlanmış.',
+  CLUB_ALREADY_APPROVED: 'Kulübün zaten onaylı.',
   FST_ERR_CTP_BODY_TOO_LARGE: 'Görsel çok büyük; daha küçük bir fotoğraf seç.',
 };
 

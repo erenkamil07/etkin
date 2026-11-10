@@ -1,7 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type App, buildApp } from '../src/app.js';
 import type { Database } from '../src/db.js';
-import { bearer, createPublishedEvent, createTestDatabase, createUser, testConfig } from './helpers.js';
+import {
+  bearer,
+  CLUB_APPLICATION,
+  createPublishedEvent,
+  createTestDatabase,
+  createUser,
+  testConfig,
+} from './helpers.js';
 
 let db: Database;
 let app: App;
@@ -106,7 +113,7 @@ describe('clubs and the feed', () => {
         method: 'POST',
         url: '/orgs',
         headers: bearer(owner.token),
-        payload: { slug, name: 'Yazılım Topluluğu', universityId },
+        payload: { slug, name: 'Yazılım Topluluğu', universityId, ...CLUB_APPLICATION },
       });
     expect((await create('meu-yazilim', mersin)).json().university).toEqual({
       id: mersin,

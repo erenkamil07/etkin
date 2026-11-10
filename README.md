@@ -141,6 +141,12 @@ tokens live in localStorage instead of the keystore.
 - **Reporting and moderation.** Clubs write public text, so anyone can report an event from its
   page ("Etkinliği bildir"), and a club's owner ticks the community rules before creating it. A
   platform admin gets a Moderasyon page in the profile to remove an event or dismiss its reports.
+- **Approved clubs only.** Creating a club is an application: the applicant's role in the club and
+  its Instagram or web page, where the admin checks it. Until approved the club can prepare drafts
+  but publish nothing, and each person has one waiting application at a time. The admin's queue
+  (Moderasyon, with a count on the Profil tab) flags clubs with a similar name at the same
+  university; a refusal carries a reason, and the owner can fix the application and apply again.
+  Clubs that existed before this rule were approved by the migration.
 - **Look and feel.** Dark-only, with Etkin orange (`#FF5A1F`) for actions and near-black text on
   it for contrast; Plus Jakarta Sans throughout. The door scanner keeps orange off its screen so
   its amber verdict can't be mistaken for ordinary UI, and each verdict has its own symbol, sound

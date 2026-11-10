@@ -1,9 +1,12 @@
 import { NativeTabs } from 'expo-router/native-tabs';
+import { useClubApplications } from '@/api/queries';
 import { Fonts } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function AppTabs() {
   const theme = useTheme();
+  // Platform admins see on the Profil tab how many clubs wait for approval.
+  const pendingClubs = useClubApplications().data?.length ?? 0;
   return (
     <NativeTabs
       backgroundColor={theme.backgroundElement}
@@ -26,6 +29,7 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="profile">
         <NativeTabs.Trigger.Label>Profil</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="person.crop.circle" md="person" />
+        <NativeTabs.Trigger.Badge hidden={pendingClubs === 0}>{String(pendingClubs)}</NativeTabs.Trigger.Badge>
       </NativeTabs.Trigger>
     </NativeTabs>
   );

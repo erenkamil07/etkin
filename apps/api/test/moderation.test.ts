@@ -4,6 +4,7 @@ import type { Database } from '../src/db.js';
 import { REMOVED_TITLE } from '../src/moderation/service.js';
 import {
   bearer,
+  CLUB_APPLICATION,
   createPublishedEvent,
   createTestDatabase,
   createTicketHolder,
@@ -92,7 +93,7 @@ describe('reporting an event', () => {
         method: 'POST',
         url: '/orgs',
         headers: bearer(owner.token),
-        payload: { slug: 'draft-club', name: 'Draft Club' },
+        payload: { slug: 'draft-club', name: 'Draft Club', ...CLUB_APPLICATION },
       })
     ).json().id;
     const startsAt = Date.now() + 86_400_000;

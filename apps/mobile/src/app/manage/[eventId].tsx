@@ -18,7 +18,7 @@ const LIVE_REFRESH_MS = 10_000;
 
 export default function EventDashboard() {
   const { orgId, eventId } = useLocalSearchParams<{ orgId: string; eventId: string }>();
-  const { canManage } = useOrgRole(orgId);
+  const { canManage, approved } = useOrgRole(orgId);
   const queryClient = useQueryClient();
   const now = useNow(30_000);
   const [search, setSearch] = useState('');
@@ -185,7 +185,11 @@ export default function EventDashboard() {
       <ErrorBanner error={publish.error ?? cancel.error} />
 
       {event.data.status === 'draft' && canManage ? (
-        <Button title="Yayınla" loading={publish.isPending} onPress={() => publish.mutate()} />
+        approved ? (
+          <Button title="Yayınla" loading={publish.isPending} onPress={() => publish.mutate()} />
+        ) : (
+          <Notice tone="warning">Kulübün onaylanınca bu etkinliği buradan yayınlayabilirsin.</Notice>
+        )
       ) : null}
       {event.data.status === 'published' ? (
         <Button

@@ -1,6 +1,7 @@
 import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { ClubStatus } from '../applications/routes.js';
 import { atLeastOneField } from '../schemas.js';
 import { UniversityId, UniversityRef } from '../universities/routes.js';
 import { currentUser } from './plugin.js';
@@ -66,6 +67,8 @@ const Profile = PublicUser.extend({
       slug: z.string(),
       name: z.string(),
       role: z.enum(['owner', 'organizer', 'scanner']),
+      clubStatus: ClubStatus,
+      reviewedAt: z.iso.datetime().nullable().describe('When a platform admin decided on the club, if they have'),
     }),
   ),
 });

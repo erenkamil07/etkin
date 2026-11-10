@@ -425,6 +425,15 @@ export async function publishEvent(db: Database, orgId: string, eventId: string)
     if (event.ends_at <= new Date()) {
       throw new AppError(409, 'EVENT_ALREADY_ENDED', 'This event has already ended');
     }
+    // Clubs prepare drafts while they wait; nothing goes public before approval.
+    const club = await trx
+      .selectFrom('organizations')
+      .select('status')
+      .where('id', '=', orgId)
+      .executeTakeFirstOrThrow();
+    if (club.status !== 'approved') {
+      throw new AppError(409, 'CLUB_NOT_APPROVED', 'The club can publish events once a platform admin approves it');
+    }
     const { count } = await trx
       .selectFrom('ticket_types')
       .select(sql<number>`count(*)::int`.as('count'))

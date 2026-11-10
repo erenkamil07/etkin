@@ -6,13 +6,14 @@ import { ThemedText } from '@/components/themed-text';
 import { Button, Card, confirmAction, ErrorBanner, Loading, Pill, Screen } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { formatDateTime } from '@/format';
+import { ClubApplications } from '@/moderation/club-applications';
 import { REPORT_REASONS } from '@/moderation/reasons';
 
 type ReportedEvent = paths['/admin/reports']['get']['responses'][200]['content']['application/json'][number];
 
 const STATUS = { draft: 'Taslak', published: 'Yayında', cancelled: 'İptal', completed: 'Bitti' } as const;
 
-/** The platform admin's review queue: reported events, most reported first. */
+/** The platform admin's review queues: clubs waiting for approval, then reported events (most reported first). */
 export default function Moderation() {
   const queryClient = useQueryClient();
   const queue = useQuery({
@@ -52,6 +53,9 @@ export default function Moderation() {
 
   return (
     <Screen belowHeader>
+      <ThemedText type="subtitle">Kulüp başvuruları</ThemedText>
+      <ClubApplications />
+      <ThemedText type="subtitle">Bildirilen etkinlikler</ThemedText>
       <ErrorBanner error={queue.error ?? decide.error} />
       {queue.data?.length === 0 ? <ThemedText themeColor="textSecondary">Açık bildirim yok.</ThemedText> : null}
       {queue.data?.map((item) => {

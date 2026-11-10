@@ -105,7 +105,9 @@ User-generated content: clubs publish event text that every user sees, so the an
 
 Google Play's user-generated content policy also asks for terms that define objectionable
 content, which users accept before posting: sign-up links the terms, and creating a club needs the
-community rules ticked.
+community rules ticked. New clubs are also checked by hand: a club applies (role, Instagram or web
+page) and publishes nothing until the platform admin approves it. The reviewer account's demo club
+is already approved; if a reviewer applies for a new club, it simply waits for review.
 
 **Payments:** none in the app. Paid events show a price and the club's own payment note (at the
 door, bank transfer); the ticket only holds the seat. So there is no Google Play Billing and no

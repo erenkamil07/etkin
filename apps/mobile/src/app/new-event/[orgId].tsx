@@ -53,6 +53,8 @@ export default function NewEvent() {
   const university = club.data?.university ?? null;
   const [audience, setAudience] = useState<'university' | 'everyone'>('university');
   const universityOnly = university !== null && audience === 'university';
+  // A club waiting for approval prepares drafts; publishing comes once it is approved.
+  const waitingForApproval = club.data !== undefined && club.data.status !== 'approved';
   const [errors, setErrors] = useState<DraftErrors>({});
   const set =
     <K extends keyof EventDraft>(key: K) =>
@@ -361,10 +363,16 @@ export default function NewEvent() {
         </Notice>
       ) : null}
       <ErrorBanner error={save.error} />
-      <Button title="Yayınla" loading={save.isPending && save.variables?.publish} onPress={() => submit(true)} />
+      {waitingForApproval ? (
+        <Notice tone="warning">
+          Kulübün onay bekliyor: etkinliği taslak olarak kaydet, onaylanınca etkinlik sayfasından yayınlarsın.
+        </Notice>
+      ) : (
+        <Button title="Yayınla" loading={save.isPending && save.variables?.publish} onPress={() => submit(true)} />
+      )}
       <Button
         title="Taslak olarak kaydet"
-        variant="secondary"
+        variant={waitingForApproval ? 'primary' : 'secondary'}
         loading={save.isPending && !save.variables?.publish}
         onPress={() => submit(false)}
       />

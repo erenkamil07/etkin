@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { type App, buildApp } from '../src/app.js';
 import type { Database } from '../src/db.js';
-import { bearer, createTestDatabase, createUser, testConfig } from './helpers.js';
+import { bearer, CLUB_APPLICATION, createTestDatabase, createUser, testConfig } from './helpers.js';
 
 let db: Database;
 let app: App;
@@ -25,7 +25,7 @@ async function createOrg(owner: User, slug = `club-${++slugCounter}`) {
     method: 'POST',
     url: '/orgs',
     headers: bearer(owner.token),
-    payload: { slug, name: 'IEEE ODTÜ', description: 'Elektrik-elektronik topluluğu' },
+    payload: { slug, name: 'IEEE ODTÜ', description: 'Elektrik-elektronik topluluğu', ...CLUB_APPLICATION },
   });
   expect(res.statusCode).toBe(201);
   return res.json() as { id: string; slug: string; name: string; description: string };
@@ -62,13 +62,13 @@ describe('clubs', () => {
   });
 
   it('rejects taken and malformed slugs', async () => {
+    await createOrg(await createUser(db), 'acm-itu');
     const owner = await createUser(db);
-    await createOrg(owner, 'acm-itu');
     const taken = await app.inject({
       method: 'POST',
       url: '/orgs',
       headers: bearer(owner.token),
-      payload: { slug: 'acm-itu', name: 'Copy' },
+      payload: { slug: 'acm-itu', name: 'Copy', ...CLUB_APPLICATION },
     });
     expect(taken.statusCode).toBe(409);
     expect(taken.json().code).toBe('SLUG_TAKEN');
@@ -77,7 +77,7 @@ describe('clubs', () => {
       method: 'POST',
       url: '/orgs',
       headers: bearer(owner.token),
-      payload: { slug: 'Bad Slug!', name: 'Bad' },
+      payload: { slug: 'Bad Slug!', name: 'Bad', ...CLUB_APPLICATION },
     });
     expect(malformed.statusCode).toBe(400);
     expect(malformed.json().errors[0].path).toBe('slug');

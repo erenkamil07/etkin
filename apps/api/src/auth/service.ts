@@ -361,7 +361,7 @@ export async function getProfile(db: Database, userId: string) {
   const memberships = await db
     .selectFrom('organization_members as m')
     .innerJoin('organizations as o', 'o.id', 'm.organization_id')
-    .select(['o.id', 'o.slug', 'o.name', 'm.role'])
+    .select(['o.id', 'o.slug', 'o.name', 'o.status', 'o.reviewed_at', 'm.role'])
     .where('m.user_id', '=', userId)
     .orderBy('o.name')
     .execute();
@@ -369,6 +369,13 @@ export async function getProfile(db: Database, userId: string) {
   return {
     ...toPublicUser(user),
     universityLockedUntil: universityLockedUntil(user.university_chosen_at)?.toISOString() ?? null,
-    memberships: memberships.map((m) => ({ organizationId: m.id, slug: m.slug, name: m.name, role: m.role })),
+    memberships: memberships.map((m) => ({
+      organizationId: m.id,
+      slug: m.slug,
+      name: m.name,
+      role: m.role,
+      clubStatus: m.status,
+      reviewedAt: m.reviewed_at?.toISOString() ?? null,
+    })),
   };
 }

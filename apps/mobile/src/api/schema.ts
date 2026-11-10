@@ -387,6 +387,16 @@ export interface paths {
                                 name: string;
                                 /** @enum {string} */
                                 role: "owner" | "organizer" | "scanner";
+                                /**
+                                 * @description pending: waiting for a platform admin; only an approved club can publish events
+                                 * @enum {string}
+                                 */
+                                clubStatus: "pending" | "approved" | "rejected";
+                                /**
+                                 * Format: date-time
+                                 * @description When a platform admin decided on the club, if they have
+                                 */
+                                reviewedAt: string | null;
                             }[];
                         };
                     };
@@ -475,6 +485,16 @@ export interface paths {
                                 name: string;
                                 /** @enum {string} */
                                 role: "owner" | "organizer" | "scanner";
+                                /**
+                                 * @description pending: waiting for a platform admin; only an approved club can publish events
+                                 * @enum {string}
+                                 */
+                                clubStatus: "pending" | "approved" | "rejected";
+                                /**
+                                 * Format: date-time
+                                 * @description When a platform admin decided on the club, if they have
+                                 */
+                                reviewedAt: string | null;
                             }[];
                         };
                     };
@@ -492,7 +512,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create a club; you become its owner */
+        /** Apply for a club; you become its owner and it can publish once a platform admin approves it */
         post: {
             parameters: {
                 query?: never;
@@ -510,6 +530,15 @@ export interface paths {
                         logoUrl?: string | null;
                         /** @description The club's university, from GET /universities; its events lead that campus's feed */
                         universityId?: number | null;
+                        /**
+                         * @description The applicant's role in the club
+                         * @enum {string}
+                         */
+                        applicantRole: "president" | "board_member" | "advisor" | "other";
+                        /** @description Where the admin can check the club: an Instagram account ("@club") or a web page */
+                        verificationLink: string;
+                        /** @description Anything else the admin should know */
+                        applicationNote?: string | null;
                     };
                 };
             };
@@ -531,6 +560,11 @@ export interface paths {
                                 id: number;
                                 name: string;
                             } | null;
+                            /**
+                             * @description pending: waiting for a platform admin; only an approved club can publish events
+                             * @enum {string}
+                             */
+                            status: "pending" | "approved" | "rejected";
                             /** @description After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null */
                             noShowRule: {
                                 limit: number;
@@ -585,6 +619,11 @@ export interface paths {
                                 id: number;
                                 name: string;
                             } | null;
+                            /**
+                             * @description pending: waiting for a platform admin; only an approved club can publish events
+                             * @enum {string}
+                             */
+                            status: "pending" | "approved" | "rejected";
                             /** @description After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null */
                             noShowRule: {
                                 limit: number;
@@ -649,6 +688,11 @@ export interface paths {
                                 id: number;
                                 name: string;
                             } | null;
+                            /**
+                             * @description pending: waiting for a platform admin; only an approved club can publish events
+                             * @enum {string}
+                             */
+                            status: "pending" | "approved" | "rejected";
                             /** @description After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null */
                             noShowRule: {
                                 limit: number;
@@ -782,6 +826,275 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orgs/{orgId}/application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The club's application and its outcome (owner) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description pending: waiting for a platform admin; only an approved club can publish events
+                             * @enum {string}
+                             */
+                            status: "pending" | "approved" | "rejected";
+                            /**
+                             * @description The applicant's role in the club
+                             * @enum {string|null}
+                             */
+                            applicantRole: "president" | "board_member" | "advisor" | "other" | null;
+                            verificationUrl: string | null;
+                            applicationNote: string | null;
+                            /** Format: date-time */
+                            submittedAt: string | null;
+                            /** Format: date-time */
+                            reviewedAt: string | null;
+                            /** @description Why it was last refused; only meaningful while the status is rejected */
+                            rejectionReason: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        /** Edit a waiting application, or apply again after a refusal (owner) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description The applicant's role in the club
+                         * @enum {string}
+                         */
+                        applicantRole: "president" | "board_member" | "advisor" | "other";
+                        /** @description Where the admin can check the club: an Instagram account ("@club") or a web page */
+                        verificationLink: string;
+                        /** @description Anything else the admin should know */
+                        applicationNote?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /**
+                             * @description pending: waiting for a platform admin; only an approved club can publish events
+                             * @enum {string}
+                             */
+                            status: "pending" | "approved" | "rejected";
+                            /**
+                             * @description The applicant's role in the club
+                             * @enum {string|null}
+                             */
+                            applicantRole: "president" | "board_member" | "advisor" | "other" | null;
+                            verificationUrl: string | null;
+                            applicationNote: string | null;
+                            /** Format: date-time */
+                            submittedAt: string | null;
+                            /** Format: date-time */
+                            reviewedAt: string | null;
+                            /** @description Why it was last refused; only meaningful while the status is rejected */
+                            rejectionReason: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/club-applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Clubs waiting for approval, oldest first (platform admin) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            club: {
+                                /** Format: uuid */
+                                id: string;
+                                slug: string;
+                                name: string;
+                                description: string | null;
+                                university: {
+                                    id: number;
+                                    name: string;
+                                } | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            };
+                            applicant: {
+                                /** Format: uuid */
+                                id: string;
+                                fullName: string;
+                                email: string;
+                            } | null;
+                            /**
+                             * @description The applicant's role in the club
+                             * @enum {string|null}
+                             */
+                            applicantRole: "president" | "board_member" | "advisor" | "other" | null;
+                            verificationUrl: string | null;
+                            applicationNote: string | null;
+                            /** Format: date-time */
+                            submittedAt: string;
+                            /** @description Why it was refused before, if this is a second try */
+                            previousRejection: string | null;
+                            /** @description Clubs at the same university with a similar name: a possible copy */
+                            similarClubs: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                /**
+                                 * @description pending: waiting for a platform admin; only an approved club can publish events
+                                 * @enum {string}
+                                 */
+                                status: "pending" | "approved" | "rejected";
+                            }[];
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/club-applications/{orgId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve a club: it can publish events from now on (platform admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/club-applications/{orgId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refuse a club, saying why; its owner can fix the application and apply again (platform admin) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Shown to the club owner */
+                        reason: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;

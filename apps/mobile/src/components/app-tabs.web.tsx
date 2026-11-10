@@ -1,11 +1,14 @@
 import { TabList, type TabListProps, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { useClubApplications } from '@/api/queries';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ThemedText } from './themed-text';
 
 // Native tabs don't exist on the web; this is the development build's stand-in.
 export default function AppTabs() {
+  // Platform admins see on the Profil tab how many clubs wait for approval.
+  const pendingClubs = useClubApplications().data?.length ?? 0;
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />
@@ -18,7 +21,7 @@ export default function AppTabs() {
             <TabButton>Biletlerim</TabButton>
           </TabTrigger>
           <TabTrigger name="profile" href="/profile" asChild>
-            <TabButton>Profil</TabButton>
+            <TabButton badge={pendingClubs}>Profil</TabButton>
           </TabTrigger>
         </TabBar>
       </TabList>
@@ -26,7 +29,7 @@ export default function AppTabs() {
   );
 }
 
-function TabButton({ children, isFocused, ref: _ref, ...props }: TabTriggerSlotProps) {
+function TabButton({ children, isFocused, badge = 0, ref: _ref, ...props }: TabTriggerSlotProps & { badge?: number }) {
   const theme = useTheme();
   return (
     <Pressable {...props} style={({ pressed }) => pressed && { opacity: 0.7 }}>
@@ -34,6 +37,13 @@ function TabButton({ children, isFocused, ref: _ref, ...props }: TabTriggerSlotP
         <ThemedText type="smallBold" themeColor={isFocused ? 'tint' : 'textSecondary'}>
           {children}
         </ThemedText>
+        {badge > 0 ? (
+          <View accessibilityLabel={`${badge} yeni`} style={[styles.badge, { backgroundColor: theme.tint }]}>
+            <ThemedText type="smallBold" style={[styles.badgeText, { color: theme.onTint }]}>
+              {badge}
+            </ThemedText>
+          </View>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -61,5 +71,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: Spacing.two,
   },
-  button: { paddingVertical: Spacing.two, paddingHorizontal: Spacing.three, borderRadius: Spacing.three },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    borderRadius: Spacing.three,
+  },
+  badge: { minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 6, justifyContent: 'center' },
+  badgeText: { fontSize: 12, lineHeight: 16, textAlign: 'center' },
 });

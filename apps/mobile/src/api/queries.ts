@@ -62,5 +62,24 @@ export function useOrgRole(orgId: string) {
     membership,
     // Door scanners only scan; stats, attendee lists and manual admission are for organizers and owners.
     canManage: membership?.role === 'owner' || membership?.role === 'organizer',
+    // A new club prepares drafts until a platform admin approves it; then it can publish.
+    approved: membership?.clubStatus === 'approved',
   };
 }
+
+/** Clubs waiting for approval; only platform admins ask (the tab bar shows how many). */
+export function useClubApplications() {
+  const me = useMe();
+  return useQuery({
+    queryKey: ['admin', 'club-applications'],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/admin/club-applications');
+      if (error) throw error;
+      return data;
+    },
+    enabled: me.data?.platformRole === 'admin',
+    refetchInterval: 5 * 60_000,
+  });
+}
+
+export type ClubApplication = NonNullable<ReturnType<typeof useClubApplications>['data']>[number];

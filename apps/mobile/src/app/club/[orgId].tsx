@@ -10,6 +10,7 @@ import { UniversityPicker } from '@/components/university-picker';
 import { Spacing } from '@/constants/theme';
 import { formatDateTime } from '@/format';
 import { useNow } from '@/hooks/use-now';
+import { ClubStatusNotice } from '@/orgs/club-status';
 
 type ClubEvent = paths['/orgs/{orgId}/events']['get']['responses'][200]['content']['application/json'][number];
 type NoShowRule = NonNullable<
@@ -76,6 +77,7 @@ export default function Club() {
   return (
     <Screen belowHeader>
       <Stack.Screen options={{ title: membership?.name ?? 'Kulüp' }} />
+      <ClubStatusNotice orgId={orgId} />
       {canManage ? (
         <Button
           title="+ Yeni etkinlik"

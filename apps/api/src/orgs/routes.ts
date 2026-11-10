@@ -1,5 +1,6 @@
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
+import { ApplicantRole, ApplicationNote, ClubStatus, VerificationLink } from '../applications/routes.js';
 import { assertOrgRole, currentUser } from '../auth/plugin.js';
 import type { Database } from '../db.js';
 import { atLeastOneField, BEARER, DateTimeOutput, OrgParams } from '../schemas.js';
@@ -22,6 +23,7 @@ const Org = z.object({
   description: z.string().nullable(),
   logoUrl: z.string().nullable(),
   university: UniversityRef.nullable(),
+  status: ClubStatus,
   noShowRule: z
     .object({ limit: z.number().int(), banDays: z.number().int() })
     .nullable()
@@ -58,6 +60,9 @@ const CreateOrgBody = z.object({
   description: Description,
   logoUrl: LogoUrl,
   universityId: OrgUniversity,
+  applicantRole: ApplicantRole,
+  verificationLink: VerificationLink,
+  applicationNote: ApplicationNote,
 });
 
 const UpdateOrgBody = z
@@ -75,15 +80,36 @@ export const orgRoutes: FastifyPluginAsyncZod<{ db: Database }> = async (app, { 
     '/orgs',
     {
       onRequest: app.authenticate,
+      // Per person: one waiting application at a time, and not many tries an
+      // hour. Platform admins, who may set clubs up for others, are exempt.
+      config: {
+        rateLimit: {
+          max: 5,
+          timeWindow: '1 hour',
+          hook: 'preHandler',
+          keyGenerator: (request) => request.user?.id ?? request.ip,
+          allowList: (request) => request.user?.platformRole === 'admin',
+        },
+      },
       schema: {
         tags: ['orgs'],
-        summary: 'Create a club; you become its owner',
+        summary: 'Apply for a club; you become its owner and it can publish once a platform admin approves it',
         security: BEARER,
         body: CreateOrgBody,
         response: { 201: Org },
       },
     },
-    async (request, reply) => reply.status(201).send(await createOrg(db, currentUser(request).id, request.body)),
+    async (request, reply) => {
+      const user = currentUser(request);
+      const { verificationLink, ...input } = request.body;
+      const org = await createOrg(
+        db,
+        { id: user.id, isAdmin: user.platformRole === 'admin' },
+        { ...input, verificationUrl: verificationLink },
+      );
+      request.log.info({ orgId: org.id, name: org.name, status: org.status }, 'club created');
+      return reply.status(201).send(org);
+    },
   );
 
   app.get(

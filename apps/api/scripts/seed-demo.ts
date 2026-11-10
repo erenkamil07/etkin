@@ -74,12 +74,18 @@ const scannerId = await ensureUser(ACCOUNTS.scanner);
 await ensureUser(ACCOUNTS.student);
 await ensureUser(ACCOUNTS.student2);
 
-const club = { slug: CLUB.slug, name: CLUB.name, university_id: await universityId(CLUB.university) };
+// The demo club is approved, so it can publish events straight away.
+const club = {
+  slug: CLUB.slug,
+  name: CLUB.name,
+  university_id: await universityId(CLUB.university),
+  status: 'approved' as const,
+};
 const orgId = (
   await db
     .insertInto('organizations')
     .values(club)
-    .onConflict((oc) => oc.column('slug').doUpdateSet({ university_id: club.university_id }))
+    .onConflict((oc) => oc.column('slug').doUpdateSet({ university_id: club.university_id, status: club.status }))
     .returning('id')
     .executeTakeFirstOrThrow()
 ).id;

@@ -54,6 +54,10 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
   <li><strong>Kulüp ekibi bilgileri:</strong> bir kulübün ekibindeysen rolün, oluşturduğun
   etkinlikler ve kapıda yaptığın okutmalar (zaman, sonuç, kapı adı). Ücretli bir etkinliğe
   yazdığın ödeme bilgisi (ör. IBAN ve alıcı adı) etkinlik sayfasında herkese açık görünür.</li>
+  <li><strong>Kulüp başvurusu:</strong> kulüp oluştururken kulüpteki görevin, kulübün Instagram hesabı ya da web
+  sayfası ve istersen bir not. Bunları yalnızca Etkin'in yöneticisi, kulübün gerçekten var olduğunu ve senin
+  yetkili olduğunu doğrulamak için görür; gerekirse kulübün hesabına mesaj atarak teyit eder. Kulüp
+  onaylanmadan etkinlikleri yayınlanamaz.</li>
   <li><strong>Cihaz kimliği:</strong> uygulama kurulurken telefonunda rastgele bir kimlik üretir.
   Biletinin QR kodunun yalnızca tek bir telefonda gösterilmesi için kullanılır. Telefonunun
   donanım kimliği, reklam kimliği veya konumu toplanmaz.</li>

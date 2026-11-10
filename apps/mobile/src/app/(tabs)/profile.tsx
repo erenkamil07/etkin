@@ -5,11 +5,11 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { publicApi } from '@/api/base';
 import { api } from '@/api/client';
-import { useMe, useMyTickets } from '@/api/queries';
+import { useClubApplications, useMe, useMyTickets } from '@/api/queries';
 import { currentRefreshToken, endSession } from '@/auth/session';
 import { Avatar } from '@/components/avatar';
 import { ThemedText } from '@/components/themed-text';
-import { Button, Card, ErrorBanner, Loading, Screen } from '@/components/ui';
+import { Button, Card, ErrorBanner, Loading, Pill, Screen } from '@/components/ui';
 import { UniversityPicker } from '@/components/university-picker';
 import { PRIVACY_URL, TERMS_URL } from '@/config';
 import { BottomTabInset, Radius, Spacing } from '@/constants/theme';
@@ -45,6 +45,14 @@ function Stat({ value, label }: { value: number | undefined; label: string }) {
   );
 }
 
+/** A new club's application: waiting, refused, or approved in the last week. */
+function ClubStatusPill({ status, reviewedAt }: { status: string; reviewedAt: string | null }) {
+  if (status === 'pending') return <Pill tone="warning">İnceleniyor</Pill>;
+  if (status === 'rejected') return <Pill tone="danger">Onaylanmadı</Pill>;
+  const recent = reviewedAt !== null && Date.now() - Date.parse(reviewedAt) < 7 * 86_400_000;
+  return recent ? <Pill tone="success">Onaylandı</Pill> : null;
+}
+
 function Chevron() {
   return (
     <ThemedText type="subtitle" themeColor="textSecondary">
@@ -78,6 +86,7 @@ export default function Profile() {
   const queryClient = useQueryClient();
   const me = useMe();
   const tickets = useMyTickets();
+  const pendingClubs = useClubApplications().data?.length ?? 0;
   const [openBadge, setOpenBadge] = useState<BadgeItem | null>(null);
   const points = useQuery({
     queryKey: ['me', 'points'],
@@ -180,9 +189,10 @@ export default function Profile() {
             <View style={styles.grow}>
               <ThemedText type="default">Moderasyon</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
-                Bildirilen etkinlikleri incele
+                Kulüp başvuruları ve bildirilen etkinlikler
               </ThemedText>
             </View>
+            {pendingClubs > 0 ? <Pill tone="tint">{`${pendingClubs} yeni başvuru`}</Pill> : null}
             <Chevron />
           </View>
         </Card>
@@ -209,6 +219,7 @@ export default function Profile() {
                     {ROLE[membership.role]} · etkinlikler, katılımcılar, QR okutma
                   </ThemedText>
                 </View>
+                <ClubStatusPill status={membership.clubStatus} reviewedAt={membership.reviewedAt} />
                 <Chevron />
               </View>
             </Card>

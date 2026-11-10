@@ -1,5 +1,6 @@
 import { sql } from 'kysely';
-import type { OrgRole } from '../db/schema.js';
+import { type ApplicationInput, assertNoOpenApplication } from '../applications/service.js';
+import type { OrganizationStatus, OrgRole } from '../db/schema.js';
 import type { Database } from '../db.js';
 import { AppError } from '../errors.js';
 import { iso } from '../schemas.js';
@@ -31,6 +32,7 @@ const ORG_COLUMNS = [
   universityName('organizations.university_id'),
   'no_show_limit',
   'no_show_ban_days',
+  'status',
   'created_at',
 ] as const;
 
@@ -44,6 +46,7 @@ function toOrg(row: {
   university_name: string | null;
   no_show_limit: number | null;
   no_show_ban_days: number | null;
+  status: OrganizationStatus;
   created_at: Date;
 }) {
   return {
@@ -53,6 +56,7 @@ function toOrg(row: {
     description: row.description,
     logoUrl: row.logo_url,
     university: universityRef(row.university_id, row.university_name),
+    status: row.status,
     noShowRule:
       row.no_show_limit !== null && row.no_show_ban_days !== null
         ? { limit: row.no_show_limit, banDays: row.no_show_ban_days }
@@ -63,10 +67,20 @@ function toOrg(row: {
 
 const orgNotFound = () => new AppError(404, 'ORG_NOT_FOUND', 'Club not found');
 
-/** The creator becomes the club's first owner. */
-export async function createOrg(db: Database, ownerId: string, input: OrgInput) {
+/**
+ * The creator becomes the club's first owner. A new club is an application a
+ * platform admin approves before it can publish; a club an admin creates is
+ * approved straight away.
+ */
+export async function createOrg(
+  db: Database,
+  owner: { id: string; isAdmin: boolean },
+  input: OrgInput & ApplicationInput,
+) {
   await assertUniversity(db, input.universityId);
   return db.transaction().execute(async (trx) => {
+    if (!owner.isAdmin) await assertNoOpenApplication(trx, owner.id);
+    const now = new Date();
     const org = await trx
       .insertInto('organizations')
       .values({
@@ -75,12 +89,19 @@ export async function createOrg(db: Database, ownerId: string, input: OrgInput) 
         description: input.description ?? null,
         logo_url: input.logoUrl ?? null,
         university_id: input.universityId ?? null,
+        applicant_role: input.applicantRole,
+        verification_url: input.verificationUrl,
+        application_note: input.applicationNote || null,
+        submitted_at: now,
+        ...(owner.isAdmin
+          ? { status: 'approved' as const, reviewed_at: now, reviewed_by: owner.id }
+          : { status: 'pending' as const }),
       })
       .returning(ORG_COLUMNS)
       .executeTakeFirstOrThrow();
     await trx
       .insertInto('organization_members')
-      .values({ organization_id: org.id, user_id: ownerId, role: 'owner' })
+      .values({ organization_id: org.id, user_id: owner.id, role: 'owner' })
       .execute();
     return toOrg(org);
   });

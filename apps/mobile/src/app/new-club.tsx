@@ -7,6 +7,13 @@ import { ThemedText } from '@/components/themed-text';
 import { Button, Choice, ErrorBanner, Field, Screen } from '@/components/ui';
 import { type UniversityChoice, UniversityPicker } from '@/components/university-picker';
 import { TERMS_URL } from '@/config';
+import {
+  type ApplicationDraft,
+  type ApplicationErrors,
+  ApplicationFields,
+  applicationBody,
+  checkApplication,
+} from '@/orgs/application';
 
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const TURKISH: Record<string, string> = { ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' };
@@ -34,7 +41,10 @@ export default function NewClub() {
   // Everything a club writes is public, so its owner agrees to the community rules first.
   const [acceptedRules, setAcceptedRules] = useState(false);
   const [university, setUniversity] = useState<UniversityChoice>(undefined);
-  const [errors, setErrors] = useState<{ name?: string; slug?: string; university?: string; rules?: string }>({});
+  const [application, setApplication] = useState<ApplicationDraft>({ role: null, link: '', note: '' });
+  const [errors, setErrors] = useState<
+    { name?: string; slug?: string; university?: string; rules?: string } & ApplicationErrors
+  >({});
 
   const create = useMutation({
     mutationFn: async () => {
@@ -44,20 +54,22 @@ export default function NewClub() {
           slug,
           description: description.trim() || null,
           universityId: university?.id ?? null,
+          ...applicationBody(application),
         },
       });
       if (error) throw error;
       return data;
     },
-    onSuccess: (club) => {
-      // Your new membership comes with /me.
-      queryClient.invalidateQueries({ queryKey: ['me'] });
+    onSuccess: async (club) => {
+      // Your new membership, and whether the club is approved, come with /me.
+      await queryClient.invalidateQueries({ queryKey: ['me'] });
+      // The club page opens on "Başvurun alındı".
       router.replace({ pathname: '/club/[orgId]', params: { orgId: club.id } });
     },
   });
 
   const submit = () => {
-    const found: typeof errors = {};
+    const found: typeof errors = checkApplication(application);
     if (name.trim().length < 2) found.name = 'Kulübün adını yaz.';
     if (slug.length < 3 || !SLUG.test(slug)) {
       found.slug = 'En az 3 karakter: küçük harf, rakam ve tire (ör. ieee-odtu).';
@@ -72,7 +84,9 @@ export default function NewClub() {
   return (
     <Screen belowHeader>
       <ThemedText themeColor="textSecondary">
-        Kulübü kuran kişi sahibi (owner) olur: etkinlik açar, ekibe organizatör ve kapı görevlisi ekler.
+        Kulübünü Etkin'e eklemek için başvur. Kulübün gerçekten var olduğunu ve senin yetkili olduğunu kontrol edip
+        onaylıyoruz; başvurular genellikle 2 gün içinde sonuçlanır. Beklerken etkinliklerini taslak olarak
+        hazırlayabilirsin.
       </ThemedText>
       <Field label="Kulüp adı" value={name} onChangeText={setName} error={errors.name} />
       <UniversityPicker label="Üniversite" value={university} onChange={setUniversity} error={errors.university} />
@@ -91,6 +105,8 @@ export default function NewClub() {
         multiline
         numberOfLines={3}
       />
+      <ThemedText type="subtitle">Başvuru bilgileri</ThemedText>
+      <ApplicationFields value={application} onChange={setApplication} errors={errors} />
       <Choice
         kind="checkbox"
         selected={acceptedRules}
@@ -110,7 +126,7 @@ export default function NewClub() {
         </ThemedText>
       ) : null}
       <ErrorBanner error={create.error} />
-      <Button title="Kulübü oluştur" loading={create.isPending} onPress={submit} />
+      <Button title="Başvuruyu gönder" loading={create.isPending} onPress={submit} />
     </Screen>
   );
 }

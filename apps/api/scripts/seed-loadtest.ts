@@ -42,7 +42,7 @@ async function insertUsers(prefix: string, count: number) {
 const [ownerId = '', ...scannerIds] = await insertUsers('staff-', 1 + GATES.length);
 const { id: orgId } = await db
   .insertInto('organizations')
-  .values({ slug: 'load-test-club', name: 'Load Test Club' })
+  .values({ slug: 'load-test-club', name: 'Load Test Club', status: 'approved' })
   .returning('id')
   .executeTakeFirstOrThrow();
 await db
