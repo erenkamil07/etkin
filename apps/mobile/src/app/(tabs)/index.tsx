@@ -91,6 +91,7 @@ export default function Events() {
                   showUniversity={scope === 'all'}
                   footer={
                     <View style={styles.pills}>
+                      {item.audience === 'members' ? <Pill tone="warning">🔒 Üyelere özel</Pill> : null}
                       {seats.pill}
                       {item.priceFromCents > 0 ? (
                         <Pill tone="tint">{formatPrice(item.priceFromCents, 'TRY')}</Pill>

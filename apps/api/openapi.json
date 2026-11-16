@@ -666,6 +666,12 @@
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "pendingRequests": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Membership requests waiting for an answer; always 0 for door scanners, who cannot answer them"
                           }
                         },
                         "required": [
@@ -674,10 +680,59 @@
                           "name",
                           "role",
                           "clubStatus",
-                          "reviewedAt"
+                          "reviewedAt",
+                          "pendingRequests"
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "clubs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "organizationId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "approved",
+                              "rejected"
+                            ]
+                          },
+                          "requestedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "decidedAt": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "organizationId",
+                          "slug",
+                          "name",
+                          "status",
+                          "requestedAt",
+                          "decidedAt"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Clubs you are a member of or asked to join (the club team is in memberships)"
                     }
                   },
                   "required": [
@@ -690,7 +745,8 @@
                     "platformRole",
                     "createdAt",
                     "universityLockedUntil",
-                    "memberships"
+                    "memberships",
+                    "clubs"
                   ],
                   "additionalProperties": false
                 }
@@ -845,6 +901,12 @@
                             "type": "string",
                             "format": "date-time",
                             "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "pendingRequests": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Membership requests waiting for an answer; always 0 for door scanners, who cannot answer them"
                           }
                         },
                         "required": [
@@ -853,10 +915,59 @@
                           "name",
                           "role",
                           "clubStatus",
-                          "reviewedAt"
+                          "reviewedAt",
+                          "pendingRequests"
                         ],
                         "additionalProperties": false
                       }
+                    },
+                    "clubs": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "organizationId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                          },
+                          "slug": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "approved",
+                              "rejected"
+                            ]
+                          },
+                          "requestedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          },
+                          "decidedAt": {
+                            "nullable": true,
+                            "type": "string",
+                            "format": "date-time",
+                            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                          }
+                        },
+                        "required": [
+                          "organizationId",
+                          "slug",
+                          "name",
+                          "status",
+                          "requestedAt",
+                          "decidedAt"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "description": "Clubs you are a member of or asked to join (the club team is in memberships)"
                     }
                   },
                   "required": [
@@ -869,7 +980,8 @@
                     "platformRole",
                     "createdAt",
                     "universityLockedUntil",
-                    "memberships"
+                    "memberships",
+                    "clubs"
                   ],
                   "additionalProperties": false
                 }
@@ -1050,6 +1162,12 @@
                       ],
                       "description": "pending: waiting for a platform admin; only an approved club can publish events"
                     },
+                    "memberCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Approved members, not counting the team"
+                    },
                     "noShowRule": {
                       "nullable": true,
                       "description": "After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null",
@@ -1086,6 +1204,7 @@
                     "logoUrl",
                     "university",
                     "status",
+                    "memberCount",
                     "noShowRule",
                     "createdAt"
                   ],
@@ -1170,6 +1289,12 @@
                       ],
                       "description": "pending: waiting for a platform admin; only an approved club can publish events"
                     },
+                    "memberCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Approved members, not counting the team"
+                    },
                     "noShowRule": {
                       "nullable": true,
                       "description": "After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null",
@@ -1206,6 +1331,7 @@
                     "logoUrl",
                     "university",
                     "status",
+                    "memberCount",
                     "noShowRule",
                     "createdAt"
                   ],
@@ -1369,6 +1495,12 @@
                       ],
                       "description": "pending: waiting for a platform admin; only an approved club can publish events"
                     },
+                    "memberCount": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "description": "Approved members, not counting the team"
+                    },
                     "noShowRule": {
                       "nullable": true,
                       "description": "After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null",
@@ -1405,6 +1537,7 @@
                     "logoUrl",
                     "university",
                     "status",
+                    "memberCount",
                     "noShowRule",
                     "createdAt"
                   ],
@@ -2110,6 +2243,470 @@
         }
       }
     },
+    "/orgs/{orgId}/membership": {
+      "get": {
+        "summary": "Your membership of this club; null when you never asked or have left",
+        "tags": [
+          "memberships"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true,
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "approved",
+                        "rejected"
+                      ]
+                    },
+                    "requestedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "decidedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "requestedAt",
+                    "decidedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Ask to join the club; needs a student number on your profile. Asking again after a refusal re-opens it",
+        "tags": [
+          "memberships"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "approved",
+                        "rejected"
+                      ]
+                    },
+                    "requestedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "decidedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "requestedAt",
+                    "decidedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Leave the club, or withdraw your request",
+        "tags": [
+          "memberships"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/orgs/{orgId}/memberships": {
+      "get": {
+        "summary": "Waiting requests (oldest first) or members (by name) (organizer+)",
+        "tags": [
+          "memberships"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "default": "pending",
+              "type": "string",
+              "enum": [
+                "pending",
+                "approved"
+              ]
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "userId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                      },
+                      "fullName": {
+                        "type": "string"
+                      },
+                      "avatarUrl": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "studentNumber": {
+                        "nullable": true,
+                        "description": "To check the request against the club’s own member list",
+                        "type": "string"
+                      },
+                      "university": {
+                        "nullable": true,
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "pending",
+                          "approved",
+                          "rejected"
+                        ]
+                      },
+                      "requestedAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                      },
+                      "decidedAt": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                      }
+                    },
+                    "required": [
+                      "userId",
+                      "fullName",
+                      "avatarUrl",
+                      "studentNumber",
+                      "university",
+                      "status",
+                      "requestedAt",
+                      "decidedAt"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orgs/{orgId}/memberships/{userId}/approve": {
+      "post": {
+        "summary": "Accept a waiting request (organizer+)",
+        "tags": [
+          "memberships"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "approved",
+                        "rejected"
+                      ]
+                    },
+                    "requestedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "decidedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "requestedAt",
+                    "decidedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orgs/{orgId}/memberships/{userId}/reject": {
+      "post": {
+        "summary": "Refuse a waiting request; they can ask again later (organizer+)",
+        "tags": [
+          "memberships"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "approved",
+                        "rejected"
+                      ]
+                    },
+                    "requestedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    },
+                    "decidedAt": {
+                      "nullable": true,
+                      "type": "string",
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                    }
+                  },
+                  "required": [
+                    "status",
+                    "requestedAt",
+                    "decidedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orgs/{orgId}/memberships/{userId}": {
+      "delete": {
+        "summary": "Take someone off the member list (organizer+)",
+        "tags": [
+          "memberships"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "orgId",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "in": "path",
+            "name": "userId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/events": {
       "get": {
         "summary": "Upcoming published events, soonest first",
@@ -2270,9 +2867,18 @@
                             "description": "How to pay the club; Etkin itself takes no money",
                             "type": "string"
                           },
+                          "audience": {
+                            "type": "string",
+                            "enum": [
+                              "everyone",
+                              "university",
+                              "members"
+                            ],
+                            "description": "everyone: anyone; university: students of the club's university; members: the club's approved members and team"
+                          },
                           "universityOnly": {
                             "type": "boolean",
-                            "description": "Only students of the club's university can get tickets"
+                            "description": "Deprecated, use audience: true when audience is university"
                           },
                           "status": {
                             "type": "string",
@@ -2347,6 +2953,7 @@
                           "checkinPoints",
                           "priceIncludes",
                           "paymentInfo",
+                          "audience",
                           "universityOnly",
                           "status",
                           "publishedAt",
@@ -2498,9 +3105,18 @@
                       "description": "How to pay the club; Etkin itself takes no money",
                       "type": "string"
                     },
+                    "audience": {
+                      "type": "string",
+                      "enum": [
+                        "everyone",
+                        "university",
+                        "members"
+                      ],
+                      "description": "everyone: anyone; university: students of the club's university; members: the club's approved members and team"
+                    },
                     "universityOnly": {
                       "type": "boolean",
-                      "description": "Only students of the club's university can get tickets"
+                      "description": "Deprecated, use audience: true when audience is university"
                     },
                     "status": {
                       "type": "string",
@@ -2655,6 +3271,7 @@
                     "checkinPoints",
                     "priceIncludes",
                     "paymentInfo",
+                    "audience",
                     "universityOnly",
                     "status",
                     "publishedAt",
@@ -2799,9 +3416,18 @@
                         "description": "How to pay the club; Etkin itself takes no money",
                         "type": "string"
                       },
+                      "audience": {
+                        "type": "string",
+                        "enum": [
+                          "everyone",
+                          "university",
+                          "members"
+                        ],
+                        "description": "everyone: anyone; university: students of the club's university; members: the club's approved members and team"
+                      },
                       "universityOnly": {
                         "type": "boolean",
-                        "description": "Only students of the club's university can get tickets"
+                        "description": "Deprecated, use audience: true when audience is university"
                       },
                       "status": {
                         "type": "string",
@@ -2876,6 +3502,7 @@
                       "checkinPoints",
                       "priceIncludes",
                       "paymentInfo",
+                      "audience",
                       "universityOnly",
                       "status",
                       "publishedAt",
@@ -2959,8 +3586,17 @@
                     "type": "string",
                     "maxLength": 500
                   },
+                  "audience": {
+                    "description": "Who can get tickets; university needs a club with a university. Default everyone",
+                    "type": "string",
+                    "enum": [
+                      "everyone",
+                      "university",
+                      "members"
+                    ]
+                  },
                   "universityOnly": {
-                    "description": "Only students of the club's university can get tickets; the club needs a university. Default false",
+                    "description": "Deprecated, use audience: true means university, false everyone",
                     "type": "boolean"
                   },
                   "paymentInfo": {
@@ -3101,9 +3737,18 @@
                       "description": "How to pay the club; Etkin itself takes no money",
                       "type": "string"
                     },
+                    "audience": {
+                      "type": "string",
+                      "enum": [
+                        "everyone",
+                        "university",
+                        "members"
+                      ],
+                      "description": "everyone: anyone; university: students of the club's university; members: the club's approved members and team"
+                    },
                     "universityOnly": {
                       "type": "boolean",
-                      "description": "Only students of the club's university can get tickets"
+                      "description": "Deprecated, use audience: true when audience is university"
                     },
                     "status": {
                       "type": "string",
@@ -3258,6 +3903,7 @@
                     "checkinPoints",
                     "priceIncludes",
                     "paymentInfo",
+                    "audience",
                     "universityOnly",
                     "status",
                     "publishedAt",
@@ -3340,8 +3986,17 @@
                     "type": "string",
                     "maxLength": 500
                   },
+                  "audience": {
+                    "description": "Who can get tickets; university needs a club with a university. Default everyone",
+                    "type": "string",
+                    "enum": [
+                      "everyone",
+                      "university",
+                      "members"
+                    ]
+                  },
                   "universityOnly": {
-                    "description": "Only students of the club's university can get tickets; the club needs a university. Default false",
+                    "description": "Deprecated, use audience: true means university, false everyone",
                     "type": "boolean"
                   },
                   "paymentInfo": {
@@ -3487,9 +4142,18 @@
                       "description": "How to pay the club; Etkin itself takes no money",
                       "type": "string"
                     },
+                    "audience": {
+                      "type": "string",
+                      "enum": [
+                        "everyone",
+                        "university",
+                        "members"
+                      ],
+                      "description": "everyone: anyone; university: students of the club's university; members: the club's approved members and team"
+                    },
                     "universityOnly": {
                       "type": "boolean",
-                      "description": "Only students of the club's university can get tickets"
+                      "description": "Deprecated, use audience: true when audience is university"
                     },
                     "status": {
                       "type": "string",
@@ -3644,6 +4308,7 @@
                     "checkinPoints",
                     "priceIncludes",
                     "paymentInfo",
+                    "audience",
                     "universityOnly",
                     "status",
                     "publishedAt",
@@ -3834,9 +4499,18 @@
                       "description": "How to pay the club; Etkin itself takes no money",
                       "type": "string"
                     },
+                    "audience": {
+                      "type": "string",
+                      "enum": [
+                        "everyone",
+                        "university",
+                        "members"
+                      ],
+                      "description": "everyone: anyone; university: students of the club's university; members: the club's approved members and team"
+                    },
                     "universityOnly": {
                       "type": "boolean",
-                      "description": "Only students of the club's university can get tickets"
+                      "description": "Deprecated, use audience: true when audience is university"
                     },
                     "status": {
                       "type": "string",
@@ -3991,6 +4665,7 @@
                     "checkinPoints",
                     "priceIncludes",
                     "paymentInfo",
+                    "audience",
                     "universityOnly",
                     "status",
                     "publishedAt",
@@ -4143,9 +4818,18 @@
                       "description": "How to pay the club; Etkin itself takes no money",
                       "type": "string"
                     },
+                    "audience": {
+                      "type": "string",
+                      "enum": [
+                        "everyone",
+                        "university",
+                        "members"
+                      ],
+                      "description": "everyone: anyone; university: students of the club's university; members: the club's approved members and team"
+                    },
                     "universityOnly": {
                       "type": "boolean",
-                      "description": "Only students of the club's university can get tickets"
+                      "description": "Deprecated, use audience: true when audience is university"
                     },
                     "status": {
                       "type": "string",
@@ -4300,6 +4984,7 @@
                     "checkinPoints",
                     "priceIncludes",
                     "paymentInfo",
+                    "audience",
                     "universityOnly",
                     "status",
                     "publishedAt",
@@ -7431,6 +8116,10 @@
     {
       "name": "orgs",
       "description": "Clubs and their teams"
+    },
+    {
+      "name": "memberships",
+      "description": "Joining clubs, and the requests organizers answer"
     },
     {
       "name": "events",

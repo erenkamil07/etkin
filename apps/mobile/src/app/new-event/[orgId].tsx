@@ -6,7 +6,7 @@ import { api } from '@/api/client';
 import { useClub } from '@/api/queries';
 import { EventCover } from '@/components/event-cover';
 import { ThemedText } from '@/components/themed-text';
-import { Button, ErrorBanner, Field, Notice, Screen, Segmented } from '@/components/ui';
+import { Button, Choice, ErrorBanner, Field, Notice, Screen, Segmented } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -47,12 +47,12 @@ export default function NewEvent() {
   const { orgId } = useLocalSearchParams<{ orgId: string }>();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<EventDraft>(emptyDraft);
-  // Who can get tickets. A club with a university keeps events to its students
-  // unless it says otherwise; without one, everyone can come.
+  // Who can get tickets: the students of the club's university, or its members only.
+  // Without a university, a club can only open events to its members.
   const club = useClub(orgId);
   const university = club.data?.university ?? null;
-  const [audience, setAudience] = useState<'university' | 'everyone'>('university');
-  const universityOnly = university !== null && audience === 'university';
+  const [chosenAudience, setAudience] = useState<'university' | 'members'>('university');
+  const audience = university ? chosenAudience : 'members';
   // A club waiting for approval prepares drafts; publishing comes once it is approved.
   const waitingForApproval = club.data !== undefined && club.data.status !== 'approved';
   const [errors, setErrors] = useState<DraftErrors>({});
@@ -123,7 +123,7 @@ export default function NewEvent() {
       return;
     }
     setErrors({});
-    save.mutate({ publish, plan: { ...plan, event: { ...plan.event, universityOnly } } });
+    save.mutate({ publish, plan: { ...plan, event: { ...plan.event, audience } } });
   };
 
   return (
@@ -205,24 +205,25 @@ export default function NewEvent() {
         Kapı, etkinlikten 1 saat önce açılır ve etkinlik bitince kapanır.
       </ThemedText>
 
+      <ThemedText type="smallBold">Kimler bilet alabilir?</ThemedText>
       {university ? (
-        <>
-          <ThemedText type="smallBold">Kimler bilet alabilir?</ThemedText>
-          <Segmented
-            options={[
-              { value: 'university', label: 'Üniversitemiz' },
-              { value: 'everyone', label: 'Herkes' },
-            ]}
-            value={audience}
-            onChange={setAudience}
-          />
-          <ThemedText type="small" themeColor="textSecondary">
-            {universityOnly
-              ? `Sadece ${university.name} öğrencileri bilet alabilir.`
-              : 'Her üniversiteden öğrenci bilet alabilir; örneğin üniversiteler arası etkinlikler için.'}
-          </ThemedText>
-        </>
-      ) : null}
+        <Choice
+          label={`${university.name} öğrencileri`}
+          detail="Kulübünün üniversitesindeki tüm öğrenciler bilet alabilir."
+          selected={audience === 'university'}
+          onPress={() => setAudience('university')}
+        />
+      ) : (
+        <ThemedText type="small" themeColor="warning">
+          Etkinliği üniversitenin öğrencilerine açmak için önce kulüp sayfasından kulübün üniversitesini seç.
+        </ThemedText>
+      )}
+      <Choice
+        label="Sadece kulüp üyeleri"
+        detail="Onayladığın üyeler ve kulüp ekibi bilet alabilir. Diğerleri etkinliği görür ama bilet alamaz."
+        selected={audience === 'members'}
+        onPress={() => setAudience('members')}
+      />
 
       <ThemedText type="smallBold">Ücret</ThemedText>
       <Segmented

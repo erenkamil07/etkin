@@ -58,6 +58,11 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
   sayfası ve istersen bir not. Bunları yalnızca Etkin'in yöneticisi, kulübün gerçekten var olduğunu ve senin
   yetkili olduğunu doğrulamak için görür; gerekirse kulübün hesabına mesaj atarak teyit eder. Kulüp
   onaylanmadan etkinlikleri yayınlanamaz.</li>
+  <li><strong>Kulüp üyeliği:</strong> bir kulübe üye olmak istersen isteğin, ne zaman istediğin ve kulübün
+  kararı (onay ya da ret). Üye olmak için öğrenci numaran gerekir; kulübün organizatörleri isteğini
+  incelerken adını, fotoğrafını, üniversiteni ve öğrenci numaranı görür ve bunu kendi üye listeleriyle
+  karşılaştırır. Onaylanırsan üyeliğin profilinde görünür ve kulübün üyelere özel etkinliklerine bilet
+  alabilirsin. İstediğin an kulüp sayfasından ayrılabilirsin; hesabını silince üyeliklerin de silinir.</li>
   <li><strong>Cihaz kimliği:</strong> uygulama kurulurken telefonunda rastgele bir kimlik üretir.
   Biletinin QR kodunun yalnızca tek bir telefonda gösterilmesi için kullanılır. Telefonunun
   donanım kimliği, reklam kimliği veya konumu toplanmaz.</li>
@@ -90,8 +95,9 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
   <li>Kulüplere etkinliklerinin katılım sayılarını göstermek.</li>
   <li>Hizmetin güvenliğini sağlamak ve kötüye kullanımı (ör. art arda yanlış şifre denemeleri)
   engellemek.</li>
-  <li>Kulübün açtığı bilet kurallarını (üniversiteye özel etkinlikler, gelmeme kuralı) uygulamak;
-  bunun için o kulübün geçmiş etkinliklerine katılıp katılmadığına bakılır.</li>
+  <li>Kulübün açtığı bilet kurallarını (üniversiteye özel etkinlikler, üyelere özel etkinlikler,
+  gelmeme kuralı) uygulamak; bunun için üniversitene, kulüp üyeliğine ve o kulübün geçmiş
+  etkinliklerine katılıp katılmadığına bakılır.</li>
   <li>Bildirilen etkinlikleri incelemek ve <a href="/terms">topluluk kurallarına</a> aykırı olanları
   kaldırmak.</li>
 </ul>
@@ -104,6 +110,8 @@ kullanmaz. Etkin ödeme almaz; kart ya da banka bilgisi toplamaz.</p>
   adını, öğrenci numaranı, bilet türünü ve giriş durumunu görür (katılımcı listesi ve kapıda
   kimlik kontrolü için).</li>
   <li><strong>Kapı görevlileri:</strong> biletini okuttuklarında adını ve öğrenci numaranı görür.</li>
+  <li><strong>Üye olmak istediğin kulübün organizatörleri:</strong> isteğini ve üyeliğini incelemek için
+  adını, fotoğrafını, üniversiteni ve öğrenci numaranı görür.</li>
   <li><strong>Altyapı sağlayıcıları:</strong> sunucu ve veritabanı Railway tarafından Avrupa
   Birliği'nde (Hollanda, Amsterdam) barındırılır. Uygulama Expo ile derlenir ve Google Play
   üzerinden dağıtılır.</li>

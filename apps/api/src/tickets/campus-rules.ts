@@ -1,5 +1,6 @@
 import type { Database } from '../db.js';
 import { AppError } from '../errors.js';
+import { isClubMember } from '../memberships/service.js';
 import type { NoShowRule } from '../orgs/service.js';
 import { universityName } from '../universities/service.js';
 
@@ -41,15 +42,16 @@ export async function noShowBanUntil(
 
 /**
  * The club's own rules for who gets its tickets, checked on every claim: a
- * university-only event takes its university's students only, and a club's
- * no-show rule keeps out people who keep skipping its events.
+ * university event takes its university's students only, a members event the
+ * club's approved members and team only, and a club's no-show rule keeps out
+ * people who keep skipping its events.
  */
 export async function assertCampusRules(db: Database, userId: string, eventId: string) {
   const event = await db
     .selectFrom('events as e')
     .innerJoin('organizations as o', 'o.id', 'e.organization_id')
     .select([
-      'e.university_only',
+      'e.audience',
       'e.organization_id',
       'o.university_id',
       universityName('o.university_id'),
@@ -60,7 +62,7 @@ export async function assertCampusRules(db: Database, userId: string, eventId: s
     .executeTakeFirstOrThrow();
 
   // A club that has since dropped its university has nothing to compare against.
-  if (event.university_only && event.university_id !== null) {
+  if (event.audience === 'university' && event.university_id !== null) {
     const user = await db
       .selectFrom('users')
       .select('university_id')
@@ -73,6 +75,10 @@ export async function assertCampusRules(db: Database, userId: string, eventId: s
         `Only students of ${event.university_name} can get tickets to this event`,
       );
     }
+  }
+
+  if (event.audience === 'members' && !(await isClubMember(db, event.organization_id, userId))) {
+    throw new AppError(403, 'MEMBERS_ONLY', "Only the club's members can get tickets to this event");
   }
 
   if (event.no_show_limit !== null && event.no_show_ban_days !== null) {

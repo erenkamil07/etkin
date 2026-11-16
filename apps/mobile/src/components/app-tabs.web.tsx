@@ -1,6 +1,6 @@
 import { TabList, type TabListProps, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { useClubApplications } from '@/api/queries';
+import { useProfileBadge } from '@/api/queries';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { ThemedText } from './themed-text';
@@ -8,7 +8,8 @@ import { ThemedText } from './themed-text';
 // Native tabs don't exist on the web; this is the development build's stand-in.
 export default function AppTabs() {
   // Platform admins see on the Profil tab how many clubs wait for approval.
-  const pendingClubs = useClubApplications().data?.length ?? 0;
+  // Club applications for admins, membership requests for club organizers.
+  const pendingClubs = useProfileBadge();
   return (
     <Tabs>
       <TabSlot style={{ height: '100%' }} />

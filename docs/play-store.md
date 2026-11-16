@@ -138,7 +138,7 @@ Data types collected (none is used for advertising or sold):
 | Personal info → Email address | Required | Account management, App functionality |
 | Personal info → User IDs | Required | App functionality, Account management |
 | Personal info → Other info (university, student number) | Optional ("Üniversitem listede yok" skips the university) | App functionality |
-| App activity → Other actions (tickets, check-ins, points) | Required | App functionality |
+| App activity → Other actions (tickets, check-ins, points, club membership requests) | Required | App functionality |
 | App activity → Other user-generated content (clubs and events you create, reports you file) | Optional | App functionality |
 | Financial info → User payment info (an IBAN a club owner writes in a paid event's payment note) | Optional | App functionality |
 | Device or other IDs (a random per-install id, not a hardware id) | Required | App functionality, Fraud prevention, security and compliance |

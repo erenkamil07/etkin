@@ -51,6 +51,10 @@ describe('DELETE /me', () => {
       .insertInto('organization_members')
       .values({ organization_id: orgId, user_id: student.id, role: 'scanner' })
       .execute();
+    await db
+      .insertInto('club_memberships')
+      .values({ organization_id: orgId, user_id: student.id, status: 'approved', decided_at: new Date() })
+      .execute();
     await seedCheckIn(db, { userId: student.id, orgId, staffId: owner.id, points: 3 });
 
     expect((await deleteAccount(student.token, PASSWORD)).statusCode).toBe(204);
@@ -89,6 +93,9 @@ describe('DELETE /me', () => {
     expect(type.issued_count).toBe(0);
     const memberships = await db.selectFrom('organization_members').where('user_id', '=', student.id).execute();
     expect(memberships).toEqual([]);
+    // So is the club membership, with the student number organizers could see.
+    const clubs = await db.selectFrom('club_memberships').where('user_id', '=', student.id).execute();
+    expect(clubs).toEqual([]);
 
     // The club's history stays, anonymously.
     const balance = await db

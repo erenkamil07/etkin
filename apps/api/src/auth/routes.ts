@@ -2,6 +2,7 @@ import type { FastifyRequest } from 'fastify';
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { z } from 'zod';
 import { ClubStatus } from '../applications/routes.js';
+import { MembershipStatus } from '../memberships/routes.js';
 import { atLeastOneField } from '../schemas.js';
 import { UniversityId, UniversityRef } from '../universities/routes.js';
 import { currentUser } from './plugin.js';
@@ -69,8 +70,24 @@ const Profile = PublicUser.extend({
       role: z.enum(['owner', 'organizer', 'scanner']),
       clubStatus: ClubStatus,
       reviewedAt: z.iso.datetime().nullable().describe('When a platform admin decided on the club, if they have'),
+      pendingRequests: z
+        .number()
+        .int()
+        .describe('Membership requests waiting for an answer; always 0 for door scanners, who cannot answer them'),
     }),
   ),
+  clubs: z
+    .array(
+      z.object({
+        organizationId: z.uuid(),
+        slug: z.string(),
+        name: z.string(),
+        status: MembershipStatus,
+        requestedAt: z.iso.datetime(),
+        decidedAt: z.iso.datetime().nullable(),
+      }),
+    )
+    .describe('Clubs you are a member of or asked to join (the club team is in memberships)'),
 });
 
 // Students on campus Wi-Fi share one public IP, so login is limited per

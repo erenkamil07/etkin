@@ -13,6 +13,8 @@ export type ApplicationStatus = "pending" | "waitlisted" | "withdrawn" | "won";
 
 export type CheckinMethod = "manual" | "qr";
 
+export type EventAudience = "everyone" | "members" | "university";
+
 export type EventStatus = "cancelled" | "completed" | "draft" | "published";
 
 export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
@@ -34,6 +36,8 @@ export type JsonPrimitive = boolean | number | string | null;
 export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
 
 export type LedgerReason = "adjustment" | "bonus" | "checkin" | "redemption" | "reversal";
+
+export type MembershipStatus = "approved" | "pending" | "rejected";
 
 export type Numeric = ColumnType<string, number | string, number | string>;
 
@@ -89,6 +93,15 @@ export interface CheckIns {
   user_id: string;
 }
 
+export interface ClubMemberships {
+  decided_at: Timestamp | null;
+  decided_by: string | null;
+  organization_id: string;
+  requested_at: Generated<Timestamp>;
+  status: Generated<MembershipStatus>;
+  user_id: string;
+}
+
 export interface EventCovers {
   data: Buffer;
   event_id: string;
@@ -111,6 +124,7 @@ export interface EventReports {
 }
 
 export interface Events {
+  audience: Generated<EventAudience>;
   checkin_closes_at: Timestamp;
   checkin_opens_at: Timestamp;
   checkin_points: Generated<number>;
@@ -128,7 +142,6 @@ export interface Events {
   starts_at: Timestamp;
   status: Generated<EventStatus>;
   title: string;
-  university_only: Generated<boolean>;
   updated_at: Generated<Timestamp>;
 }
 
@@ -302,6 +315,7 @@ export interface DB {
   allocation_runs: AllocationRuns;
   badges: Badges;
   check_ins: CheckIns;
+  club_memberships: ClubMemberships;
   event_covers: EventCovers;
   event_reports: EventReports;
   events: Events;

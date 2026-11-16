@@ -9,6 +9,7 @@ import { useClubApplications, useMe, useMyTickets } from '@/api/queries';
 import { currentRefreshToken, endSession } from '@/auth/session';
 import { Avatar } from '@/components/avatar';
 import { ClubAvatar } from '@/components/club-avatar';
+import { PressableScale } from '@/components/pressable-scale';
 import { BadgeGridSkeleton, CardSkeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
 import { Button, Card, ErrorBanner, Pill, Screen } from '@/components/ui';
@@ -54,6 +55,13 @@ function ClubStatusPill({ status, reviewedAt }: { status: string; reviewedAt: st
   if (status === 'rejected') return <Pill tone="danger">Onaylanmadı</Pill>;
   const recent = reviewedAt !== null && Date.now() - Date.parse(reviewedAt) < 7 * 86_400_000;
   return recent ? <Pill tone="success">Onaylandı</Pill> : null;
+}
+
+/** Where your request to join a club stands. */
+function MembershipPill({ status }: { status: 'pending' | 'approved' | 'rejected' }) {
+  if (status === 'approved') return <Pill tone="success">Üye</Pill>;
+  if (status === 'pending') return <Pill tone="warning">Onay bekliyor</Pill>;
+  return <Pill tone="danger">Onaylanmadı</Pill>;
 }
 
 function Chevron() {
@@ -183,6 +191,26 @@ export default function Profile() {
               ) : null}
             </View>
           </View>
+          {/* "MEÜ Yazılım Topluluğu üyesi": the clubs that accepted you, on your card. */}
+          {me.data.clubs.some((club) => club.status === 'approved') ? (
+            <View style={styles.memberOf}>
+              {me.data.clubs
+                .filter((club) => club.status === 'approved')
+                .map((club) => (
+                  <PressableScale
+                    key={club.organizationId}
+                    accessibilityRole="link"
+                    onPress={() => router.push({ pathname: '/club/[orgId]', params: { orgId: club.organizationId } })}
+                    style={[styles.memberChip, { backgroundColor: theme.backgroundSelected }]}
+                  >
+                    <ClubAvatar orgId={club.organizationId} name={club.name} size={20} />
+                    <ThemedText type="smallBold" numberOfLines={1} style={styles.chipLabel}>
+                      {club.name} üyesi
+                    </ThemedText>
+                  </PressableScale>
+                ))}
+            </View>
+          ) : null}
           <Button title="Profili düzenle" variant="secondary" onPress={() => router.push('/edit-profile')} />
         </Card>
       )}
@@ -210,6 +238,38 @@ export default function Profile() {
         </Card>
       ) : null}
 
+      {me.data ? (
+        <>
+          <ThemedText type="smallBold">Kulüplerim</ThemedText>
+          {me.data.clubs.length === 0 ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              Henüz bir kulübe üye değilsin. Bir etkinlik sayfasında kulübün adına dokunup üye olabilirsin.
+            </ThemedText>
+          ) : (
+            me.data.clubs.map((club) => (
+              <Card
+                key={club.organizationId}
+                onPress={() => router.push({ pathname: '/club/[orgId]', params: { orgId: club.organizationId } })}
+              >
+                <View style={styles.row}>
+                  <ClubAvatar orgId={club.organizationId} name={club.name} />
+                  <View style={styles.grow}>
+                    <ThemedText type="default">{club.name}</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {club.status === 'approved' && club.decidedAt
+                        ? `${formatDate(club.decidedAt)} tarihinden beri üye`
+                        : `${formatDate(club.requestedAt)} tarihinde istedin`}
+                    </ThemedText>
+                  </View>
+                  <MembershipPill status={club.status} />
+                  <Chevron />
+                </View>
+              </Card>
+            ))
+          )}
+        </>
+      ) : null}
+
       {/* Club team first: at an event this is the way to the door scanner. */}
       {me.data ? (
         <>
@@ -231,6 +291,12 @@ export default function Profile() {
                   <ThemedText type="small" themeColor="textSecondary">
                     {ROLE[membership.role]} · etkinlikler, katılımcılar, QR okutma
                   </ThemedText>
+                  {/* Under the name, so a long club name keeps its width. */}
+                  {membership.pendingRequests > 0 ? (
+                    <View style={styles.requestsPill}>
+                      <Pill tone="tint">{`${membership.pendingRequests} yeni üyelik isteği`}</Pill>
+                    </View>
+                  ) : null}
                 </View>
                 <ClubStatusPill status={membership.clubStatus} reviewedAt={membership.reviewedAt} />
                 <Chevron />
@@ -391,6 +457,19 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', gap: Spacing.two },
   stat: { flex: 1, borderRadius: Radius.large, borderWidth: 1, padding: Spacing.three, gap: Spacing.half },
   statValue: { fontSize: 28, lineHeight: 34 },
+  requestsPill: { marginTop: Spacing.one },
+  memberOf: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two, marginBottom: Spacing.two },
+  memberChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    maxWidth: '100%',
+    borderRadius: Radius.pill,
+    paddingVertical: Spacing.one,
+    paddingLeft: Spacing.one,
+    paddingRight: Spacing.three,
+  },
+  chipLabel: { flexShrink: 1 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: Spacing.two },
   settings: { borderRadius: Radius.large, borderWidth: 1, overflow: 'hidden' },
   settingsRow: {

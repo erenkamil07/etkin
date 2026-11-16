@@ -3,6 +3,7 @@ import { type ApplicationInput, assertNoOpenApplication } from '../applications/
 import type { OrganizationStatus, OrgRole } from '../db/schema.js';
 import type { Database } from '../db.js';
 import { AppError } from '../errors.js';
+import { memberCount } from '../memberships/service.js';
 import { iso } from '../schemas.js';
 import { assertUniversity, universityName, universityRef } from '../universities/service.js';
 
@@ -33,6 +34,7 @@ const ORG_COLUMNS = [
   'no_show_limit',
   'no_show_ban_days',
   'status',
+  memberCount('organizations.id'),
   'created_at',
 ] as const;
 
@@ -47,6 +49,7 @@ function toOrg(row: {
   no_show_limit: number | null;
   no_show_ban_days: number | null;
   status: OrganizationStatus;
+  member_count: number;
   created_at: Date;
 }) {
   return {
@@ -57,6 +60,7 @@ function toOrg(row: {
     logoUrl: row.logo_url,
     university: universityRef(row.university_id, row.university_name),
     status: row.status,
+    memberCount: row.member_count,
     noShowRule:
       row.no_show_limit !== null && row.no_show_ban_days !== null
         ? { limit: row.no_show_limit, banDays: row.no_show_ban_days }

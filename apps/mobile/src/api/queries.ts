@@ -83,3 +83,34 @@ export function useClubApplications() {
 }
 
 export type ClubApplication = NonNullable<ReturnType<typeof useClubApplications>['data']>[number];
+
+/** Your membership of a club (asked, member or refused), or undefined if you never asked or left. */
+export function useClubMembership(orgId: string) {
+  const me = useMe();
+  return me.data?.clubs.find((club) => club.organizationId === orgId);
+}
+
+/** A club's waiting requests or its members, for organizers. */
+export function useMembershipList(orgId: string, status: 'pending' | 'approved', enabled: boolean) {
+  return useQuery({
+    queryKey: ['orgs', orgId, 'memberships', status],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/orgs/{orgId}/memberships', {
+        params: { path: { orgId }, query: { status } },
+      });
+      if (error) throw error;
+      return data;
+    },
+    enabled,
+  });
+}
+
+export type ClubMember = NonNullable<ReturnType<typeof useMembershipList>['data']>[number];
+
+/** What waits on the Profil tab: club applications (admins) and membership requests (organizers). */
+export function useProfileBadge() {
+  const me = useMe();
+  const applications = useClubApplications().data?.length ?? 0;
+  const requests = me.data?.memberships.reduce((sum, club) => sum + club.pendingRequests, 0) ?? 0;
+  return applications + requests;
+}

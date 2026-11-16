@@ -31,6 +31,12 @@ const AllocationModeSchema = z
   .enum(['fcfs', 'priority', 'lottery'])
   .describe('fcfs: first come first served; priority: early window for loyal members; lottery: points-weighted draw');
 
+export const EventAudience = z
+  .enum(['everyone', 'university', 'members'])
+  .describe(
+    "everyone: anyone; university: students of the club's university; members: the club's approved members and team",
+  );
+
 const TicketType = z.object({
   id: z.uuid(),
   name: z.string(),
@@ -62,7 +68,8 @@ const EventBase = z.object({
   checkinPoints: z.number().int(),
   priceIncludes: z.string().nullable().describe("What the ticket price covers, in the club's words"),
   paymentInfo: z.string().nullable().describe('How to pay the club; Etkin itself takes no money'),
-  universityOnly: z.boolean().describe("Only students of the club's university can get tickets"),
+  audience: EventAudience,
+  universityOnly: z.boolean().describe('Deprecated, use audience: true when audience is university'),
   status: z.enum(['draft', 'published', 'cancelled', 'completed']),
   publishedAt: DateTimeOutput.nullable(),
   cover: Cover.nullable(),
@@ -92,10 +99,10 @@ const EventBody = z.object({
   checkinClosesAt: DateTimeInput.optional().describe('Defaults to endsAt'),
   checkinPoints: z.number().int().min(0).max(100).optional().describe('Points awarded at the door; default 1'),
   priceIncludes: text(500).describe('Paid events: what the price covers, e.g. "Yemek ve sertifika"'),
-  universityOnly: z
-    .boolean()
-    .optional()
-    .describe("Only students of the club's university can get tickets; the club needs a university. Default false"),
+  audience: EventAudience.optional().describe(
+    'Who can get tickets; university needs a club with a university. Default everyone',
+  ),
+  universityOnly: z.boolean().optional().describe('Deprecated, use audience: true means university, false everyone'),
   paymentInfo: text(500).describe(
     'Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type',
   ),

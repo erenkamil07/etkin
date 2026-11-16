@@ -24,6 +24,7 @@ const Org = z.object({
   logoUrl: z.string().nullable(),
   university: UniversityRef.nullable(),
   status: ClubStatus,
+  memberCount: z.number().int().describe('Approved members, not counting the team'),
   noShowRule: z
     .object({ limit: z.number().int(), banDays: z.number().int() })
     .nullable()

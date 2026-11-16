@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
-import { useMe, useMyTickets, useOrgRole } from '@/api/queries';
+import { useClubMembership, useMe, useMyTickets, useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
 import { ClubAvatar } from '@/components/club-avatar';
 import { EventCover } from '@/components/event-cover';
@@ -61,9 +61,14 @@ export default function EventDetail() {
   const orgId = event.data?.organization.id ?? '';
   const { membership, canManage } = useOrgRole(orgId);
   const me = useMe();
-  // Mirrors the API's rule only to explain it up front; the API decides on claim.
-  const campus = event.data?.universityOnly ? event.data.organization.university : null;
+  const clubMembership = useClubMembership(orgId);
+  // Mirrors the API's rules only to explain them up front; the API decides on claim.
+  const campus = event.data?.audience === 'university' ? event.data.organization.university : null;
   const notOurStudent = campus !== null && me.data !== undefined && me.data.university?.id !== campus.id;
+  // Members-only: approved members and the club team. Everyone else sees the event, locked.
+  const membersOnly = event.data?.audience === 'members';
+  const notMember = membersOnly && me.data !== undefined && !membership && clubMembership?.status !== 'approved';
+  const openClub = () => router.push({ pathname: '/club/[orgId]', params: { orgId } });
 
   const claim = useMutation({
     mutationFn: async (ticketTypeId: string) => {
@@ -95,12 +100,17 @@ export default function EventDetail() {
             fallback={{ eventId: event.data.id, orgId: event.data.organization.id, title: event.data.title }}
           />
           <View style={styles.heading}>
-            <View style={styles.row}>
+            <Pressable
+              accessibilityRole="link"
+              accessibilityLabel={`${event.data.organization.name}, kulüp sayfası`}
+              onPress={openClub}
+              style={styles.row}
+            >
               <ClubAvatar orgId={event.data.organization.id} name={event.data.organization.name} size={28} />
               <ThemedText type="smallBold" themeColor="textSecondary" numberOfLines={1} style={styles.grow}>
-                {event.data.organization.name}
+                {event.data.organization.name} ›
               </ThemedText>
-            </View>
+            </Pressable>
             <ThemedText type="subtitle">{event.data.title}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
               {formatDateTime(event.data.startsAt)}
@@ -115,6 +125,19 @@ export default function EventDetail() {
                 ? `Bu etkinlik sadece ${campus.name} öğrencilerine açık; bilet alamazsın.`
                 : `Bu etkinlik sadece ${campus.name} öğrencilerine açık.`}
             </Notice>
+          ) : null}
+          {notMember ? (
+            <Card>
+              <ThemedText type="smallBold">🔒 Kulüp üyelerine özel</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {clubMembership?.status === 'pending'
+                  ? 'Üyelik isteğin onay bekliyor. Onaylanınca bu etkinliğe bilet alabilirsin.'
+                  : `Bu etkinliğe sadece ${event.data.organization.name} üyeleri bilet alabilir.`}
+              </ThemedText>
+              {clubMembership?.status === 'pending' ? null : <Button title="Kulübe üye ol" onPress={openClub} />}
+            </Card>
+          ) : membersOnly ? (
+            <Notice tone="success">Kulüp üyelerine özel bir etkinlik; üye olduğun için bilet alabilirsin.</Notice>
           ) : null}
 
           {membership ? (
@@ -205,7 +228,7 @@ export default function EventDetail() {
                         {state.note}
                       </ThemedText>
                     ) : null}
-                    {event.data.status === 'published' && state.open && !notOurStudent ? (
+                    {event.data.status === 'published' && state.open && !notOurStudent && !notMember ? (
                       <Button
                         title="Bileti al"
                         loading={claim.isPending && claim.variables === type.id}

@@ -62,6 +62,23 @@ await rejects(
   'organizations_slug_check',
 );
 
+// --- club memberships -----------------------------------------------------
+await db.query(`INSERT INTO club_memberships (organization_id, user_id) VALUES ($1, $2)`, [org.id, u.id]);
+await rejects(
+  `INSERT INTO club_memberships (organization_id, user_id) VALUES ($1, $2)`,
+  'one membership row per person and club',
+  [org.id, u.id],
+  'club_memberships_pkey',
+);
+await rejects(
+  `UPDATE club_memberships SET status = 'approved' WHERE user_id = $1`,
+  'a decision needs its time',
+  [u.id],
+  'club_memberships_decided',
+);
+await db.query(`UPDATE club_memberships SET status = 'approved', decided_at = now() WHERE user_id = $1`, [u.id]);
+ok(true, 'approved membership with a decision time accepted');
+
 // --- events & ticket types ------------------------------------------------
 const newEvent = (title, offset) =>
   one(

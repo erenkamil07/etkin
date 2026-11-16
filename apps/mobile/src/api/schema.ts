@@ -397,6 +397,21 @@ export interface paths {
                                  * @description When a platform admin decided on the club, if they have
                                  */
                                 reviewedAt: string | null;
+                                /** @description Membership requests waiting for an answer; always 0 for door scanners, who cannot answer them */
+                                pendingRequests: number;
+                            }[];
+                            /** @description Clubs you are a member of or asked to join (the club team is in memberships) */
+                            clubs: {
+                                /** Format: uuid */
+                                organizationId: string;
+                                slug: string;
+                                name: string;
+                                /** @enum {string} */
+                                status: "pending" | "approved" | "rejected";
+                                /** Format: date-time */
+                                requestedAt: string;
+                                /** Format: date-time */
+                                decidedAt: string | null;
                             }[];
                         };
                     };
@@ -495,6 +510,21 @@ export interface paths {
                                  * @description When a platform admin decided on the club, if they have
                                  */
                                 reviewedAt: string | null;
+                                /** @description Membership requests waiting for an answer; always 0 for door scanners, who cannot answer them */
+                                pendingRequests: number;
+                            }[];
+                            /** @description Clubs you are a member of or asked to join (the club team is in memberships) */
+                            clubs: {
+                                /** Format: uuid */
+                                organizationId: string;
+                                slug: string;
+                                name: string;
+                                /** @enum {string} */
+                                status: "pending" | "approved" | "rejected";
+                                /** Format: date-time */
+                                requestedAt: string;
+                                /** Format: date-time */
+                                decidedAt: string | null;
                             }[];
                         };
                     };
@@ -565,6 +595,8 @@ export interface paths {
                              * @enum {string}
                              */
                             status: "pending" | "approved" | "rejected";
+                            /** @description Approved members, not counting the team */
+                            memberCount: number;
                             /** @description After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null */
                             noShowRule: {
                                 limit: number;
@@ -624,6 +656,8 @@ export interface paths {
                              * @enum {string}
                              */
                             status: "pending" | "approved" | "rejected";
+                            /** @description Approved members, not counting the team */
+                            memberCount: number;
                             /** @description After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null */
                             noShowRule: {
                                 limit: number;
@@ -693,6 +727,8 @@ export interface paths {
                              * @enum {string}
                              */
                             status: "pending" | "approved" | "rejected";
+                            /** @description Approved members, not counting the team */
+                            memberCount: number;
                             /** @description After `limit` no-shows in 90 days, no tickets from the club for `banDays`; off when null */
                             noShowRule: {
                                 limit: number;
@@ -1100,6 +1136,286 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/orgs/{orgId}/membership": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your membership of this club; null when you never asked or have left */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            status: "pending" | "approved" | "rejected";
+                            /** Format: date-time */
+                            requestedAt: string;
+                            /** Format: date-time */
+                            decidedAt: string | null;
+                        } | null;
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Ask to join the club; needs a student number on your profile. Asking again after a refusal re-opens it */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            status: "pending" | "approved" | "rejected";
+                            /** Format: date-time */
+                            requestedAt: string;
+                            /** Format: date-time */
+                            decidedAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        /** Leave the club, or withdraw your request */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orgs/{orgId}/memberships": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Waiting requests (oldest first) or members (by name) (organizer+) */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "pending" | "approved";
+                };
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            userId: string;
+                            fullName: string;
+                            avatarUrl: string | null;
+                            /** @description To check the request against the club’s own member list */
+                            studentNumber: string | null;
+                            university: {
+                                id: number;
+                                name: string;
+                            } | null;
+                            /** @enum {string} */
+                            status: "pending" | "approved" | "rejected";
+                            /** Format: date-time */
+                            requestedAt: string;
+                            /** Format: date-time */
+                            decidedAt: string | null;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orgs/{orgId}/memberships/{userId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept a waiting request (organizer+) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            status: "pending" | "approved" | "rejected";
+                            /** Format: date-time */
+                            requestedAt: string;
+                            /** Format: date-time */
+                            decidedAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orgs/{orgId}/memberships/{userId}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refuse a waiting request; they can ask again later (organizer+) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            status: "pending" | "approved" | "rejected";
+                            /** Format: date-time */
+                            requestedAt: string;
+                            /** Format: date-time */
+                            decidedAt: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/orgs/{orgId}/memberships/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Take someone off the member list (organizer+) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    userId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/events": {
         parameters: {
             query?: never;
@@ -1161,7 +1477,12 @@ export interface paths {
                                 priceIncludes: string | null;
                                 /** @description How to pay the club; Etkin itself takes no money */
                                 paymentInfo: string | null;
-                                /** @description Only students of the club's university can get tickets */
+                                /**
+                                 * @description everyone: anyone; university: students of the club's university; members: the club's approved members and team
+                                 * @enum {string}
+                                 */
+                                audience: "everyone" | "university" | "members";
+                                /** @description Deprecated, use audience: true when audience is university */
                                 universityOnly: boolean;
                                 /** @enum {string} */
                                 status: "draft" | "published" | "cancelled" | "completed";
@@ -1248,7 +1569,12 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
-                            /** @description Only students of the club's university can get tickets */
+                            /**
+                             * @description everyone: anyone; university: students of the club's university; members: the club's approved members and team
+                             * @enum {string}
+                             */
+                            audience: "everyone" | "university" | "members";
+                            /** @description Deprecated, use audience: true when audience is university */
                             universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
@@ -1353,7 +1679,12 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
-                            /** @description Only students of the club's university can get tickets */
+                            /**
+                             * @description everyone: anyone; university: students of the club's university; members: the club's approved members and team
+                             * @enum {string}
+                             */
+                            audience: "everyone" | "university" | "members";
+                            /** @description Deprecated, use audience: true when audience is university */
                             universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
@@ -1412,7 +1743,12 @@ export interface paths {
                         checkinPoints?: number;
                         /** @description Paid events: what the price covers, e.g. "Yemek ve sertifika" */
                         priceIncludes?: string | null;
-                        /** @description Only students of the club's university can get tickets; the club needs a university. Default false */
+                        /**
+                         * @description Who can get tickets; university needs a club with a university. Default everyone
+                         * @enum {string}
+                         */
+                        audience?: "everyone" | "university" | "members";
+                        /** @description Deprecated, use audience: true means university, false everyone */
                         universityOnly?: boolean;
                         /** @description Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type */
                         paymentInfo?: string | null;
@@ -1456,7 +1792,12 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
-                            /** @description Only students of the club's university can get tickets */
+                            /**
+                             * @description everyone: anyone; university: students of the club's university; members: the club's approved members and team
+                             * @enum {string}
+                             */
+                            audience: "everyone" | "university" | "members";
+                            /** @description Deprecated, use audience: true when audience is university */
                             universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
@@ -1575,7 +1916,12 @@ export interface paths {
                         checkinPoints?: number;
                         /** @description Paid events: what the price covers, e.g. "Yemek ve sertifika" */
                         priceIncludes?: string | null;
-                        /** @description Only students of the club's university can get tickets; the club needs a university. Default false */
+                        /**
+                         * @description Who can get tickets; university needs a club with a university. Default everyone
+                         * @enum {string}
+                         */
+                        audience?: "everyone" | "university" | "members";
+                        /** @description Deprecated, use audience: true means university, false everyone */
                         universityOnly?: boolean;
                         /** @description Paid events: how to pay the club, e.g. at the door or by bank transfer. Required to publish an event with a paid ticket type */
                         paymentInfo?: string | null;
@@ -1619,7 +1965,12 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
-                            /** @description Only students of the club's university can get tickets */
+                            /**
+                             * @description everyone: anyone; university: students of the club's university; members: the club's approved members and team
+                             * @enum {string}
+                             */
+                            audience: "everyone" | "university" | "members";
+                            /** @description Deprecated, use audience: true when audience is university */
                             universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
@@ -1721,7 +2072,12 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
-                            /** @description Only students of the club's university can get tickets */
+                            /**
+                             * @description everyone: anyone; university: students of the club's university; members: the club's approved members and team
+                             * @enum {string}
+                             */
+                            audience: "everyone" | "university" | "members";
+                            /** @description Deprecated, use audience: true when audience is university */
                             universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";
@@ -1827,7 +2183,12 @@ export interface paths {
                             priceIncludes: string | null;
                             /** @description How to pay the club; Etkin itself takes no money */
                             paymentInfo: string | null;
-                            /** @description Only students of the club's university can get tickets */
+                            /**
+                             * @description everyone: anyone; university: students of the club's university; members: the club's approved members and team
+                             * @enum {string}
+                             */
+                            audience: "everyone" | "university" | "members";
+                            /** @description Deprecated, use audience: true when audience is university */
                             universityOnly: boolean;
                             /** @enum {string} */
                             status: "draft" | "published" | "cancelled" | "completed";

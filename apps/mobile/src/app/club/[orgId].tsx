@@ -2,17 +2,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, Switch, View } from 'react-native';
 import { api } from '@/api/client';
-import { useClub, useOrgRole } from '@/api/queries';
+import { useClub, useMe, useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
 import { ClubAvatar } from '@/components/club-avatar';
-import { CardSkeleton } from '@/components/skeleton';
+import { EventCard } from '@/components/event-card';
+import { CardSkeleton, EventCardSkeleton, PageSkeleton } from '@/components/skeleton';
 import { ThemedText } from '@/components/themed-text';
-import { Button, Card, ErrorBanner, Screen, Segmented } from '@/components/ui';
+import { Button, Card, ErrorBanner, Pill, Screen, Segmented } from '@/components/ui';
 import { UniversityPicker } from '@/components/university-picker';
 import { Spacing } from '@/constants/theme';
 import { formatDateTime } from '@/format';
 import { useNow } from '@/hooks/use-now';
 import { ClubStatusNotice } from '@/orgs/club-status';
+import { JoinClub, MembershipInbox } from '@/orgs/membership';
 
 type ClubEvent = paths['/orgs/{orgId}/events']['get']['responses'][200]['content']['application/json'][number];
 type NoShowRule = NonNullable<
@@ -38,6 +40,7 @@ function byRelevance(now: number) {
 export default function Club() {
   const { orgId } = useLocalSearchParams<{ orgId: string }>();
   const { membership, canManage } = useOrgRole(orgId);
+  const me = useMe();
   const now = useNow(60_000);
   const queryClient = useQueryClient();
 
@@ -67,6 +70,7 @@ export default function Club() {
     },
   });
 
+  // The team sees every event, drafts included; everyone else the upcoming published ones.
   const events = useQuery({
     queryKey: ['orgs', orgId, 'events'],
     queryFn: async () => {
@@ -74,26 +78,44 @@ export default function Club() {
       if (error) throw error;
       return data;
     },
+    enabled: membership !== undefined,
   });
+  const upcoming = useQuery({
+    queryKey: ['events', 'club', orgId],
+    queryFn: async () => {
+      const { data, error } = await api.GET('/events', { params: { query: { orgId, limit: 50 } } });
+      if (error) throw error;
+      return data.items;
+    },
+    enabled: me.data !== undefined && membership === undefined,
+  });
+
+  const name = club.data?.name ?? membership?.name;
+
+  if (club.isPending && !membership) return <PageSkeleton cover={false} />;
 
   return (
     <Screen belowHeader>
-      <Stack.Screen options={{ title: membership?.name ?? 'Kulüp' }} />
-      {membership ? (
+      <Stack.Screen options={{ title: name ?? 'Kulüp' }} />
+      {club.error && !membership ? <ErrorBanner error={club.error} /> : null}
+      {name ? (
         <View style={styles.header}>
-          <ClubAvatar orgId={orgId} name={membership.name} size={56} />
+          <ClubAvatar orgId={orgId} name={name} size={64} />
           <View style={styles.grow}>
             <ThemedText type="subtitle" numberOfLines={2}>
-              {membership.name}
+              {name}
             </ThemedText>
-            {club.data?.university ? (
-              <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-                {club.data.university.name}
-              </ThemedText>
-            ) : null}
+            <ThemedText type="small" themeColor="textSecondary" numberOfLines={2}>
+              {[club.data?.university?.name, club.data && `${club.data.memberCount} üye`].filter(Boolean).join(' · ')}
+            </ThemedText>
           </View>
         </View>
       ) : null}
+      {club.data?.description ? <ThemedText type="small">{club.data.description}</ThemedText> : null}
+
+      {/* The team already counts as members; everyone else can ask to join. */}
+      {!membership && name && club.data?.status === 'approved' ? <JoinClub orgId={orgId} clubName={name} /> : null}
+
       <ClubStatusNotice orgId={orgId} />
       {canManage ? (
         <Button
@@ -156,8 +178,29 @@ export default function Club() {
         </Card>
       ) : null}
 
-      <ThemedText type="smallBold">Etkinlikler</ThemedText>
-      {events.isPending ? (
+      {canManage && name ? <MembershipInbox orgId={orgId} clubName={name} /> : null}
+
+      <ThemedText type="smallBold">{membership ? 'Etkinlikler' : 'Yaklaşan etkinlikler'}</ThemedText>
+      {!membership ? (
+        upcoming.isPending ? (
+          <EventCardSkeleton count={2} />
+        ) : upcoming.error ? (
+          <ErrorBanner error={upcoming.error} />
+        ) : upcoming.data.length === 0 ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            Kulübün şu an yaklaşan etkinliği yok.
+          </ThemedText>
+        ) : (
+          upcoming.data.map((event) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              footer={event.audience === 'members' ? <Pill tone="warning">🔒 Üyelere özel</Pill> : null}
+              onPress={() => router.push({ pathname: '/events/[id]', params: { id: event.id } })}
+            />
+          ))
+        )
+      ) : events.isPending ? (
         <CardSkeleton />
       ) : events.error ? (
         <ErrorBanner error={events.error} />

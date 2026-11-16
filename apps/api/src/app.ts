@@ -25,6 +25,7 @@ import { AppError, registerErrorHandling } from './errors.js';
 import { eventRoutes } from './events/routes.js';
 import { legalRoutes } from './legal/routes.js';
 import { loyaltyRoutes } from './loyalty/routes.js';
+import { membershipRoutes } from './memberships/routes.js';
 import { moderationRoutes } from './moderation/routes.js';
 import { orgRoutes } from './orgs/routes.js';
 import { healthRoutes, type ReadinessCheck } from './routes/health.js';
@@ -88,6 +89,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
       tags: [
         { name: 'auth', description: 'Accounts and sessions' },
         { name: 'orgs', description: 'Clubs and their teams' },
+        { name: 'memberships', description: 'Joining clubs, and the requests organizers answer' },
         { name: 'events', description: 'Events and ticket types' },
         { name: 'tickets', description: 'Claiming and managing your tickets' },
         { name: 'check-in', description: 'Admitting people at the door' },
@@ -121,6 +123,7 @@ export async function buildApp({ config, db, readinessChecks }: AppDeps) {
   });
   await app.register(orgRoutes, { db });
   await app.register(applicationRoutes, { db });
+  await app.register(membershipRoutes, { db });
   await app.register(eventRoutes, { db });
   await app.register(coverRoutes, { db });
   await app.register(avatarRoutes, { db });

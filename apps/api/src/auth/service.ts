@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { PlatformRole } from '../db/schema.js';
 import { type Database, isUniqueViolation } from '../db.js';
 import { AppError } from '../errors.js';
+import { myClubs, pendingRequestCounts } from '../memberships/service.js';
 import {
   assertUniversity,
   nextUniversityChosenAt,
@@ -232,7 +233,7 @@ export async function logout(deps: AuthDeps, refreshToken: string): Promise<void
  * Deletes the account as KVKK and Google Play expect while keeping the clubs'
  * history honest. The row is anonymised rather than removed: name, email,
  * student number, university and password are wiped (the email is free for a
- * new account), every session ends and team memberships go. Seats held for
+ * new account), every session ends, and team and club memberships go. Seats held for
  * events that haven't started are given back. Past attendance, points and
  * scan logs stay in the clubs' numbers, tied to nobody.
  *
@@ -274,6 +275,7 @@ export async function deleteAccount(db: Database, userId: string, password: stri
 
     await trx.updateTable('tickets').set({ bound_device_id: null }).where('user_id', '=', userId).execute();
     await trx.deleteFrom('organization_members').where('user_id', '=', userId).execute();
+    await trx.deleteFrom('club_memberships').where('user_id', '=', userId).execute();
     await trx
       .updateTable('refresh_tokens')
       .set({ revoked_at: now })
@@ -366,6 +368,10 @@ export async function getProfile(db: Database, userId: string) {
     .orderBy('o.name')
     .execute();
 
+  // Organizers and owners answer membership requests; scanners don't see them.
+  const answering = memberships.filter((m) => m.role !== 'scanner').map((m) => m.id);
+  const [pending, clubs] = await Promise.all([pendingRequestCounts(db, answering), myClubs(db, userId)]);
+
   return {
     ...toPublicUser(user),
     universityLockedUntil: universityLockedUntil(user.university_chosen_at)?.toISOString() ?? null,
@@ -376,6 +382,8 @@ export async function getProfile(db: Database, userId: string) {
       role: m.role,
       clubStatus: m.status,
       reviewedAt: m.reviewed_at?.toISOString() ?? null,
+      pendingRequests: pending.get(m.id) ?? 0,
     })),
+    clubs,
   };
 }
