@@ -5,7 +5,6 @@ import { useTheme } from '@/hooks/use-theme';
 
 export default function AppTabs() {
   const theme = useTheme();
-  // Platform admins see on the Profil tab how many clubs wait for approval.
   // Club applications for admins, membership requests for club organizers.
   const pendingClubs = useProfileBadge();
   return (
@@ -30,7 +29,8 @@ export default function AppTabs() {
       <NativeTabs.Trigger name="profile">
         <NativeTabs.Trigger.Label>Profil</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="person.crop.circle" md="person" />
-        <NativeTabs.Trigger.Badge hidden={pendingClubs === 0}>{String(pendingClubs)}</NativeTabs.Trigger.Badge>
+        {/* Android ignores `hidden` and shows "0": leave the badge out instead. */}
+        {pendingClubs > 0 ? <NativeTabs.Trigger.Badge>{String(pendingClubs)}</NativeTabs.Trigger.Badge> : null}
       </NativeTabs.Trigger>
     </NativeTabs>
   );

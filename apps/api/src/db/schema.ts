@@ -305,6 +305,7 @@ export interface Users {
   id: Generated<string>;
   password_hash: string | null;
   platform_role: Generated<PlatformRole>;
+  show_photo_at_events: Generated<boolean>;
   student_number: string | null;
   university_chosen_at: Timestamp | null;
   university_id: number | null;

@@ -131,6 +131,9 @@ tokens live in localStorage instead of the keystore.
   permission). The app shrinks it to 1200 px JPEG (about 200 KB); the API keeps it in PostgreSQL
   without its EXIF, GPS or XMP, and serves it at a versioned URL cached for good. Lists show a
   banner cropped from the top, the event page the whole poster.
+- **Attendee faces.** Event cards show how many hold a ticket ("200 kişi katılıyor") and up to three
+  holders' photos, only from people who turned on "Katıldığım etkinliklerde fotoğrafım görünsün" (off
+  by default).
 - **Profile.** A photo (cropped square, 400 px, metadata stripped like posters), name and student
   number under "Profili düzenle"; stats for events attended, points and badges; the last events
   you were checked in to; badges you can tap for what they mean or what is left to earn them; and

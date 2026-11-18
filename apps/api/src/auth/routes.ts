@@ -58,6 +58,9 @@ const Tokens = z.object({
 const Session = Tokens.extend({ user: PublicUser });
 
 const Profile = PublicUser.extend({
+  showPhotoAtEvents: z
+    .boolean()
+    .describe('Your photo appears among the faces on events you have a ticket for; off by default'),
   universityLockedUntil: z.iso
     .datetime()
     .nullable()
@@ -169,13 +172,18 @@ export const authRoutes: FastifyPluginAsyncZod<{ auth: AuthDeps }> = async (app,
       onRequest: app.authenticate,
       schema: {
         tags: ['auth'],
-        summary: 'Change your name, student number or university (null if yours is not listed)',
+        summary:
+          'Change your name, student number, university (null if yours is not listed) or whether events show your photo',
         security: [{ bearerAuth: [] }],
         body: z
           .object({
             fullName: z.string().trim().min(2).max(120).optional(),
             studentNumber: z.string().trim().min(1).max(32).nullable().optional(),
             universityId: UniversityId.nullable().optional(),
+            showPhotoAtEvents: z
+              .boolean()
+              .optional()
+              .describe('Show your profile photo among the faces on events you have a ticket for'),
           })
           .refine(atLeastOneField, 'Provide at least one field to change'),
         response: { 200: Profile },

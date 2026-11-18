@@ -620,6 +620,10 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "showPhotoAtEvents": {
+                      "type": "boolean",
+                      "description": "Your photo appears among the faces on events you have a ticket for; off by default"
+                    },
                     "universityLockedUntil": {
                       "nullable": true,
                       "description": "When the university can next be changed; null if it can be changed now",
@@ -744,6 +748,7 @@
                     "avatarUrl",
                     "platformRole",
                     "createdAt",
+                    "showPhotoAtEvents",
                     "universityLockedUntil",
                     "memberships",
                     "clubs"
@@ -756,7 +761,7 @@
         }
       },
       "patch": {
-        "summary": "Change your name, student number or university (null if yours is not listed)",
+        "summary": "Change your name, student number, university (null if yours is not listed) or whether events show your photo",
         "tags": [
           "auth"
         ],
@@ -785,6 +790,10 @@
                     "exclusiveMinimum": true,
                     "maximum": 9007199254740991,
                     "description": "An id from GET /universities"
+                  },
+                  "showPhotoAtEvents": {
+                    "description": "Show your profile photo among the faces on events you have a ticket for",
+                    "type": "boolean"
                   }
                 }
               }
@@ -855,6 +864,10 @@
                       "format": "date-time",
                       "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
                     },
+                    "showPhotoAtEvents": {
+                      "type": "boolean",
+                      "description": "Your photo appears among the faces on events you have a ticket for; off by default"
+                    },
                     "universityLockedUntil": {
                       "nullable": true,
                       "description": "When the university can next be changed; null if it can be changed now",
@@ -979,6 +992,7 @@
                     "avatarUrl",
                     "platformRole",
                     "createdAt",
+                    "showPhotoAtEvents",
                     "universityLockedUntil",
                     "memberships",
                     "clubs"
@@ -2922,6 +2936,31 @@
                             "additionalProperties": false,
                             "description": "The event's poster, if it has one"
                           },
+                          "attendees": {
+                            "type": "object",
+                            "properties": {
+                              "count": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Tickets held, used ones included"
+                              },
+                              "photos": {
+                                "maxItems": 3,
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "description": "Up to 3 profile photos of holders who chose to show them on events, latest first"
+                              }
+                            },
+                            "required": [
+                              "count",
+                              "photos"
+                            ],
+                            "additionalProperties": false,
+                            "description": "For the faces and \"N kişi katılıyor\" on event cards"
+                          },
                           "capacity": {
                             "type": "integer",
                             "minimum": -9007199254740991,
@@ -2958,6 +2997,7 @@
                           "status",
                           "publishedAt",
                           "cover",
+                          "attendees",
                           "capacity",
                           "remaining",
                           "priceFromCents"
@@ -3160,6 +3200,31 @@
                       "additionalProperties": false,
                       "description": "The event's poster, if it has one"
                     },
+                    "attendees": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "Tickets held, used ones included"
+                        },
+                        "photos": {
+                          "maxItems": 3,
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Up to 3 profile photos of holders who chose to show them on events, latest first"
+                        }
+                      },
+                      "required": [
+                        "count",
+                        "photos"
+                      ],
+                      "additionalProperties": false,
+                      "description": "For the faces and \"N kişi katılıyor\" on event cards"
+                    },
                     "ticketTypes": {
                       "type": "array",
                       "items": {
@@ -3276,6 +3341,7 @@
                     "status",
                     "publishedAt",
                     "cover",
+                    "attendees",
                     "ticketTypes"
                   ],
                   "additionalProperties": false
@@ -3471,6 +3537,31 @@
                         "additionalProperties": false,
                         "description": "The event's poster, if it has one"
                       },
+                      "attendees": {
+                        "type": "object",
+                        "properties": {
+                          "count": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991,
+                            "description": "Tickets held, used ones included"
+                          },
+                          "photos": {
+                            "maxItems": 3,
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "Up to 3 profile photos of holders who chose to show them on events, latest first"
+                          }
+                        },
+                        "required": [
+                          "count",
+                          "photos"
+                        ],
+                        "additionalProperties": false,
+                        "description": "For the faces and \"N kişi katılıyor\" on event cards"
+                      },
                       "capacity": {
                         "type": "integer",
                         "minimum": -9007199254740991,
@@ -3507,6 +3598,7 @@
                       "status",
                       "publishedAt",
                       "cover",
+                      "attendees",
                       "capacity",
                       "remaining",
                       "priceFromCents"
@@ -3792,6 +3884,31 @@
                       "additionalProperties": false,
                       "description": "The event's poster, if it has one"
                     },
+                    "attendees": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "Tickets held, used ones included"
+                        },
+                        "photos": {
+                          "maxItems": 3,
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Up to 3 profile photos of holders who chose to show them on events, latest first"
+                        }
+                      },
+                      "required": [
+                        "count",
+                        "photos"
+                      ],
+                      "additionalProperties": false,
+                      "description": "For the faces and \"N kişi katılıyor\" on event cards"
+                    },
                     "ticketTypes": {
                       "type": "array",
                       "items": {
@@ -3908,6 +4025,7 @@
                     "status",
                     "publishedAt",
                     "cover",
+                    "attendees",
                     "ticketTypes"
                   ],
                   "additionalProperties": false
@@ -4197,6 +4315,31 @@
                       "additionalProperties": false,
                       "description": "The event's poster, if it has one"
                     },
+                    "attendees": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "Tickets held, used ones included"
+                        },
+                        "photos": {
+                          "maxItems": 3,
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Up to 3 profile photos of holders who chose to show them on events, latest first"
+                        }
+                      },
+                      "required": [
+                        "count",
+                        "photos"
+                      ],
+                      "additionalProperties": false,
+                      "description": "For the faces and \"N kişi katılıyor\" on event cards"
+                    },
                     "ticketTypes": {
                       "type": "array",
                       "items": {
@@ -4313,6 +4456,7 @@
                     "status",
                     "publishedAt",
                     "cover",
+                    "attendees",
                     "ticketTypes"
                   ],
                   "additionalProperties": false
@@ -4554,6 +4698,31 @@
                       "additionalProperties": false,
                       "description": "The event's poster, if it has one"
                     },
+                    "attendees": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "Tickets held, used ones included"
+                        },
+                        "photos": {
+                          "maxItems": 3,
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Up to 3 profile photos of holders who chose to show them on events, latest first"
+                        }
+                      },
+                      "required": [
+                        "count",
+                        "photos"
+                      ],
+                      "additionalProperties": false,
+                      "description": "For the faces and \"N kişi katılıyor\" on event cards"
+                    },
                     "ticketTypes": {
                       "type": "array",
                       "items": {
@@ -4670,6 +4839,7 @@
                     "status",
                     "publishedAt",
                     "cover",
+                    "attendees",
                     "ticketTypes"
                   ],
                   "additionalProperties": false
@@ -4873,6 +5043,31 @@
                       "additionalProperties": false,
                       "description": "The event's poster, if it has one"
                     },
+                    "attendees": {
+                      "type": "object",
+                      "properties": {
+                        "count": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991,
+                          "description": "Tickets held, used ones included"
+                        },
+                        "photos": {
+                          "maxItems": 3,
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Up to 3 profile photos of holders who chose to show them on events, latest first"
+                        }
+                      },
+                      "required": [
+                        "count",
+                        "photos"
+                      ],
+                      "additionalProperties": false,
+                      "description": "For the faces and \"N kişi katılıyor\" on event cards"
+                    },
                     "ticketTypes": {
                       "type": "array",
                       "items": {
@@ -4989,6 +5184,7 @@
                     "status",
                     "publishedAt",
                     "cover",
+                    "attendees",
                     "ticketTypes"
                   ],
                   "additionalProperties": false

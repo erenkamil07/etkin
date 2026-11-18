@@ -73,6 +73,15 @@ const EventBase = z.object({
   status: z.enum(['draft', 'published', 'cancelled', 'completed']),
   publishedAt: DateTimeOutput.nullable(),
   cover: Cover.nullable(),
+  attendees: z
+    .object({
+      count: z.number().int().describe('Tickets held, used ones included'),
+      photos: z
+        .array(z.string())
+        .max(3)
+        .describe('Up to 3 profile photos of holders who chose to show them on events, latest first'),
+    })
+    .describe('For the faces and "N kişi katılıyor" on event cards'),
 });
 const EventSummary = EventBase.extend({
   capacity: z.number().int(),

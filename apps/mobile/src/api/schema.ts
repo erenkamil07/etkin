@@ -375,6 +375,8 @@ export interface paths {
                             platformRole: "user" | "admin";
                             /** Format: date-time */
                             createdAt: string;
+                            /** @description Your photo appears among the faces on events you have a ticket for; off by default */
+                            showPhotoAtEvents: boolean;
                             /**
                              * Format: date-time
                              * @description When the university can next be changed; null if it can be changed now
@@ -447,7 +449,7 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Change your name, student number or university (null if yours is not listed) */
+        /** Change your name, student number, university (null if yours is not listed) or whether events show your photo */
         patch: {
             parameters: {
                 query?: never;
@@ -462,6 +464,8 @@ export interface paths {
                         studentNumber?: string | null;
                         /** @description An id from GET /universities */
                         universityId?: number | null;
+                        /** @description Show your profile photo among the faces on events you have a ticket for */
+                        showPhotoAtEvents?: boolean;
                     };
                 };
             };
@@ -488,6 +492,8 @@ export interface paths {
                             platformRole: "user" | "admin";
                             /** Format: date-time */
                             createdAt: string;
+                            /** @description Your photo appears among the faces on events you have a ticket for; off by default */
+                            showPhotoAtEvents: boolean;
                             /**
                              * Format: date-time
                              * @description When the university can next be changed; null if it can be changed now
@@ -1495,6 +1501,13 @@ export interface paths {
                                     width: number;
                                     height: number;
                                 } | null;
+                                /** @description For the faces and "N kişi katılıyor" on event cards */
+                                attendees: {
+                                    /** @description Tickets held, used ones included */
+                                    count: number;
+                                    /** @description Up to 3 profile photos of holders who chose to show them on events, latest first */
+                                    photos: string[];
+                                };
                                 capacity: number;
                                 remaining: number;
                                 /** @description Cheapest ticket type; 0 when any ticket is free */
@@ -1587,6 +1600,13 @@ export interface paths {
                                 width: number;
                                 height: number;
                             } | null;
+                            /** @description For the faces and "N kişi katılıyor" on event cards */
+                            attendees: {
+                                /** @description Tickets held, used ones included */
+                                count: number;
+                                /** @description Up to 3 profile photos of holders who chose to show them on events, latest first */
+                                photos: string[];
+                            };
                             ticketTypes: {
                                 /** Format: uuid */
                                 id: string;
@@ -1697,6 +1717,13 @@ export interface paths {
                                 width: number;
                                 height: number;
                             } | null;
+                            /** @description For the faces and "N kişi katılıyor" on event cards */
+                            attendees: {
+                                /** @description Tickets held, used ones included */
+                                count: number;
+                                /** @description Up to 3 profile photos of holders who chose to show them on events, latest first */
+                                photos: string[];
+                            };
                             capacity: number;
                             remaining: number;
                             /** @description Cheapest ticket type; 0 when any ticket is free */
@@ -1810,6 +1837,13 @@ export interface paths {
                                 width: number;
                                 height: number;
                             } | null;
+                            /** @description For the faces and "N kişi katılıyor" on event cards */
+                            attendees: {
+                                /** @description Tickets held, used ones included */
+                                count: number;
+                                /** @description Up to 3 profile photos of holders who chose to show them on events, latest first */
+                                photos: string[];
+                            };
                             ticketTypes: {
                                 /** Format: uuid */
                                 id: string;
@@ -1983,6 +2017,13 @@ export interface paths {
                                 width: number;
                                 height: number;
                             } | null;
+                            /** @description For the faces and "N kişi katılıyor" on event cards */
+                            attendees: {
+                                /** @description Tickets held, used ones included */
+                                count: number;
+                                /** @description Up to 3 profile photos of holders who chose to show them on events, latest first */
+                                photos: string[];
+                            };
                             ticketTypes: {
                                 /** Format: uuid */
                                 id: string;
@@ -2090,6 +2131,13 @@ export interface paths {
                                 width: number;
                                 height: number;
                             } | null;
+                            /** @description For the faces and "N kişi katılıyor" on event cards */
+                            attendees: {
+                                /** @description Tickets held, used ones included */
+                                count: number;
+                                /** @description Up to 3 profile photos of holders who chose to show them on events, latest first */
+                                photos: string[];
+                            };
                             ticketTypes: {
                                 /** Format: uuid */
                                 id: string;
@@ -2201,6 +2249,13 @@ export interface paths {
                                 width: number;
                                 height: number;
                             } | null;
+                            /** @description For the faces and "N kişi katılıyor" on event cards */
+                            attendees: {
+                                /** @description Tickets held, used ones included */
+                                count: number;
+                                /** @description Up to 3 profile photos of holders who chose to show them on events, latest first */
+                                photos: string[];
+                            };
                             ticketTypes: {
                                 /** Format: uuid */
                                 id: string;

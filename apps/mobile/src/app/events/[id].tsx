@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { api } from '@/api/client';
 import { useClubMembership, useMe, useMyTickets, useOrgRole } from '@/api/queries';
 import type { paths } from '@/api/schema';
+import { AttendeeFaces } from '@/components/attendee-faces';
 import { ClubAvatar } from '@/components/club-avatar';
 import { EventCover } from '@/components/event-cover';
 import { PageSkeleton } from '@/components/skeleton';
@@ -12,6 +13,7 @@ import { Button, Card, ErrorBanner, Notice, Screen } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { formatDateTime, formatPrice } from '@/format';
 import { useNow } from '@/hooks/use-now';
+import { useTheme } from '@/hooks/use-theme';
 
 type Event = paths['/events/{eventId}']['get']['responses'][200]['content']['application/json'];
 type TicketType = Event['ticketTypes'][number];
@@ -45,6 +47,7 @@ function sales(type: TicketType, now: number): { open: boolean; note?: string } 
 
 export default function EventDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const theme = useTheme();
   const queryClient = useQueryClient();
   const now = useNow(30_000);
 
@@ -116,6 +119,7 @@ export default function EventDetail() {
               {formatDateTime(event.data.startsAt)}
               {event.data.locationName ? ` · ${event.data.locationName}` : ''}
             </ThemedText>
+            <AttendeeFaces attendees={event.data.attendees} size={30} ringColor={theme.background} />
           </View>
 
           {event.data.status === 'cancelled' ? <Notice tone="danger">Bu etkinlik iptal edildi.</Notice> : null}

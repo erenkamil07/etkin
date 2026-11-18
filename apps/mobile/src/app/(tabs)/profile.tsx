@@ -20,6 +20,7 @@ import { formatDate, formatDateTime } from '@/format';
 import { useTheme } from '@/hooks/use-theme';
 import { type BadgeItem, BadgeSheet, BadgeTile, badgeKey } from '@/profile/badges';
 import { NewBadges } from '@/profile/new-badges';
+import { PhotoAtEventsSwitch } from '@/profile/photo-at-events';
 import { UNIVERSITY_HINT } from '@/universities';
 
 const ROLE = { owner: 'Kurucu', organizer: 'Organizatör', scanner: 'Kapı görevlisi' } as const;
@@ -427,6 +428,11 @@ export default function Profile() {
             }
           />
           <ErrorBanner error={changeUniversity.error} />
+        </Card>
+      ) : null}
+      {me.data ? (
+        <Card>
+          <PhotoAtEventsSwitch />
         </Card>
       ) : null}
       <View style={[styles.settings, { borderColor: theme.border, backgroundColor: theme.backgroundElement }]}>

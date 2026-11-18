@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Fonts, Radius, Spacing } from '@/constants/theme';
 import { dateBadge, formatWeekdayTime } from '@/format';
 import { useTheme } from '@/hooks/use-theme';
+import { AttendeeFaces, type Attendees } from './attendee-faces';
 import { type Cover, EventCover } from './event-cover';
 import { PressableScale } from './pressable-scale';
 import { ThemedText } from './themed-text';
@@ -18,6 +19,7 @@ interface EventSummary {
   locationName: string | null;
   organization: { id: string; name: string; university?: { name: string } | null };
   cover?: Cover | null;
+  attendees?: Attendees | null;
 }
 
 /**
@@ -82,6 +84,11 @@ export function EventCard({
             {formatWeekdayTime(event.startsAt)}
             {event.locationName ? ` · ${event.locationName}` : ''}
           </ThemedText>
+          {event.attendees?.count ? (
+            <View style={styles.faces}>
+              <AttendeeFaces attendees={event.attendees} />
+            </View>
+          ) : null}
           {footer ? <View style={styles.footer}>{footer}</View> : null}
         </View>
       </View>
@@ -122,5 +129,6 @@ const styles = StyleSheet.create({
   month: { fontFamily: Fonts.bold, fontSize: 12, lineHeight: 16, letterSpacing: 1 },
   body: { flex: 1, gap: 2 },
   title: { fontFamily: Fonts.bold, fontSize: 17, lineHeight: 23 },
+  faces: { marginTop: Spacing.two },
   footer: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, marginTop: Spacing.two },
 });

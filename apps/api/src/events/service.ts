@@ -82,6 +82,16 @@ const EVENT_COLUMNS = [
   'e.status',
   'e.published_at',
   coverColumn,
+  // Tickets held (used ones included): the "N kişi katılıyor" next to the faces.
+  sql<number>`(select coalesce(sum(tt.issued_count), 0)::int from ticket_types tt where tt.event_id = e.id)`.as(
+    'attendee_count',
+  ),
+  // Up to three holders who chose to show their photo on events, latest first.
+  sql<string[]>`(select coalesce(json_agg(f.avatar_url), '[]'::json) from (
+    select p.avatar_url from tickets t join users p on p.id = t.user_id
+    where t.event_id = e.id and t.status in ('active', 'checked_in')
+      and p.show_photo_at_events and p.avatar_url is not null and p.deleted_at is null
+    order by t.created_at desc limit 3) f)`.as('attendee_photos'),
 ] as const;
 
 interface EventRow {
@@ -106,6 +116,8 @@ interface EventRow {
   status: EventStatus;
   published_at: Date | null;
   cover: { version: string; width: number; height: number } | null;
+  attendee_count: number;
+  attendee_photos: string[];
 }
 
 function toEvent(row: EventRow) {
@@ -133,6 +145,7 @@ function toEvent(row: EventRow) {
     status: row.status,
     publishedAt: isoOrNull(row.published_at),
     cover: coverRef(row.id, row.cover),
+    attendees: { count: row.attendee_count, photos: row.attendee_photos },
   };
 }
 

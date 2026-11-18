@@ -9,6 +9,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Button, confirmAction, ErrorBanner, Field, Loading, Screen } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { pickProfilePhoto, uploadProfilePhoto } from '@/profile/photo';
+import { PhotoAtEventsSwitch } from '@/profile/photo-at-events';
 
 export default function EditProfile() {
   const me = useMe();
@@ -82,10 +83,11 @@ function EditForm({
         </View>
       </View>
       <ThemedText type="small" themeColor="textSecondary">
-        Fotoğrafını sadece bilet aldığın etkinliklerin kulüp ekipleri görür: kapıda biletin okutulunca bilet sahibinin
-        sen olduğunu anlarlar.
+        Fotoğrafını bilet aldığın etkinliklerin kulüp ekipleri görür: kapıda biletin okutulunca bilet sahibinin sen
+        olduğunu anlarlar. Diğer öğrenciler ancak aşağıdaki ayarı açarsan görür.
       </ThemedText>
       <ErrorBanner error={photo.error} />
+      <PhotoAtEventsSwitch />
 
       <Field label="Ad soyad" value={fullName} onChangeText={setFullName} autoComplete="name" error={nameError} />
       <Field

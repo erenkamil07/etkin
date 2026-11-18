@@ -75,7 +75,10 @@ sorumlu olan: Eren Göksel (bireysel geliştirici), ${mail}.</p>
   <li><strong>Profil fotoğrafı (isteğe bağlı):</strong> eklersen telefonda kare olarak küçültülüp
   yüklenir; konum, cihaz ve tarih bilgileri sunucuda silinir. Fotoğrafını herkes göremez: yalnızca
   sen ve bilet aldığın etkinliklerin kulüp ekipleri (katılımcı listesinde ve kapıda biletin
-  okutulunca, biletin sana ait olduğunu anlamak için) görür. İstediğin an
+  okutulunca, biletin sana ait olduğunu anlamak için) görür. <strong>Profil → Ayarlar</strong>'da
+  “Katıldığım etkinliklerde fotoğrafım görünsün” ayarını açarsan, bilet aldığın etkinliklerin sayfasında
+  “kişi katılıyor” yazısının yanında, adın olmadan, uygulamayı kullanan herkes görebilir. Bu ayar
+  başlangıçta kapalıdır ve istediğin an kapatabilirsin. Fotoğrafını istediğin an
   <strong>Profil → Profili düzenle</strong> ile değiştirebilir ya da kaldırabilirsin; hesabını
   silince o da silinir.</li>
   <li><strong>Bildirimler:</strong> bir etkinliği kurallara aykırı diye bildirirsen seçtiğin sebep,
@@ -110,6 +113,9 @@ kullanmaz. Etkin ödeme almaz; kart ya da banka bilgisi toplamaz.</p>
   adını, öğrenci numaranı, bilet türünü ve giriş durumunu görür (katılımcı listesi ve kapıda
   kimlik kontrolü için).</li>
   <li><strong>Kapı görevlileri:</strong> biletini okuttuklarında adını ve öğrenci numaranı görür.</li>
+  <li><strong>Diğer kullanıcılar:</strong> bir etkinliğe kaç kişinin bilet aldığını görür. Fotoğrafını ise
+  yalnızca “Katıldığım etkinliklerde fotoğrafım görünsün” ayarını açtıysan, o etkinliğin sayfasında adın
+  olmadan görür.</li>
   <li><strong>Üye olmak istediğin kulübün organizatörleri:</strong> isteğini ve üyeliğini incelemek için
   adını, fotoğrafını, üniversiteni ve öğrenci numaranı görür.</li>
   <li><strong>Altyapı sağlayıcıları:</strong> sunucu ve veritabanı Railway tarafından Avrupa

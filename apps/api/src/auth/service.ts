@@ -50,6 +50,7 @@ const USER_COLUMNS = [
   'university_chosen_at',
   'student_number',
   'avatar_url',
+  'show_photo_at_events',
   'platform_role',
   'created_at',
 ] as const;
@@ -63,6 +64,7 @@ interface UserRow {
   university_chosen_at: Date | null;
   student_number: string | null;
   avatar_url: string | null;
+  show_photo_at_events: boolean;
   platform_role: PlatformRole;
   created_at: Date;
 }
@@ -294,6 +296,7 @@ export async function deleteAccount(db: Database, userId: string, password: stri
         university_id: null,
         university_chosen_at: null,
         avatar_url: null,
+        show_photo_at_events: false,
         deleted_at: now,
         updated_at: now,
       })
@@ -306,6 +309,7 @@ export interface ProfilePatch {
   universityId?: number | null | undefined;
   fullName?: string | undefined;
   studentNumber?: string | null | undefined;
+  showPhotoAtEvents?: boolean | undefined;
 }
 
 /**
@@ -344,6 +348,7 @@ export async function updateProfile(db: Database, userId: string, patch: Profile
       ...university,
       ...(patch.fullName !== undefined && { full_name: patch.fullName }),
       ...(patch.studentNumber !== undefined && { student_number: patch.studentNumber }),
+      ...(patch.showPhotoAtEvents !== undefined && { show_photo_at_events: patch.showPhotoAtEvents }),
     };
     if (Object.keys(changes).length === 0) return;
     await trx.updateTable('users').set(changes).where('id', '=', userId).execute();
@@ -375,6 +380,7 @@ export async function getProfile(db: Database, userId: string) {
   return {
     ...toPublicUser(user),
     universityLockedUntil: universityLockedUntil(user.university_chosen_at)?.toISOString() ?? null,
+    showPhotoAtEvents: user.show_photo_at_events,
     memberships: memberships.map((m) => ({
       organizationId: m.id,
       slug: m.slug,
